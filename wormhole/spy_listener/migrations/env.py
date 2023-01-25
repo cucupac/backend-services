@@ -41,9 +41,9 @@ postgres_user = getenv("POSTGRES_USER", default="postgres")
 postgres_password = getenv("POSTGRES_PASSWORD", default="postgres")
 postgres_database = getenv("POSTGRES_DB", default="spy_listener_dev")
 
-url = f"postgresql://{postgres_user}:{postgres_password}@{postgres_host}:{postgres_port}/{postgres_database}"
+# url = f"postgresql://{postgres_user}:{postgres_password}@{postgres_host}:{postgres_port}/{postgres_database}"
 # NOTE: Uncomment the URL below and comment the URL above to run a test database migration
-# url = f"postgresql://{postgres_user}:{postgres_password}@{postgres_host}:5444/spy_listener_dev_test"
+url = f"postgresql://{postgres_user}:{postgres_password}@{postgres_host}:5444/spy_listener_dev_test"
 config.set_main_option("sqlalchemy.url", url)
 
 
