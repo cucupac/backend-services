@@ -53,7 +53,7 @@ async def startup_event():
 async def shutdown_event():
     # Close RabbitMQ connection
     connection = await get_connection()
-    connection.close()
+    await connection.close()
     # Close client session
     client_session = await get_client_session()
     await client_session.close()

@@ -28,11 +28,13 @@ class VaaManager(IVaaManager):
         # Convert vaa bytes to hexadecimal string
         vaa_hex = codecs.encode(bytes(vaa), "hex_codec").decode()
 
-        vaa_unique_set = frozenset({
-            "emitter_chain": parsed_vaa.emitter_chain,
-            "emitter_address": parsed_vaa.emitter_address,
-            "sequence": parsed_vaa.sequence,
-        }.items())
+        vaa_unique_set = frozenset(
+            {
+                "emitter_chain": parsed_vaa.emitter_chain,
+                "emitter_address": parsed_vaa.emitter_address,
+                "sequence": parsed_vaa.sequence,
+            }.items()
+        )
 
         if not self.recent_vaas.get(vaa_unique_set):
             try:
@@ -40,14 +42,19 @@ class VaaManager(IVaaManager):
                     message=QueueMessage(
                         dest_chain_id=parsed_vaa.payload.dest_chain_id,
                         to_address=parsed_vaa.payload.to_address,
+                        sequence=parsed_vaa.sequence,
+                        emitter_chain=parsed_vaa.emitter_chain,
+                        emitter_address=parsed_vaa.emitter_address,
                         vaa_hex=vaa_hex,
                     )
                 )
-                error = None
-                status = Status.PENDING
+
             except QueueException as e:
                 error = e.detail
                 status = Status.FAILED
+            else:
+                error = None
+                status = Status.PENDING
 
             # Store in database
             await self.transactions_repo.create(

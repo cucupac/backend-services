@@ -29,6 +29,8 @@ class ParsedPayload(BaseModel):
         description="That amount of money to be transferred (18 decimals).",
         example=1e18,
     )
+
+
 class ParsedVaa(BaseModel):
     """Vaa object after parsing raw VAA bytes."""
 

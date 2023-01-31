@@ -1,6 +1,7 @@
 from typing import List
 
 import pytest
+from asyncpg.exceptions import UniqueViolationError
 
 import tests.constants as constant
 from app.usecases.interfaces.repos.transactions import ITransactionsRepo
@@ -25,6 +26,17 @@ async def test_create(
     assert isinstance(transaction, TransactionsJoinRelays)
     for key, value in create_transaction_repo_adapter.dict().items():
         assert value == transaction.dict()[key]
+
+
+@pytest.mark.asyncio
+async def test_create_unique_violation(
+    transactions_repo: ITransactionsRepo,
+    create_transaction_repo_adapter: CreateRepoAdapter,
+) -> None:
+    await transactions_repo.create(transaction=create_transaction_repo_adapter)
+
+    with pytest.raises(UniqueViolationError):
+        await transactions_repo.create(transaction=create_transaction_repo_adapter)
 
 
 @pytest.mark.asyncio

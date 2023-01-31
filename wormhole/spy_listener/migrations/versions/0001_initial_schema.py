@@ -2,7 +2,7 @@
 
 Revision ID: 0001
 Revises: 
-Create Date: 2023-01-25 00:47:32.479607
+Create Date: 2023-01-31 13:47:42.432195
 
 """
 from alembic import op
@@ -39,6 +39,7 @@ def upgrade():
     sa.Column('transaction_id', sa.BigInteger(), nullable=True),
     sa.Column('message', sa.String(), nullable=False),
     sa.Column('status', sa.String(), nullable=False),
+    sa.Column('transaction_hash', sa.String(), nullable=True),
     sa.Column('error', sa.Text(), nullable=True),
     sa.Column('created_at', sa.DateTime(), server_default=sa.text('now()'), nullable=False),
     sa.Column('updated_at', sa.DateTime(), server_default=sa.text('now()'), nullable=False),

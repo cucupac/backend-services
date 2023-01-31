@@ -37,5 +37,5 @@ sa.Index(
     TRANSACTIONS.c.emitter_address,
     TRANSACTIONS.c.source_chain_id,
     TRANSACTIONS.c.sequence,
-    unique=True
+    unique=True,
 )

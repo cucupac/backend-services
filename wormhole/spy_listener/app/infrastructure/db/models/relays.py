@@ -15,6 +15,7 @@ RELAYS = sa.Table(
     ),
     sa.Column("message", sa.String, nullable=False),
     sa.Column("status", sa.String, nullable=False, default="pending"),
+    sa.Column("transaction_hash", sa.String, nullable=True),
     sa.Column("error", sa.Text(), nullable=True),
     sa.Column("created_at", sa.DateTime, nullable=False, server_default=sa.func.now()),
     sa.Column(
