@@ -11,7 +11,6 @@ from app.dependencies import (
 )
 from app.infrastructure.db.core import get_or_create_database
 from app.infrastructure.web.endpoints.metrics import health
-from app.infrastructure.web.endpoints.public import transactions
 from app.settings import settings
 
 
@@ -22,7 +21,6 @@ def setup_app():
         openapi_url=settings.openapi_url,
     )
     app.include_router(health.health_router, prefix="/metrics/health")
-    app.include_router(transactions.transactions_router, prefix="/public/challenges")
 
     # CORS (Cross-Origin Resource Sharing)
     origins = ["*"]

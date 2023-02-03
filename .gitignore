@@ -50,3 +50,6 @@ coverage.xml
 .pytest_cache/
 # VSCode
 .vscode/
+
+# Misc
+notes.txt
