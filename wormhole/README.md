@@ -4,6 +4,8 @@ Ax Protocol's Python adaptation of Wormhole's [spy_relayer](wormhole-github).
 
 There are two independent components to this service, the Spy Listener and the Relayer.
 
+![ax_wormhole_relayer](./assets/ax_wormhole_relayer.png)
+
 ## Spy Listener
 
 Listens for VAAs (messages) in Wormhole's Guardian Network via gRPC subscription to Wormhole's Guardian Spy. This Spy Listener implementation specifically listens for VAAs relevant to Ax Protocol. When a relevant VAA in the Guardian Network is received, the Spy Listener publishes the message to an [AMQP queue](rabbitmq) for the Relayer to pick up.

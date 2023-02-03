@@ -15,14 +15,14 @@ class RabbitmqClient(IQueueClient):
         self.vaa_delivery = vaa_delivery
 
     async def start_consumption(self) -> None:
-        """Consumes message to RabbitMQ."""
+        """Consumes messages from RabbitMQ."""
 
         # Start listening
         try:
             await self.queue.consume(self.__on_message)
         except Exception as e:
             self.logger.error(
-                message="[RabbitmqClient]: Message was not consumed from RabbitMQ.\nError: %s"
+                message="[RabbitmqClient]: Message not consumed.\nError: %s"
                 % str(e)
             )
             raise QueueError(detail=str(e))

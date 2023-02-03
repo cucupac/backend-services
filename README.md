@@ -1,27 +1,28 @@
-# Ax Protocol Relayer Service
+# Ax Relayer
 
-This monorepo contains all code relevant to Ax Protocol's Cross-Chain Relayer Service.
+This monorepo contains all code relevant to the Ax Relayer Service.
 
-Currently, Wormhole is the only protocol that is supported by this service, but support for other cross-chain messaging protocols will be added as necessary.
+Currently, Wormhole is the only protocol supported by this service, but support for other cross-chain messaging protocols will be added as necessary.
 
 # TODO
+
 **ax-relayer**
-- [ ] Restructure monorepo such for proper management of CI/CD pipeline, environment varibles, database migrations, etc.
-- [X] Figure out how to properly close AMQP connection -> connection.close().
-- [ ] Figure out why we can't stop server via CTRL+C KeyboardInterrupt (likely ralated to AMQP connection).
+
+-   [ ] Restructure monorepo such for proper management of CI/CD pipeline, environment varibles, database migrations, Make files, etc.
+-   [ ] Fix inability to stop server via CTRL+C KeyboardInterrupt (likely ralated to AMQP connection).
+-   [ ] Get clear on all possible system failures and mitigate accordingly.
+-   [ ] Come up with deployment strategy.
+-   [ ] Integration tests (use test_rabbitmq).
 
 **ax-relayer/wormhole/spy_listener**
-- [ ] Design and implement message reliability scheme.
-  - [channel] publisher_confirms=True
-  - [message] delivery_mode=DeliveryMode.PERSISTENT
-  - [publish] mandatory=True
-  - Handle message republishing based on return object of exchange.publish()
-- [ ] Finish unit tests
-- [ ] Integration tests
+
+-   [ ] Fix broken unit tests.
 
 **ax-relayer/wormhole/relayer**
-- [ ] Design and implement message reliability scheme.
-  - [queue] durable=True
-  - [incoming message] message.ack()
-- [ ] Finish unit tests
-- [ ] Integration tests
+
+-   [ ] Research websocket and architect integration into the relayer, such that the Ax frontend can hook up to the websocket.
+-   [ ] Finish unit tests
+    -   [ ] [Queue] Mock incoming messages
+    -   [ ] [Repo] Test ability to update a row correctly (requires initial db insertion)
+    -   [ ] [VAA Delivery] Success: using mocks, ensure that the row in the database gets updated to success and has transaction_hash (requires initial db insertion)
+    -   [ ] [VAA Delivery] EVM client failure: using mocks, ensure that database does not have transaction_hash and that it’s status was updated to FAILED (requires initial db insertion)
