@@ -1,5 +1,5 @@
 import aio_pika
-from aio_pika import ExchangeType, RobustConnection
+from aio_pika import ExchangeType, RobustConnection, connect_robust
 from aio_pika.abc import AbstractExchange
 
 from app.dependencies import get_event_loop, get_logger
@@ -16,7 +16,7 @@ async def get_exchange() -> AbstractExchange:
     if connection is None:
         event_loop = await get_event_loop()
 
-        connection = await aio_pika.connect_robust(
+        connection = await connect_robust(
             "amqp://{username}:{password}@{host}:{port}".format(
                 username=settings.rmq_username,
                 password=settings.rmq_password,
@@ -29,7 +29,9 @@ async def get_exchange() -> AbstractExchange:
         logger = await get_logger()
         logger.info(message="[RabbitmqClient]: Connected to queue.")
 
-        channel = await connection.channel(publisher_confirms=True)
+        channel = await connection.channel(
+            publisher_confirms=True, on_return_raises=True
+        )
         logger.info(message="[RabbitmqClient]: Established channel.")
 
         exchange = await channel.declare_exchange(

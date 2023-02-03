@@ -2,6 +2,7 @@ import json
 
 from aio_pika import DeliveryMode, Message
 from aio_pika.abc import AbstractExchange
+from pamqp.commands import Basic
 
 from app.settings import settings
 from app.usecases.interfaces.clients.queues.queue import IQueueClient
@@ -15,7 +16,6 @@ class RabbitmqClient(IQueueClient):
         self.logger = logger
 
     async def publish(self, message: QueueMessage) -> None:
-        # mandandatory=True flag -
         try:
             result = await self.exchange.publish(
                 Message(
@@ -26,16 +26,13 @@ class RabbitmqClient(IQueueClient):
                 mandatory=True,
             )
 
+            if not isinstance(result, Basic.Ack):
+                raise Exception("Ack was not returned for publish.\n%s" % str(result))
+
         except Exception as e:
             self.logger.error(
-                message="[RabbitmqClient]: Message was not published to RabbitMQ.\nError: %s"
-                % str(e)
+                message="[RabbitmqClient]: Message not published.\nError: %s" % str(e)
             )
             raise QueueError(detail=str(e))
-        else:
-            self.logger.info(
-                message="[RabbitmqClient]: Message was successfully published and delivered to RabbitMQ:\n%s"
-                % message
-            )
-            print("\n\nresult: \n", result)
-            print("\ntype(isDelivered):\n", type(result), "\n\n")
+
+        self.logger.info(message="[RabbitmqClient]: Message published:\n%s" % message)
