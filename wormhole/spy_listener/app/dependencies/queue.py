@@ -5,47 +5,40 @@ from aio_pika.abc import AbstractExchange
 from app.dependencies import get_event_loop, get_logger
 from app.settings import settings
 
-channel = None
 connection = None
 exchange = None
 
 
-async def connect_to_queue() -> AbstractExchange:
-    global channel  # pylint: disable = global-statement
+async def get_exchange() -> AbstractExchange:
     global connection  # pylint: disable = global-statement
     global exchange  # pylint: disable = global-statement
 
-    if channel is None:
+    if connection is None:
         event_loop = await get_event_loop()
 
         connection = await aio_pika.connect_robust(
-            f"amqp://{settings.rabbitmq_username}:{settings.rabbitmq_password}@{settings.rabbitmq_host}:{settings.rabbitmq_port}/%2F",
+            "amqp://{username}:{password}@{host}:{port}".format(
+                username=settings.rmq_username,
+                password=settings.rmq_password,
+                host=settings.rmq_host,
+                port=settings.rmq_port,
+            ),
             loop=event_loop,
         )
 
-        logger = get_logger()
-        logger.info(message="[RabbitmqClient]: Connected to queue!")
+        logger = await get_logger()
+        logger.info(message="[RabbitmqClient]: Connected to queue.")
 
-        channel = await connection.channel()
-
-        logger.info(message="[RabbitmqClient]: Established queue channel!")
+        channel = await connection.channel(publisher_confirms=True)
+        logger.info(message="[RabbitmqClient]: Established channel.")
 
         exchange = await channel.declare_exchange(
             settings.exchange_name, ExchangeType.DIRECT
         )
-
-        logger.info(message="[RabbitmqClient]: Established queue exchange!")
+        logger.info(message="[RabbitmqClient]: Established exchange.")
 
     return exchange
 
 
 async def get_connection() -> RobustConnection:
     return connection
-
-
-async def get_channel() -> RobustConnection:
-    return channel
-
-
-async def get_exchange() -> RobustConnection:
-    return exchange

@@ -31,5 +31,5 @@ class Logger(ILogger):
         logger.critical(message)
 
 
-def get_logger() -> ILogger:
+async def get_logger() -> ILogger:
     return Logger()

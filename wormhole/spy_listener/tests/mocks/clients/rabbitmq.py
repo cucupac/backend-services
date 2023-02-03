@@ -1,8 +1,22 @@
+from enum import Enum
+
 from app.usecases.interfaces.clients.queues.queue import IQueueClient
-from app.usecases.schemas.queue import QueueMessage
+from app.usecases.schemas.queue import QueueError, QueueMessage
+from tests import constants as constant
+
+
+class QueueResult(str, Enum):
+    SUCCESS = "SUCCESS"
+    FAILURE = "FAILURE"
 
 
 class MockRabbitmqClient(IQueueClient):
-    def publish(self, message: QueueMessage) -> None:
+    def __init__(self, result: QueueResult) -> None:
+        self.result = result
+
+    async def publish(self, message: QueueMessage) -> bool:
         """Publishes message to RabbitMQ."""
-        return
+        if self.result == QueueResult.SUCCESS:
+            return True
+        elif self.result == QueueResult.FAILURE:
+            raise QueueError(detail=constant.QUEUE_ERROR_DETAIL)

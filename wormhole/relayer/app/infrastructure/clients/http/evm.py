@@ -27,6 +27,7 @@ class EvmClient(IEvmClient):
         )
 
         web3_client = Web3(Web3.HTTPProvider(chain_lookup[str(dest_chain_id)]["rpc"]))
+
         contract = web3_client.eth.contract(
             address=chain_lookup[str(dest_chain_id)]["bridge_contract"], abi=self.abi
         )
@@ -53,12 +54,16 @@ class EvmClient(IEvmClient):
         max_priority_fee = web3_client.eth.max_priority_fee
         gas_price_estimate = web3_client.eth.gas_price
 
-        transaction = contract.functions.processMessage(vaa).buildTransaction({
-            "from": "0x3f9E4A6120aB7868485602241AbE9D85d6F9E382",
-            "nonce": web3_client.eth.get_transaction_count(settings.relayer_address),
-            "maxFeePerGas": gas_price_estimate + max_priority_fee,
-            "maxPriorityFeePerGas": max_priority_fee
-        })
+        transaction = contract.functions.processMessage(vaa).buildTransaction(
+            {
+                "from": "0x3f9E4A6120aB7868485602241AbE9D85d6F9E382",
+                "nonce": web3_client.eth.get_transaction_count(
+                    settings.relayer_address
+                ),
+                "maxFeePerGas": gas_price_estimate + max_priority_fee,
+                "maxPriorityFeePerGas": max_priority_fee,
+            }
+        )
 
         return web3_client.eth.account.sign_transaction(
             transaction_dict=transaction, private_key=settings.relayer_private_key

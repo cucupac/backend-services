@@ -19,7 +19,7 @@ from app.usecases.schemas.transactions import CreateRepoAdapter, TransactionsJoi
 from app.usecases.services.vaa_manager import VaaManager
 
 # Mocks
-from tests.mocks.clients.rabbitmq import MockRabbitmqClient
+from tests.mocks.clients.rabbitmq import MockRabbitmqClient, QueueResult
 
 
 # Database Connection
@@ -31,6 +31,17 @@ async def test_db_url():
         host=os.getenv("POSTGRES_HOST", "localhost"),
         port=os.getenv("POSTGRES_PORT", "5444"),
         database_name=os.getenv("POSTGRES_DB", "ax_relayer_dev_test"),
+    )
+
+
+# RabbitMQ Connection
+@pytest_asyncio.fixture
+async def test_rmq_url():
+    return "amqp://{username}:{password}@{host}:{port}".format(
+        username=os.getenv("RMQ_USERNAME", "guest"),
+        password=os.getenv("RMQ_PASSWORD", "guest"),
+        host=os.getenv("RMQ_HOST", "localhost"),
+        port=os.getenv("RMQ_PORT", "5673"),
     )
 
 
@@ -51,18 +62,32 @@ async def transactions_repo(test_db: Database) -> ITransactionsRepo:
     return TransactionsRepo(db=test_db)
 
 
-# Clinets
+# Clients
 @pytest_asyncio.fixture
-async def queue_client() -> IQueueClient:
-    return MockRabbitmqClient()
+async def test_queue_client_success() -> IQueueClient:
+    return MockRabbitmqClient(result=QueueResult.SUCCESS)
+
+
+@pytest_asyncio.fixture
+async def test_queue_client_fail() -> IQueueClient:
+    return MockRabbitmqClient(result=QueueResult.FAILURE)
 
 
 # Services
 @pytest_asyncio.fixture
 async def vaa_manager(
-    queue_client: IQueueClient, transactions_repo: ITransactionsRepo
+    test_queue_client_success: IQueueClient, transactions_repo: ITransactionsRepo
 ) -> IVaaManager:
-    return VaaManager(transactions_repo=transactions_repo, queue=queue_client)
+    return VaaManager(
+        transactions_repo=transactions_repo, queue=test_queue_client_success
+    )
+
+
+@pytest_asyncio.fixture
+async def vaa_manager_queue_fail(
+    test_queue_client_fail: IQueueClient, transactions_repo: ITransactionsRepo
+) -> IVaaManager:
+    return VaaManager(transactions_repo=transactions_repo, queue=test_queue_client_fail)
 
 
 # Database-inserted Objects
@@ -75,6 +100,9 @@ async def inserted_transaction(
     return await transactions_repo.create(transaction=create_transaction_repo_adapter)
 
 
+sequence_count = 0
+
+
 @pytest_asyncio.fixture
 async def many_inserted_transactions(
     transactions_repo: ITransactionsRepo,
@@ -82,11 +110,13 @@ async def many_inserted_transactions(
 ) -> List[TransactionsJoinRelays]:
     """Inserts a user object into the database for other tests."""
 
+    global sequence_count  # pylint: disable = global-statement
     transactions = []
     for _ in range(constant.DEFAULT_ITERATIONS):
-        transactions.append(
-            await transactions_repo.create(transaction=create_transaction_repo_adapter)
-        )
+        transaction = create_transaction_repo_adapter
+        transaction.sequence += sequence_count
+        transactions.append(await transactions_repo.create(transaction=transaction))
+        sequence_count += 1
 
     return transactions
 

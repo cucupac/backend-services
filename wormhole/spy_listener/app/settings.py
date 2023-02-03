@@ -5,6 +5,7 @@ from pydantic import BaseSettings
 # File path to the global .env file
 DOTENV_FILE = ".env" if path.isfile(".env") else None
 
+
 class Settings(BaseSettings):
     """Application Settings and Environment Variables"""
 
@@ -25,10 +26,10 @@ class Settings(BaseSettings):
     db_url: str
 
     # RabbitMQ
-    rabbitmq_host: str
-    rabbitmq_port: int
-    rabbitmq_username: str
-    rabbitmq_password: str
+    rmq_host: str
+    rmq_port: int
+    rmq_username: str
+    rmq_password: str
 
     exchange_name: str
     routing_key: str

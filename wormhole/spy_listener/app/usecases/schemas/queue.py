@@ -12,7 +12,6 @@ class QueueError(QueueException):
         super().__init__(*args)
         self.detail = kwargs.get("detail")
 
-
 class QueueMessage(BaseModel):
     """Message sent to queue."""
 
@@ -25,6 +24,21 @@ class QueueMessage(BaseModel):
         ...,
         description="The account address of the recipient.",
         example="0xE37c0D48d3F0D7E9b2b5E29c5D5b2c7B9fE37c0D",
+    )
+    sequence: int = Field(
+        ...,
+        description="The emitter contract's chronological sequence of the cross-chain message.",
+        example=1,
+    )
+    emitter_chain: int = Field(
+        ...,
+        description="The Wormhole-ascribed source-chain ID.",
+        example=5,
+    )
+    emitter_address: str = Field(
+        ...,
+        description="The address of the contract on the source-chain that emitted the cross-chain message.",
+        example="0xbf8a1387d4682b5b431cea8f53edd5e7a7834861",
     )
     vaa_hex: str = Field(
         ...,

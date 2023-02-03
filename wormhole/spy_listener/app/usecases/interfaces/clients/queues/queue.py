@@ -5,5 +5,5 @@ from app.usecases.schemas.queue import QueueMessage
 
 class IQueueClient(ABC):
     @abstractmethod
-    def publish(self, message: QueueMessage) -> None:
+    async def publish(self, message: QueueMessage) -> None:
         """Publishes message to RabbitMQ."""

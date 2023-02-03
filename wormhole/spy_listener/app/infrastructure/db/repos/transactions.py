@@ -6,7 +6,6 @@ from sqlalchemy import and_, select
 from app.infrastructure.db.models.relays import RELAYS
 from app.infrastructure.db.models.transactions import TRANSACTIONS
 from app.usecases.interfaces.repos.transactions import ITransactionsRepo
-from app.usecases.schemas.relays import Status
 from app.usecases.schemas.transactions import (
     CreateRepoAdapter,
     RetriveManyRepoAdapter,
@@ -39,6 +38,7 @@ class TransactionsRepo(ITransactionsRepo):
                 status=transaction.relay_status,
                 error=transaction.relay_error,
                 message=transaction.relay_message,
+                transaction_hash=None
             )
 
             await self.db.execute(insert_statement)
@@ -59,6 +59,7 @@ class TransactionsRepo(ITransactionsRepo):
             RELAYS.c.status.label("relay_status"),
             RELAYS.c.error.label("relay_error"),
             RELAYS.c.message.label("relay_message"),
+            RELAYS.c.transaction_hash.label("relay_transaction_hash")
         ]
 
         query = select(columns_to_select).select_from(j).where(TRANSACTIONS.c.id == id)
@@ -101,6 +102,7 @@ class TransactionsRepo(ITransactionsRepo):
             RELAYS.c.status.label("relay_status"),
             RELAYS.c.error.label("relay_error"),
             RELAYS.c.message.label("relay_message"),
+            RELAYS.c.transaction_hash.label("relay_transaction_hash")
         ]
 
         query = select(columns_to_select).select_from(j).where(and_(*query_conditions))

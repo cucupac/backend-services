@@ -37,7 +37,7 @@ class VaaDelivery(IVaaDelivery):
                 emitter_address=message.emitter_address,
                 source_chain_id=message.emitter_chain,
                 sequence=message.sequence,
-                transaction_hash=transaction_hash,
+                transaction_hash=transaction_hash.hex(),
                 error=error,
                 status=status,
             )

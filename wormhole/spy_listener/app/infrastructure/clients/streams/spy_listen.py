@@ -17,13 +17,13 @@ class StreamClient(IStreamClient):
         self.vaa_manager = vaa_manager
 
     async def start(self) -> None:
-        logger = get_logger()
+        logger = await get_logger()
         while True:
             try:
                 async with grpc.aio.insecure_channel(
                     settings.guardian_spy_url
                 ) as channel:
-                    
+
                     logger.info(message="[StreamClient]: Connected to stream!")
                     stub = spy_pb2_grpc.SpyRPCServiceStub(channel)
 
@@ -35,7 +35,10 @@ class StreamClient(IStreamClient):
                         await self.vaa_manager.process(vaa=response.vaa_bytes)
 
             except grpc.aio.AioRpcError as e:
-                logger.error(message="[StreamClient]: connection dropped.\nError: %s\n\nAttempting to reconnect..." % str(e))
+                logger.error(
+                    message="[StreamClient]: connection dropped.\nError: %s\n\nAttempting to reconnect..."
+                    % str(e)
+                )
                 await asyncio.sleep(5)
 
     def __get_filters(self) -> List[spy_pb2.FilterEntry]:

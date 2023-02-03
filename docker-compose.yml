@@ -13,6 +13,18 @@ services:
         depends_on:
             - db
 
+    relayer:
+        build:
+            context: ./wormhole/relayer
+            dockerfile: Dockerfile
+        ports:
+            - "9000:9000"
+        container_name: relayer
+        env_file:
+            - .env
+        depends_on:
+            - db
+
     db:
         image: library/postgres:12-alpine
         container_name: ax_database
@@ -34,6 +46,15 @@ services:
         env_file:
             - .env
 
+    ci:
+        container_name: spy_listener_ci
+        image: "ax_protocol/spy_listener"
+        env_file:
+            - tests.env
+        entrypoint: app/ci/initiate_tests.sh
+        depends_on:
+            - test_db
+
     test_db:
         image: library/postgres:12-alpine
         container_name: test_ax_database
@@ -45,7 +66,6 @@ services:
             - POSTGRES_DB=ax_relayer_dev_test
         ports:
             - 5444:5444
-        command: -p 5444
 
     test_rabbitmq:
         image: rabbitmq:3-management-alpine
@@ -55,12 +75,3 @@ services:
             - 15673:15673
         env_file:
             - tests.env
-
-    ci:
-        container_name: spy_listener_ci
-        image: "ax_protocol/spy_listener"
-        env_file:
-            - tests.env
-        entrypoint: app/ci/initiate_tests.sh
-        depends_on:
-            - test_db
