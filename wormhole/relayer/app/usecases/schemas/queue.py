@@ -14,7 +14,7 @@ class QueueError(QueueException):
 
 
 class QueueMessage(BaseModel):
-    """Message sent to queue."""
+    """Message received from queue."""
 
     dest_chain_id: int = (
         Field(

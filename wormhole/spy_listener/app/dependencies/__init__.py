@@ -3,7 +3,7 @@ various classes and utility funtions."""
 
 from .logger import get_logger
 from .event_loop import get_event_loop
-from .http_client import get_client_session
+from .client_session import get_client_session
 from .repos import get_transactions_repo
 from .queue import get_connection, get_exchange
 from .queue_client import get_rmq_client

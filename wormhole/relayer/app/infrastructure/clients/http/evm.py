@@ -1,6 +1,6 @@
 import base64
 import json
-from typing import Any, List, Mapping, Optional
+from typing import Any, List, Mapping
 
 from eth_account.datastructures import SignedTransaction
 from web3 import Web3
@@ -19,10 +19,10 @@ class EvmClient(IEvmClient):
 
     async def deliver(
         self, vaa: bytes, dest_chain_id: int
-    ) -> Optional[TransactionHash]:
+    ) -> TransactionHash:
         """Sends transaction to the destination blockchain."""
 
-        chain_lookup: Mapping[int, str] = json.loads(
+        chain_lookup: Mapping[str, str] = json.loads(
             base64.b64decode(settings.chain_lookup).decode("utf-8")
         )
 
@@ -42,7 +42,7 @@ class EvmClient(IEvmClient):
             )
         except Exception as e:
             self.logger.error(
-                message="[EvmClient]: Vaa delivery failed. Error: %s" % str(e)
+                message="[EvmClient]: VAA delivery failed. Error: %s" % str(e)
             )
             raise EvmClientError(detail=str(e))
 
@@ -56,7 +56,7 @@ class EvmClient(IEvmClient):
 
         transaction = contract.functions.processMessage(vaa).buildTransaction(
             {
-                "from": "0x3f9E4A6120aB7868485602241AbE9D85d6F9E382",
+                "from": settings.relayer_address,
                 "nonce": web3_client.eth.get_transaction_count(
                     settings.relayer_address
                 ),
