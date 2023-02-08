@@ -12,6 +12,7 @@ class QueueError(QueueException):
         super().__init__(*args)
         self.detail = kwargs.get("detail")
 
+
 class QueueMessage(BaseModel):
     """Message sent to queue."""
 

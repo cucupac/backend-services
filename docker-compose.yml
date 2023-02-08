@@ -66,6 +66,7 @@ services:
             - POSTGRES_DB=ax_relayer_dev_test
         ports:
             - 5444:5444
+        command: -p 5444
 
     test_rabbitmq:
         image: rabbitmq:3-management-alpine

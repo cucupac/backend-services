@@ -27,7 +27,7 @@ async def get_exchange() -> AbstractExchange:
         )
 
         logger = await get_logger()
-        logger.info(message="[RabbitmqClient]: Connected to queue.")
+        logger.info(message="[RabbitmqClient]: Established connection.")
 
         channel = await connection.channel(publisher_confirms=True)
         logger.info(message="[RabbitmqClient]: Established channel.")

@@ -1,21 +1,20 @@
 # Wormhole Relayer
 
-Ax Protocol's Python adaptation of Wormhole's [spy_relayer](wormhole-github).
+Ax Protocol's Python adaptation of Wormhole's [spy_relayer](https://github.com/wormhole-foundation/wormhole/tree/main/relayer/spy_relayer).
 
-There are two independent components to this service, the Spy Listener and the Relayer.
+There are two main components to this service, the Spy Listener and the Relayer. However, these components interact with other services to properly handle their job. Please refer to the image below for more details.
 
-![ax_wormhole_relayer](./assets/ax_wormhole_relayer.png)
+## ![ax_wormhole_relayer_process_flow](./assets/ax_wormhole_relayer.png)
+
+## <p align="center">Figure 1: Process Flow Diagram</p>
 
 ## Spy Listener
 
-Listens for VAAs (messages) in Wormhole's Guardian Network via gRPC subscription to Wormhole's Guardian Spy. This Spy Listener implementation specifically listens for VAAs relevant to Ax Protocol. When a relevant VAA in the Guardian Network is received, the Spy Listener publishes the message to an [AMQP queue](rabbitmq) for the Relayer to pick up.
+Listens for VAAs (messages) in Wormhole's Guardian Network via gRPC subscription to Wormhole's Guardian Spy. This Spy Listener implementation specifically listens for VAAs relevant to Ax Protocol. When a relevant VAA in the Guardian Network is received, the Spy Listener publishes the message to an [AMQP queue](https://rabbitmq.com/) for the Relayer to pick up.
 
 ## Relayer
 
-Receives messages from the [AMQP queue](rabbitmq), delivers the messages, and pays the corresponding gas fees at the destination chain.
-
-[wormhole-github]: https://github.com/wormhole-foundation/wormhole/tree/main/relayer/spy_relayer
-[rabbitmq]: https://rabbitmq.com/
+Receives messages from the [AMQP queue](https://rabbitmq.com/), delivers the messages, and pays the corresponding gas fees at the destination chain.
 
 ## Guardian Spy
 

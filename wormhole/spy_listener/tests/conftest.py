@@ -125,9 +125,9 @@ async def many_inserted_transactions(
 @pytest_asyncio.fixture
 async def create_transaction_repo_adapter() -> CreateRepoAdapter:
     return CreateRepoAdapter(
-        emitter_address=constant.TEST_ADDRESS,
-        from_address=constant.TEST_ADDRESS,
-        to_address=constant.TEST_ADDRESS,
+        emitter_address=constant.TEST_EMITTER_ADDRESS,
+        from_address=constant.TEST_USER_ADDRESS,
+        to_address=constant.TEST_USER_ADDRESS,
         source_chain_id=constant.TEST_SOURCE_CHAIN_ID,
         dest_chain_id=constant.TEST_DESTINATION_CHAIN_ID,
         amount=constant.TEST_AMOUNT,

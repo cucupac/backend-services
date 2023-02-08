@@ -22,12 +22,11 @@ class RabbitmqClient(IQueueClient):
             await self.queue.consume(self.__on_message)
         except Exception as e:
             self.logger.error(
-                message="[RabbitmqClient]: Message not consumed.\nError: %s"
-                % str(e)
+                message="[RabbitmqClient]: Message not consumed.\nError: %s" % str(e)
             )
             raise QueueError(detail=str(e))
         else:
-            self.logger.error(
+            self.logger.info(
                 message="[RabbitmqClient]: Listening for incoming messages."
             )
 

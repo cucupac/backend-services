@@ -32,6 +32,10 @@ class VaaDelivery(IVaaDelivery):
             status = Status.SUCCESS
             transaction_hash = transaction_hash_bytes.hex()
 
+        print(
+            f"\n\nrelay info:\nemitter_address={message.emitter_address}\nsource_chain_id={message.emitter_chain}\nsequence={message.sequence}\ntransaction_hash={transaction_hash}\nerror={error}\nstatus={status}"
+        )
+
         # Update relay in the database
         await self.relays_repo.update(
             relay=UpdateRepoAdapter(

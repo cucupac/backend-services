@@ -15,7 +15,6 @@ class RabbitmqClient(IQueueClient):
         self.logger = logger
 
     async def publish(self, message: QueueMessage) -> None:
-        # mandandatory=True flag -
         try:
             result = await self.exchange.publish(
                 Message(
@@ -37,5 +36,3 @@ class RabbitmqClient(IQueueClient):
                 message="[RabbitmqClient]: Message was successfully published and delivered to RabbitMQ:\n%s"
                 % message
             )
-            print("\n\nresult: \n", result)
-            print("\ntype(isDelivered):\n", type(result), "\n\n")

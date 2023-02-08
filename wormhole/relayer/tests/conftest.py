@@ -1,5 +1,4 @@
 import os
-from typing import List
 
 import pytest_asyncio
 import respx
@@ -9,17 +8,16 @@ from httpx import AsyncClient
 
 import tests.constants as constant
 from app.dependencies import get_relays_repo
-from app.infrastructure.db.repos.relays import TransactionsRepo
+from app.infrastructure.db.repos.relays import RelaysRepo
 from app.infrastructure.web.setup import setup_app
-from app.usecases.interfaces.clients.queues.queue import IQueueClient
-from app.usecases.interfaces.repos.transactions import ITransactionsRepo
+from app.usecases.interfaces.clients.http.evm import IEvmClient
+from app.usecases.interfaces.repos.relays import IRelaysRepo
 from app.usecases.interfaces.services.vaa_delivery import IVaaDelivery
-from app.usecases.schemas.relays import Status
-from app.usecases.schemas.transactions import CreateRepoAdapter, TransactionsJoinRelays
-from app.usecases.services.vaa_delivery import VaaManager
+from app.usecases.schemas.relays import Status, UpdateRepoAdapter
+from app.usecases.services.vaa_delivery import VaaDelivery
 
 # Mocks
-from tests.mocks.clients.rabbitmq import MockRabbitmqClient
+from tests.mocks.clients.http.evm import EvmResult, MockEvmClient
 
 
 # Database Connection
@@ -34,6 +32,17 @@ async def test_db_url():
     )
 
 
+# RabbitMQ Connection
+@pytest_asyncio.fixture
+async def test_rmq_url():
+    return "amqp://{username}:{password}@{host}:{port}".format(
+        username=os.getenv("RMQ_USERNAME", "guest"),
+        password=os.getenv("RMQ_PASSWORD", "guest"),
+        host=os.getenv("RMQ_HOST", "localhost"),
+        port=os.getenv("RMQ_PORT", "5673"),
+    )
+
+
 @pytest_asyncio.fixture
 async def test_db(test_db_url) -> Database:
     test_db = Database(url=test_db_url, min_size=5)
@@ -45,72 +54,80 @@ async def test_db(test_db_url) -> Database:
     await test_db.disconnect()
 
 
-# Repos (Database Gateways)
 @pytest_asyncio.fixture
-async def relays_repo(test_db: Database) -> ITransactionsRepo:
-    return TransactionsRepo(db=test_db)
+async def relays_repo(test_db: Database) -> IRelaysRepo:
+    return RelaysRepo(db=test_db)
 
 
-# Clinets
 @pytest_asyncio.fixture
-async def queue_client() -> IQueueClient:
-    return MockRabbitmqClient()
+async def test_evm_client_success() -> IEvmClient:
+    return MockEvmClient(result=EvmResult.SUCCESS)
+
+
+@pytest_asyncio.fixture
+async def test_evm_client_fail() -> IEvmClient:
+    return MockEvmClient(result=EvmResult.FAILURE)
 
 
 # Services
 @pytest_asyncio.fixture
 async def vaa_delivery(
-    queue_client: IQueueClient, relays_repo: ITransactionsRepo
+    test_evm_client_success: IEvmClient, relays_repo: IRelaysRepo
 ) -> IVaaDelivery:
-    return VaaManager(relays_repo=relays_repo, queue=queue_client)
+    return VaaDelivery(relays_repo=relays_repo, evm_client=test_evm_client_success)
+
+
+@pytest_asyncio.fixture
+async def vaa_delivery_fail(
+    test_evm_client_fail: IEvmClient, relays_repo: IRelaysRepo
+) -> IVaaDelivery:
+    return VaaDelivery(relays_repo=relays_repo, evm_client=test_evm_client_fail)
 
 
 # Database-inserted Objects
 @pytest_asyncio.fixture
-async def inserted_transaction(
-    relays_repo: ITransactionsRepo,
-    create_transaction_repo_adapter: CreateRepoAdapter,
-) -> TransactionsJoinRelays:
-    """Inserts a user object into the database for other tests."""
-    return await relays_repo.create(transaction=create_transaction_repo_adapter)
-
-
-@pytest_asyncio.fixture
-async def many_inserted_transactions(
-    relays_repo: ITransactionsRepo,
-    create_transaction_repo_adapter: CreateRepoAdapter,
-) -> List[TransactionsJoinRelays]:
-    """Inserts a user object into the database for other tests."""
-
-    transactions = []
-    for _ in range(constant.DEFAULT_ITERATIONS):
-        transactions.append(
-            await relays_repo.create(transaction=create_transaction_repo_adapter)
+async def inserted_transaction(test_db: Database) -> None:
+    async with test_db.transaction():
+        transaction_id = await test_db.execute(
+            """INSERT INTO transactions (emitter_address, from_address, to_address, source_chain_id, dest_chain_id, amount, sequence) VALUES (:emitter_address, :from_address, :to_address, :source_chain_id, :dest_chain_id, :amount, :sequence) RETURNING id""",
+            {
+                "emitter_address": constant.TEST_EMITTER_ADDRESS,
+                "from_address": constant.TEST_USER_ADDRESS,
+                "to_address": constant.TEST_USER_ADDRESS,
+                "source_chain_id": constant.TEST_SOURCE_CHAIN_ID,
+                "dest_chain_id": constant.TEST_DESTINATION_CHAIN_ID,
+                "amount": constant.TEST_AMOUNT,
+                "sequence": constant.TEST_SEQUENCE,
+            },
         )
-
-    return transactions
+        await test_db.execute(
+            """INSERT INTO relays (transaction_id, message, status, transaction_hash, error) VALUES (:transaction_id, :message, :status, :transaction_hash, :error)""",
+            {
+                "transaction_id": transaction_id,
+                "status": Status.PENDING,
+                "error": None,
+                "message": constant.TEST_VAA,
+                "transaction_hash": None,
+            },
+        )
 
 
 # Repo Adapters
 @pytest_asyncio.fixture
-async def create_transaction_repo_adapter() -> CreateRepoAdapter:
-    return CreateRepoAdapter(
-        emitter_address=constant.TEST_ADDRESS,
-        from_address=constant.TEST_ADDRESS,
-        to_address=constant.TEST_ADDRESS,
+async def update_relays_repo_adapter() -> UpdateRepoAdapter:
+    return UpdateRepoAdapter(
+        emitter_address=constant.TEST_EMITTER_ADDRESS,
         source_chain_id=constant.TEST_SOURCE_CHAIN_ID,
-        dest_chain_id=constant.TEST_DESTINATION_CHAIN_ID,
-        amount=constant.TEST_AMOUNT,
-        sequence=0,
-        relay_status=Status.PENDING,
-        relay_error=None,
-        relay_message=constant.TEST_VAA,
+        sequence=constant.TEST_SEQUENCE,
+        transaction_hash=constant.TEST_TRANSACTION_HASH,
+        error=None,
+        status=Status.SUCCESS,
     )
 
 
 @pytest_asyncio.fixture
 def test_app(
-    relays_repo: ITransactionsRepo,
+    relays_repo: IRelaysRepo,
 ) -> FastAPI:
     app = setup_app()
     app.dependency_overrides[get_relays_repo] = lambda: relays_repo

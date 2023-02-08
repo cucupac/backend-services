@@ -13,5 +13,5 @@ async def get_or_create_database() -> Database:
     DATABASE = Database(settings.db_url, min_size=5)
     await DATABASE.connect()
     logger = await get_logger()
-    logger.info(message="[Database]: Connected to database!")
+    logger.info(message="[Database]: Established connection.")
     return DATABASE

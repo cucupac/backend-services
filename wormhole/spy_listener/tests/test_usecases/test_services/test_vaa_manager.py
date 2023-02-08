@@ -11,12 +11,12 @@ from app.usecases.schemas.vaa import ParsedPayload, ParsedVaa
 
 
 @pytest.mark.asyncio
-async def test_process_success(
+async def test_publish_success(
     vaa_manager: IVaaManager,
     transactions_repo: ITransactionsRepo,
     test_db: Database,
 ) -> None:
-
+    """Test that successful publishing of message gets properly handled"""
     # Setup
     test_parsed_vaa: ParsedVaa = vaa_manager._parse_vaa(vaa=constant.TEST_VAA_BYTES)
 
@@ -52,11 +52,12 @@ async def test_process_success(
 
 
 @pytest.mark.asyncio
-async def test_process_fail(
+async def test_publish_fail(
     vaa_manager_queue_fail: IVaaManager,
     transactions_repo: ITransactionsRepo,
     test_db: Database,
 ) -> None:
+    """Test that failure to publish message gets properly handled"""
 
     # Setup
     test_parsed_vaa: ParsedVaa = vaa_manager_queue_fail._parse_vaa(

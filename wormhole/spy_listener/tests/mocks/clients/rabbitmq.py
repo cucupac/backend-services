@@ -14,9 +14,9 @@ class MockRabbitmqClient(IQueueClient):
     def __init__(self, result: QueueResult) -> None:
         self.result = result
 
-    async def publish(self, message: QueueMessage) -> bool:
+    async def publish(self, message: QueueMessage) -> None:
         """Publishes message to RabbitMQ."""
         if self.result == QueueResult.SUCCESS:
-            return True
+            return
         elif self.result == QueueResult.FAILURE:
             raise QueueError(detail=constant.QUEUE_ERROR_DETAIL)

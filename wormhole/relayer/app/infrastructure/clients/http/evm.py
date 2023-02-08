@@ -17,9 +17,7 @@ class EvmClient(IEvmClient):
         self.abi = abi
         self.logger = logger
 
-    async def deliver(
-        self, vaa: bytes, dest_chain_id: int
-    ) -> TransactionHash:
+    async def deliver(self, vaa: bytes, dest_chain_id: int) -> TransactionHash:
         """Sends transaction to the destination blockchain."""
 
         chain_lookup: Mapping[str, str] = json.loads(
@@ -32,11 +30,11 @@ class EvmClient(IEvmClient):
             address=chain_lookup[str(dest_chain_id)]["bridge_contract"], abi=self.abi
         )
 
-        signed_transaction = await self.__craft_transaction(
-            vaa=vaa, contract=contract, web3_client=web3_client
-        )
-
         try:
+            signed_transaction = await self.__craft_transaction(
+                vaa=vaa, contract=contract, web3_client=web3_client
+            )
+
             return web3_client.eth.send_raw_transaction(
                 transaction=signed_transaction.rawTransaction
             )

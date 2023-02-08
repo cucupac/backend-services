@@ -28,7 +28,7 @@ async def get_queue() -> AbstractQueue:
             loop=event_loop,
         )
 
-        logger.info(message="[RabbitmqClient]: Connection established.")
+        logger.info(message="[RabbitmqClient]: Established connection.")
 
         channel = await connection.channel()
 
@@ -36,7 +36,7 @@ async def get_queue() -> AbstractQueue:
 
         await queue.bind(settings.exchange_name, routing_key=settings.routing_key)
 
-        logger.info(message="[RabbitmqClient]: Queue established.")
+        logger.info(message="[RabbitmqClient]: Established queue.")
 
     return queue
 
