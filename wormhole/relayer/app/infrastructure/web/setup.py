@@ -22,7 +22,7 @@ def setup_app():
         openapi_url=settings.openapi_url,
     )
     app.include_router(health.health_router, prefix="/metrics/health")
-    app.include_router(transactions.transactions_router, prefix="/public/challenges")
+    app.include_router(transactions.transactions_router, prefix="/public/transactions")
 
     # CORS (Cross-Origin Resource Sharing)
     origins = ["*"]

@@ -1,5 +1,4 @@
-import aio_pika
-from aio_pika import RobustConnection
+from aio_pika import RobustConnection, connect_robust
 from aio_pika.abc import AbstractQueue
 
 from app.dependencies import get_event_loop, get_logger
@@ -18,7 +17,7 @@ async def get_queue() -> AbstractQueue:
     if queue is None:
         event_loop = await get_event_loop()
 
-        connection = await aio_pika.connect_robust(
+        connection = await connect_robust(
             "amqp://{username}:{password}@{host}:{port}".format(
                 username=settings.rmq_username,
                 password=settings.rmq_password,

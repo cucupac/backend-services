@@ -1,6 +1,6 @@
 from app.dependencies import get_logger, get_queue, get_vaa_delivery
-from app.infrastructure.clients.queues.rabbitmq import RabbitmqClient
-from app.usecases.interfaces.clients.queues.queue import IQueueClient
+from app.infrastructure.clients.amqp.rabbitmq import RabbitmqClient
+from app.usecases.interfaces.clients.amqp.queue import IQueueClient
 
 
 async def get_rabbitmq_client() -> IQueueClient:

@@ -1,6 +1,7 @@
 import json
 
 from app.usecases.interfaces.clients.http.evm import IEvmClient
+from app.usecases.interfaces.clients.ws.websocket import IWebsocketClient
 from app.usecases.interfaces.repos.relays import IRelaysRepo
 from app.usecases.interfaces.services.vaa_delivery import IVaaDelivery
 from app.usecases.schemas.evm import EvmClientError
@@ -9,9 +10,15 @@ from app.usecases.schemas.relays import Status, UpdateRepoAdapter
 
 
 class VaaDelivery(IVaaDelivery):
-    def __init__(self, relays_repo: IRelaysRepo, evm_client: IEvmClient):
+    def __init__(
+        self,
+        relays_repo: IRelaysRepo,
+        evm_client: IEvmClient,
+        websocket_client: IWebsocketClient,
+    ):
         self.relays_repo = relays_repo
         self.evm_client = evm_client
+        self.websocket_client = websocket_client
 
     async def process(self, queue_message: bytes) -> None:
         """Process message from queue."""
@@ -32,8 +39,12 @@ class VaaDelivery(IVaaDelivery):
             status = Status.SUCCESS
             transaction_hash = transaction_hash_bytes.hex()
 
-        print(
-            f"\n\nrelay info:\nemitter_address={message.emitter_address}\nsource_chain_id={message.emitter_chain}\nsequence={message.sequence}\ntransaction_hash={transaction_hash}\nerror={error}\nstatus={status}"
+        # Notify client via web socket
+        await self.websocket_client.notify_client(
+            address=message.from_address,
+            status=status,
+            error=error,
+            transaction_hash=transaction_hash,
         )
 
         # Update relay in the database

@@ -11,7 +11,7 @@ import tests.constants as constant
 from app.dependencies import get_transactions_repo
 from app.infrastructure.db.repos.transactions import TransactionsRepo
 from app.infrastructure.web.setup import setup_app
-from app.usecases.interfaces.clients.queues.queue import IQueueClient
+from app.usecases.interfaces.clients.amqp.queue import IQueueClient
 from app.usecases.interfaces.repos.transactions import ITransactionsRepo
 from app.usecases.interfaces.services.vaa_manager import IVaaManager
 from app.usecases.schemas.relays import Status

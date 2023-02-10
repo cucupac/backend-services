@@ -1,6 +1,6 @@
 from aio_pika.abc import AbstractIncomingMessage, AbstractQueue
 
-from app.usecases.interfaces.clients.queues.queue import IQueueClient
+from app.usecases.interfaces.clients.amqp.queue import IQueueClient
 from app.usecases.interfaces.dependencies.logger import ILogger
 from app.usecases.interfaces.services.vaa_delivery import IVaaDelivery
 from app.usecases.schemas.queue import QueueError

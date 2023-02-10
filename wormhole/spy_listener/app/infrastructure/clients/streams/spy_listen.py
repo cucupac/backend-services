@@ -8,7 +8,7 @@ import grpc
 from app.dependencies import get_logger
 from app.infrastructure.clients.streams.grpc.spy.v1 import spy_pb2, spy_pb2_grpc
 from app.settings import settings
-from app.usecases.interfaces.clients.streams.spy_listen import IStreamClient
+from app.usecases.interfaces.clients.grpc.spy_listen import IStreamClient
 from app.usecases.interfaces.services.vaa_manager import IVaaManager
 
 

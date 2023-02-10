@@ -1,6 +1,15 @@
-from fastapi import APIRouter, Body, Depends
+from fastapi import APIRouter, WebSocket, Depends, Path
+from pydantic import constr
+
+from app.dependencies import get_websocket_client
+from app.usecases.interfaces.clients.ws.websocket import IWebsocketClient
 
 transactions_router = APIRouter(tags=["Transactions"])
 
-
-# TODO: websocket endpoint here
+@transactions_router.websocket("/ws/{address}")  # client_id = ethereum address
+async def websocket_endpoint(
+    websocket: WebSocket,
+    address: constr(max_length=42, min_length=42) = Path(...),
+    websocket_client: IWebsocketClient = Depends(get_websocket_client),
+):
+    await websocket_client.open_connection(address=address, connection=websocket)

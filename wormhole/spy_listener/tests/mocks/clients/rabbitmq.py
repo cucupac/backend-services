@@ -1,6 +1,6 @@
 from enum import Enum
 
-from app.usecases.interfaces.clients.queues.queue import IQueueClient
+from app.usecases.interfaces.clients.amqp.queue import IQueueClient
 from app.usecases.schemas.queue import QueueError, QueueMessage
 from tests import constants as constant
 
