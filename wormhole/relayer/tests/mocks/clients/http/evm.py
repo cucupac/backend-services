@@ -20,5 +20,4 @@ class MockEvmClient(IEvmClient):
         """Sends transaction to the destination blockchain."""
         if self.result == EvmResult.SUCCESS:
             return HexBytes(constant.TEST_TRANSACTION_HASH)
-        elif self.result == EvmResult.FAILURE:
-            raise EvmClientError(detail=constant.EVM_CLIENT_ERROR_DETAIL)
+        raise EvmClientError(detail=constant.EVM_CLIENT_ERROR_DETAIL)

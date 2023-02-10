@@ -9,9 +9,9 @@ class IVaaManager(ABC):
         """Processes vaa bytes."""
 
     @abstractmethod
-    def _parse_vaa(self, vaa: bytes) -> ParsedVaa:
+    def parse_vaa(self, vaa: bytes) -> ParsedVaa:
         """Extracts utilizable data from VAA bytes."""
 
     @abstractmethod
-    def _parse_payload(self, payload: bytes) -> ParsedPayload:
+    def parse_payload(self, payload: bytes) -> ParsedPayload:
         """Extracts utilizable data from payload bytes."""

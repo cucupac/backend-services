@@ -37,10 +37,10 @@ def setup_app():
     return app
 
 
-app = setup_app()
+fastapi_app = setup_app()
 
 
-@app.on_event("startup")
+@fastapi_app.on_event("startup")
 async def startup_event():
     await get_event_loop()
     await get_client_session()
@@ -49,7 +49,7 @@ async def startup_event():
     await queue_client.start_consumption()
 
 
-@app.on_event("shutdown")
+@fastapi_app.on_event("shutdown")
 async def shutdown_event():
     # Close RabbitMQ connection
     queue_connection = await get_connection()
@@ -71,6 +71,6 @@ def main(reload=False):
         "app.infrastructure.web.setup:app",
         loop="uvloop",
         host=settings.server_host,
-        port=settings.server_port,
+        port=settings.relayer_server_port,
         **kwargs,
     )

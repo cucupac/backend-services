@@ -1,3 +1,4 @@
+# pylint: disable=unused-argument
 import pytest
 from databases import Database
 
@@ -33,5 +34,5 @@ async def test_update(
     assert test_relay["source_chain_id"] == constant.TEST_SOURCE_CHAIN_ID
     assert test_relay["sequence"] == constant.TEST_SEQUENCE
     assert test_relay["transaction_hash"] == constant.TEST_TRANSACTION_HASH
-    assert test_relay["error"] == None
+    assert test_relay["error"] is None
     assert test_relay["status"] == Status.SUCCESS

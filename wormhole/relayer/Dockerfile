@@ -12,7 +12,7 @@ COPY . /app
 
 # Server
 ENV OPENAPI_URL="/openapi.json"
-ENV SERVER_PORT=8000
+ENV RELAYER_SERVER_PORT=8000
 ENV ENVIRONMENT=development
 
 # Database 
@@ -36,6 +36,6 @@ ENV RELAYER_PRIVATE_KEY=inject_at_deployment
 ENV RELAYER_ADDRESS=inject_at_deployment
 ENV  WORMHOLE_BRIDGE_ABI=inject_at_deployment
 
-EXPOSE $SERVER_PORT
+EXPOSE $RELAYER_SERVER_PORT
 
 CMD ["python", "-m", "app"]

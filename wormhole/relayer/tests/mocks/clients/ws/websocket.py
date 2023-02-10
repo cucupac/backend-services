@@ -1,21 +1,17 @@
-from abc import ABC, abstractmethod
 from typing import Optional
 
-from fastapi import WebSocket
-
+from app.infrastructure.clients.ws.websocket import WebSocket
+from app.usecases.interfaces.clients.ws.websocket import IWebsocketClient
 from app.usecases.schemas.relays import Status
 
 
-class IWebsocketClient(ABC):
-    @abstractmethod
+class MockWebsocketClient(IWebsocketClient):
     async def open_connection(self, address: str, connection: WebSocket) -> None:
         """Open web socket connection and store it in dictionary."""
 
-    @abstractmethod
     async def close_connection(self, address: str) -> None:
         """Close web socket connection."""
 
-    @abstractmethod
     async def notify_client(
         self,
         address: str,

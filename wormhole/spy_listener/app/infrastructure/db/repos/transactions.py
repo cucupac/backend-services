@@ -31,10 +31,10 @@ class TransactionsRepo(ITransactionsRepo):
         )
 
         async with self.db.transaction():
-            id = await self.db.execute(insert_statement)
+            transaction_id = await self.db.execute(insert_statement)
 
             insert_statement = RELAYS.insert().values(
-                transaction_id=id,
+                transaction_id=transaction_id,
                 status=transaction.relay_status,
                 error=transaction.relay_error,
                 message=transaction.relay_message,
@@ -43,11 +43,11 @@ class TransactionsRepo(ITransactionsRepo):
 
             await self.db.execute(insert_statement)
 
-        return await self.retrieve(id=id)
+        return await self.retrieve(transaction_id=transaction_id)
 
     async def retrieve(
         self,
-        id: str,
+        transaction_id: int,
     ) -> Optional[TransactionsJoinRelays]:
         """Retrieve transaction object with relay information."""
 
@@ -62,7 +62,11 @@ class TransactionsRepo(ITransactionsRepo):
             RELAYS.c.transaction_hash.label("relay_transaction_hash"),
         ]
 
-        query = select(columns_to_select).select_from(j).where(TRANSACTIONS.c.id == id)
+        query = (
+            select(columns_to_select)
+            .select_from(j)
+            .where(TRANSACTIONS.c.id == transaction_id)
+        )
 
         result = await self.db.fetch_one(query)
 
@@ -89,10 +93,8 @@ class TransactionsRepo(ITransactionsRepo):
                 TRANSACTIONS.c.to_address == query_params.to_address
             )
 
-        if len(query_conditions) == 0:
-            raise Exception(
-                "Please pass a condition parameter to query by to the function, retrieve_many()"
-            )
+        if not query_conditions:
+            return
 
         j = TRANSACTIONS.join(RELAYS, TRANSACTIONS.c.id == RELAYS.c.transaction_id)
 

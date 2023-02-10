@@ -18,5 +18,4 @@ class MockRabbitmqClient(IQueueClient):
         """Publishes message to RabbitMQ."""
         if self.result == QueueResult.SUCCESS:
             return
-        elif self.result == QueueResult.FAILURE:
-            raise QueueError(detail=constant.QUEUE_ERROR_DETAIL)
+        raise QueueError(detail=constant.QUEUE_ERROR_DETAIL)

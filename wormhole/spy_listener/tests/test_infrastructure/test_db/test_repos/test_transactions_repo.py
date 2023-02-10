@@ -1,3 +1,4 @@
+# pylint: disable=unused-argument
 from typing import List
 
 import pytest
@@ -45,7 +46,9 @@ async def test_retrieve(
     transactions_repo: ITransactionsRepo,
 ) -> None:
 
-    transaction = await transactions_repo.retrieve(id=inserted_transaction.id)
+    transaction = await transactions_repo.retrieve(
+        transaction_id=inserted_transaction.id
+    )
 
     assert isinstance(transaction, TransactionsJoinRelays)
     for key, value in transaction.dict().items():

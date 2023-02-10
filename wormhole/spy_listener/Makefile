@@ -2,7 +2,7 @@ SHELL := /bin/bash
 
 docker_image = spy_listener
 docker_username = ax_protocol
-formatted_code := app/ migrations/ tests/ tasks.py
+formatted_code := app/ tests/
 rev_id = ""
 migration_message = ""
 
@@ -17,8 +17,14 @@ format:
 	isort $(formatted_code)
 	black $(formatted_code)
 
+format-check:
+	@echo Checking spy_listener format...
+	isort $(formatted_code) --check
+	black --check $(formatted_code)
+
 lint:
-	pylint app
+	@echo Linting spy_listener...
+	pylint --ignore-paths=app/infrastructure/clients/streams/grpc $(formatted_code)
 
 run:
 	python -m app --reload
@@ -32,13 +38,18 @@ build:
 push:
 	docker push $(docker_username)/$(docker_image):latest
 
+test:
+	@echo Running spy_listener unit tests...
+	coverage run --source app -m pytest tests --color=yes
+	coverage report --fail-under=50
+
 # Call more than one service
-test: build
-	function removeContainers {
-		docker-compose -p spy_listener_ci rm -s -f test_db
-	}
-	trap removeContainers EXIT
-	docker-compose -p spy_listener_ci run --rm ci
+# test: build
+# 	function removeContainers {
+# 		docker-compose -p spy_listener_ci rm -s -f test_db
+# 	}
+# 	trap removeContainers EXIT
+# 	docker-compose -p spy_listener_ci run --rm ci
 
 
 migration:
@@ -51,3 +62,5 @@ migration:
 
 migrate:
 	alembic upgrade head
+
+# test comment 6

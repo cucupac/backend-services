@@ -1,3 +1,4 @@
+# pylint: disable=redefined-outer-name
 import os
 from typing import List
 
@@ -25,24 +26,22 @@ from tests.mocks.clients.rabbitmq import MockRabbitmqClient, QueueResult
 # Database Connection
 @pytest_asyncio.fixture
 async def test_db_url():
-    return "postgres://{username}:{password}@{host}:{port}/{database_name}".format(
-        username=os.getenv("POSTGRES_USER", "postgres"),
-        password=os.getenv("POSTGRES_PASSWORD", "postgres"),
-        host=os.getenv("POSTGRES_HOST", "localhost"),
-        port=os.getenv("POSTGRES_PORT", "5444"),
-        database_name=os.getenv("POSTGRES_DB", "ax_relayer_dev_test"),
-    )
+    username = os.getenv("POSTGRES_USER", "postgres")
+    password = os.getenv("POSTGRES_PASSWORD", "postgres")
+    host = os.getenv("POSTGRES_HOST", "localhost")
+    port = os.getenv("POSTGRES_PORT", "5444")
+    database_name = os.getenv("POSTGRES_DB", "ax_relayer_dev_test")
+    return f"postgres://{username}:{password}@{host}:{port}/{database_name}"
 
 
 # RabbitMQ Connection
 @pytest_asyncio.fixture
 async def test_rmq_url():
-    return "amqp://{username}:{password}@{host}:{port}".format(
-        username=os.getenv("RMQ_USERNAME", "guest"),
-        password=os.getenv("RMQ_PASSWORD", "guest"),
-        host=os.getenv("RMQ_HOST", "localhost"),
-        port=os.getenv("RMQ_PORT", "5673"),
-    )
+    username = os.getenv("RMQ_USERNAME", "guest")
+    password = os.getenv("RMQ_PASSWORD", "guest")
+    host = os.getenv("RMQ_HOST", "localhost")
+    port = os.getenv("RMQ_PORT", "5673")
+    return f"amqp://{username}:{password}@{host}:{port}"
 
 
 @pytest_asyncio.fixture

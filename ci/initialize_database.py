@@ -1,6 +1,5 @@
 import time
 import os
-
 from datetime import datetime
 
 import psycopg2
@@ -15,6 +14,7 @@ CONNECTION_INFO = {
     "password": os.getenv("POSTGRES_USER"),
     "port": os.getenv("POSTGRES_PORT")
 }
+
 
 def connect_to_db():
     """Attempt to connect to test database within specified amount of time."""

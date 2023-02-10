@@ -1,3 +1,4 @@
+# pylint: disable=unused-argument
 import json
 
 import pytest
@@ -21,6 +22,7 @@ async def test_deliver(
         {
             "dest_chain_id": constant.TEST_DESTINATION_CHAIN_ID,
             "to_address": constant.TEST_USER_ADDRESS,
+            "from_address": constant.TEST_USER_ADDRESS,
             "sequence": constant.TEST_SEQUENCE,
             "emitter_chain": constant.TEST_SOURCE_CHAIN_ID,
             "emitter_address": constant.TEST_EMITTER_ADDRESS,
@@ -44,7 +46,7 @@ async def test_deliver(
     )
 
     assert test_relay["status"] == Status.SUCCESS
-    assert test_relay["error"] == None
+    assert test_relay["error"] is None
     assert test_relay["transaction_hash"] == constant.TEST_TRANSACTION_HASH
 
 
@@ -60,6 +62,7 @@ async def test_deliver_fail(
         {
             "dest_chain_id": constant.TEST_DESTINATION_CHAIN_ID,
             "to_address": constant.TEST_USER_ADDRESS,
+            "from_address": constant.TEST_USER_ADDRESS,
             "sequence": constant.TEST_SEQUENCE,
             "emitter_chain": constant.TEST_SOURCE_CHAIN_ID,
             "emitter_address": constant.TEST_EMITTER_ADDRESS,
@@ -84,4 +87,4 @@ async def test_deliver_fail(
 
     assert test_relay["status"] == Status.FAILED
     assert test_relay["error"] == constant.EVM_CLIENT_ERROR_DETAIL
-    assert test_relay["transaction_hash"] == None
+    assert test_relay["transaction_hash"] is None

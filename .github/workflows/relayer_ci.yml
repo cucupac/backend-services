@@ -1,0 +1,81 @@
+name: relayer_ci
+
+on:
+    push:
+        branches:
+            - main
+        paths:
+            - "wormhole/relayer/**"
+    pull_request:
+        paths:
+            - "wormhole/relayer/**"
+
+env:
+    POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+    POSTGRES_HOST: ${{ secrets.POSTGRES_HOST }}
+    POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+    POSTGRES_PORT: ${{ secrets.POSTGRES_PORT }}
+    POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+    RELAYER_SERVER_PORT: ${{ secrets.RELAYER_SERVER_PORT }}
+    RMQ_HOST: ${{ secrets.RMQ_HOST }}
+    RMQ_PORT: ${{ secrets.RMQ_PORT }}
+    RMQ_USERNAME: ${{ secrets.RMQ_USERNAME }}
+    RMQ_PASSWORD: ${{ secrets.RMQ_PASSWORD }}
+    EXCHANGE_NAME: ${{ secrets.EXCHANGE_NAME }}
+    ROUTING_KEY: ${{ secrets.ROUTING_KEY }}
+    QUEUE_NAME: ${{ secrets.QUEUE_NAME }}
+    GUARDIAN_SPY_URL: "https://spy.example.com"
+    SPY_SERVICE_FILTERS: "example"
+    CHAIN_LOOKUP: "example"
+    DB_URL: "postgresql://user:password@localhost/example"
+    RELAYER_PRIVATE_KEY: "0x"
+    RELAYER_ADDRESS: "0x"
+    WORMHOLE_BRIDGE_ABI: "example"
+
+jobs:
+    run-ci:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v2
+
+            - name: Set up python
+              id: setup-python
+              uses: actions/setup-python@v2
+              with:
+                  python-version: 3.9
+
+            - name: Install dependencies
+              run: pip install -r wormhole/relayer/requirements.txt
+
+            - name: Create containers
+              id: create-containers
+              run: docker-compose up -d test_db
+
+            - name: Database setup
+              id: database-setup
+              run: |
+                  python ci/initialize_database.py
+                  cd wormhole/spy_listener
+                  alembic upgrade head
+
+            - name: Lint apps
+              id: lint
+              run: |
+                  cd wormhole/relayer
+                  make lint
+              continue-on-error: false
+
+            - name: Format check
+              id: format_check
+              run: |
+                  cd wormhole/relayer
+                  make format-check
+              continue-on-error: false
+
+            - name: Run tests
+              id: tests
+              run: |
+                  cd wormhole/relayer
+                  make test
+              continue-on-error: false

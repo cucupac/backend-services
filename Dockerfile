@@ -2,25 +2,25 @@ FROM python:3.8
 
 WORKDIR /app
 
-COPY ./requirements.txt /app/requirements.txt
+# COPY ./requirements.txt /app/requirements.txt
 
 RUN pip install --no-cache-dir --upgrade -r /app/requirements.txt
 
 COPY . /app
 
 # Environment Variables
+
 # Server
 ENV OPENAPI_URL="/openapi.json"
-ENV SPY_LISTENER_SERVER_PORT=8000
+ENV SERVER_PORT=8000
 ENV ENVIRONMENT=development
-ENV SPY_SERVICE_FILTERS=inject_at_deployment
 
 # Database 
 ENV DB_URL=postgres://postgres:postgres@localhost:5432/ax_relayer_dev
 
 # Wormhole
 ENV GUARDIAN_SPY_URL=inject_at_deployment
-ENV SPY_SERVICE_FILTERS=inject_at_deployment
+ENV CHAIN_LOOKUP=inject_at_deployment
 
 # RMQ
 ENV RMQ_HOST=inject_at_deployment
@@ -31,8 +31,12 @@ ENV EXCHANGE_NAME=vaa_exchange
 ENV ROUTING_KEY=wormhole_vaa
 ENV QUEUE_NAME=vaa_queue
 
-EXPOSE $SPY_LISTENER_SERVER_PORT
+# EVM
+ENV RELAYER_PRIVATE_KEY=inject_at_deployment
+ENV RELAYER_ADDRESS=inject_at_deployment
+ENV  WORMHOLE_BRIDGE_ABI=inject_at_deployment
 
-CMD ["python", "-m", "app"]
+EXPOSE $SERVER_PORT
 
-
+# TODO: Change this
+CMD ["python", "-m", "app"]  

@@ -1,3 +1,4 @@
+# pylint: disable=duplicate-code
 import sqlalchemy as sa
 
 from app.infrastructure.db.metadata import METADATA

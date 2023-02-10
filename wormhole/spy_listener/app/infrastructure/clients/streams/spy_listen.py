@@ -5,7 +5,7 @@ from typing import List
 
 import grpc
 
-from app.dependencies import get_logger
+from app.dependencies import logger
 from app.infrastructure.clients.streams.grpc.spy.v1 import spy_pb2, spy_pb2_grpc
 from app.settings import settings
 from app.usecases.interfaces.clients.grpc.spy_listen import IStreamClient
@@ -17,14 +17,13 @@ class StreamClient(IStreamClient):
         self.vaa_manager = vaa_manager
 
     async def start(self) -> None:
-        logger = await get_logger()
         while True:
             try:
                 async with grpc.aio.insecure_channel(
                     settings.guardian_spy_url
                 ) as channel:
 
-                    logger.info(message="[StreamClient]: Connected to stream!")
+                    logger.info("[StreamClient]: Connected to stream!")
                     stub = spy_pb2_grpc.SpyRPCServiceStub(channel)
 
                     request = spy_pb2.SubscribeSignedVAARequest(
@@ -36,8 +35,8 @@ class StreamClient(IStreamClient):
 
             except grpc.aio.AioRpcError as e:
                 logger.error(
-                    message="[StreamClient]: connection dropped.\nError: %s\n\nAttempting to reconnect..."
-                    % str(e)
+                    "[StreamClient]: connection dropped.\nError: %s\n\nAttempting to reconnect...",
+                    str(e),
                 )
                 await asyncio.sleep(5)
 
@@ -48,9 +47,9 @@ class StreamClient(IStreamClient):
         )
         filters = []
 
-        for filter in filter_list:
+        for vaa_filter in filter_list:
             # Create a filter
-            filter_entry = spy_pb2.FilterEntry(emitter_filter=filter)
+            filter_entry = spy_pb2.FilterEntry(emitter_filter=vaa_filter)
             filters.append(filter_entry)
 
         return filters

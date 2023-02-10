@@ -16,7 +16,7 @@ class ITransactionsRepo(ABC):
     @abstractmethod
     async def retrieve(
         self,
-        id: str,
+        transaction_id: int,
     ) -> Optional[TransactionsJoinRelays]:
         """Retrieve transaction object with relay information."""
 

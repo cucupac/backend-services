@@ -1,7 +1,6 @@
 from databases import Database
 from sqlalchemy import and_
 
-# TODO: think about placing in shared directory, if not definiting new schemas (might not want for stuff like this -- details -- only library)
 from app.infrastructure.db.models.relays import RELAYS
 from app.infrastructure.db.models.transactions import TRANSACTIONS
 from app.usecases.interfaces.repos.relays import IRelaysRepo

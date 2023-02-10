@@ -1,17 +1,15 @@
+from logging import Logger
 from typing import Mapping, Optional
 
 from fastapi import WebSocket, WebSocketDisconnect
 
-from app.usecases.interfaces.dependencies.logger import ILogger
 from app.usecases.interfaces.clients.ws.websocket import IWebsocketClient
 from app.usecases.schemas.relays import Status
 
 
 class WebsocketClient(IWebsocketClient):
-    def __init__(self, logger: ILogger):
-        self.clients: Mapping[
-            str, WebSocket
-        ] = dict()
+    def __init__(self, logger: Logger):
+        self.clients: Mapping[str, WebSocket] = {}
         self.logger = logger
 
     async def open_connection(self, address: str, connection: WebSocket) -> None:
@@ -20,10 +18,9 @@ class WebsocketClient(IWebsocketClient):
 
         try:
             while True:
-                data = await connection.receive_text()
+                await connection.receive_text()
         except WebSocketDisconnect as e:
             print(f"\n\nError: {e}\n\n")
-        
 
     async def close_connection(self, address: str) -> None:
         """Close websocket connection."""

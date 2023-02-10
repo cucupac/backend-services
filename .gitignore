@@ -13,8 +13,6 @@ env/
 ENV/
 .venv
 # Environment Variable Files
-env_file.env
-tests.env
 *.env
 .secrets.*
 # MacOS

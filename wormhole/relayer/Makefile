@@ -2,7 +2,7 @@ SHELL := /bin/bash
 
 docker_image = relayer
 docker_username = ax_protocol
-formatted_code := app/ tests/ tasks.py
+formatted_code := app/ tests/
 rev_id = ""
 migration_message = ""
 
@@ -17,8 +17,14 @@ format:
 	isort $(formatted_code)
 	black $(formatted_code)
 
+format-check:
+	@echo Checking relayer format...
+	isort $(formatted_code) --check
+	black --check $(formatted_code)
+
 lint:
-	pylint app
+	@echo Linting relayer...
+	pylint $(formatted_code)
 
 run:
 	python -m app --reload
@@ -32,10 +38,18 @@ build:
 push:
 	docker push $(docker_username)/$(docker_image):latest
 
+test:
+	@echo Running relayer unit tests...
+	coverage run --source app -m pytest tests --color=yes
+	coverage report --fail-under=50
+
 # Call more than one service
-test: build
-	function removeContainers {
-		docker-compose -p relayer_ci rm -s -f test_db
-	}
-	trap removeContainers EXIT
-	docker-compose -p relayer_ci run --rm ci
+# test: build
+# 	function removeContainers {
+# 		docker-compose -p relayer_ci rm -s -f test_db
+# 	}
+# 	trap removeContainers EXIT
+# 	docker-compose -p relayer_ci run --rm ci
+
+
+# test comment 5

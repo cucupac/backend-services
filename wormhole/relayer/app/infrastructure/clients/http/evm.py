@@ -1,5 +1,6 @@
 import base64
 import json
+from logging import Logger
 from typing import Any, List, Mapping
 
 from eth_account.datastructures import SignedTransaction
@@ -8,12 +9,11 @@ from web3.contract import Contract
 
 from app.settings import settings
 from app.usecases.interfaces.clients.http.evm import IEvmClient
-from app.usecases.interfaces.dependencies.logger import ILogger
 from app.usecases.schemas.evm import EvmClientError, TransactionHash
 
 
 class EvmClient(IEvmClient):
-    def __init__(self, abi: List[Mapping[str, Any]], logger: ILogger) -> None:
+    def __init__(self, abi: List[Mapping[str, Any]], logger: Logger) -> None:
         self.abi = abi
         self.logger = logger
 
@@ -39,10 +39,8 @@ class EvmClient(IEvmClient):
                 transaction=signed_transaction.rawTransaction
             )
         except Exception as e:
-            self.logger.error(
-                message="[EvmClient]: VAA delivery failed. Error: %s" % str(e)
-            )
-            raise EvmClientError(detail=str(e))
+            self.logger.error("[EvmClient]: VAA delivery failed. Error: %s", str(e))
+            raise EvmClientError(detail=str(e)) from e
 
     async def __craft_transaction(
         self, vaa: bytes, contract: Contract, web3_client: Web3

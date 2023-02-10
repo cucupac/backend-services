@@ -15,3 +15,4 @@ TEST_VAA_PAYLOAD = b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x0
 QUEUE_ERROR_DETAIL = (
     "[MockRabbitmqClient]: Error - Message was not published to RabbitMQ."
 )
+DEFAULT_ITERATIONS = 3
