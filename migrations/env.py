@@ -12,9 +12,9 @@ sys.path[0] = str(pathlib.Path(__file__).parents[1].resolve())
 load_dotenv()
 
 # Import Tables
-from app.infrastructure.db.metadata import METADATA
-from app.infrastructure.db.models.relays import RELAYS
-from app.infrastructure.db.models.transactions import TRANSACTIONS
+from migrations.models.metadata import METADATA
+from migrations.models.relays import RELAYS
+from migrations.models.transactions import TRANSACTIONS
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -42,6 +42,7 @@ postgres_password = getenv("POSTGRES_PASSWORD", default="postgres")
 postgres_database = getenv("POSTGRES_DB", default="ax_relayer_dev")
 
 url = f"postgresql://{postgres_user}:{postgres_password}@{postgres_host}:{postgres_port}/{postgres_database}"
+
 # NOTE: Uncomment the URL below and comment the URL above to run a test database migration
 # url = f"postgresql://{postgres_user}:{postgres_password}@{postgres_host}:5444/ax_relayer_dev_test"
 config.set_main_option("sqlalchemy.url", url)

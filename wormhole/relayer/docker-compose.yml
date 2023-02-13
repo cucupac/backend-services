@@ -6,6 +6,18 @@ services:
   #  Main Containers
   #
   # ****************************************************************************
+  relayer:
+    build:
+      context: ./wormhole/relayer
+      dockerfile: Dockerfile
+    ports:
+      - "9000:9000"
+    container_name: relayer
+    env_file:
+      - .env
+    depends_on:
+      - db
+      - rabbitmq  
   db:
     image: library/postgres:12-alpine
     container_name: ax_database
@@ -18,11 +30,18 @@ services:
     ports:
       - 5432:5432
 
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: rabbitmq_broker
+    ports:
+      - 5672:5672
+      - 15672:15672
+
   # ****************************************************************************
   #
   #  Testing Containers
   #
-  # **************************************************************************** 
+  # ****************************************************************************  
   test_db:
     image: library/postgres:12-alpine
     container_name: test_ax_database
@@ -35,3 +54,4 @@ services:
     ports:
       - 5444:5444
     command: -p 5444
+    
