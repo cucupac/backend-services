@@ -5,7 +5,7 @@ from typing import Mapping
 
 from eth_abi import decode_abi
 
-from app.usecases.interfaces.clients.queues.queue import IQueueClient
+from app.usecases.interfaces.clients.amqp.queue import IQueueClient
 from app.usecases.interfaces.repos.transactions import ITransactionsRepo
 from app.usecases.interfaces.services.vaa_manager import IVaaManager
 from app.usecases.schemas.queue import QueueException, QueueMessage
@@ -23,7 +23,7 @@ class VaaManager(IVaaManager):
     async def process(self, vaa: bytes) -> None:
         """Process vaa bytes."""
 
-        parsed_vaa = self._parse_vaa(vaa=vaa)
+        parsed_vaa = self.parse_vaa(vaa=vaa)
 
         # Convert vaa bytes to hexadecimal string
         vaa_hex = codecs.encode(bytes(vaa), "hex_codec").decode()
@@ -42,6 +42,7 @@ class VaaManager(IVaaManager):
                     message=QueueMessage(
                         dest_chain_id=parsed_vaa.payload.dest_chain_id,
                         to_address=parsed_vaa.payload.to_address,
+                        from_address=parsed_vaa.payload.from_address,
                         sequence=parsed_vaa.sequence,
                         emitter_chain=parsed_vaa.emitter_chain,
                         emitter_address=parsed_vaa.emitter_address,
@@ -79,7 +80,7 @@ class VaaManager(IVaaManager):
             # Add the newest (to end)
             self.recent_vaas[vaa_unique_set] = True
 
-    def _parse_vaa(self, vaa: bytes) -> ParsedVaa:
+    def parse_vaa(self, vaa: bytes) -> ParsedVaa:
         """Extracts utilizable data from VAA bytes."""
 
         sig_start = 6
@@ -108,11 +109,11 @@ class VaaManager(IVaaManager):
             emitter_address="0x" + hex(int(body[10:42].hex(), 16))[2:],
             sequence=int.from_bytes(body[42:50], byteorder="big", signed=False),
             consistency_level=body[50],
-            payload=self._parse_payload(payload=body[51:]),
+            payload=self.parse_payload(payload=body[51:]),
             hash=hashlib.sha3_256(body).digest(),
         )
 
-    def _parse_payload(self, payload: bytes) -> ParsedPayload:
+    def parse_payload(self, payload: bytes) -> ParsedPayload:
         """Extracts utilizable data from payload bytes."""
 
         types = ["bytes", "uint256", "bytes", "uint256"]

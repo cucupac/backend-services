@@ -20,7 +20,7 @@ Ensure .env and tests.env files have been created and populated with the correct
 
 ### RabbitMQ User Setup Command Examples
 
-More information can be found in the official [RabbitMQ docs](rabbitmq-docs).
+More information can be found in the official [RabbitMQ docs](https://www.rabbitmq.com/access-control.html).
 
 | Action               | Command                                                                                    |
 | -------------------- | ------------------------------------------------------------------------------------------ |
@@ -29,8 +29,6 @@ More information can be found in the official [RabbitMQ docs](rabbitmq-docs).
 | Set user permissions | `docker-compose exec rabbitmq rabbitmqctl set_permissions -p '/' 'my_user' '.*' '.*' '.*'` |
 | Set user tags        | `docker-compose exec rabbitmq rabbitmqctl set_user_tags 'my_user' 'administrator'`         |
 | Delete a user        | `docker-compose exec rabbitmq rabbitmqctl delete_user 'guest'`                             |
-
-[rabbitmq-docs]: https://www.rabbitmq.com/access-control.html
 
 ## Adhoc Unit Testing
 

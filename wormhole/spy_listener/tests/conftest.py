@@ -1,3 +1,4 @@
+# pylint: disable=redefined-outer-name
 import os
 from typing import List
 
@@ -11,7 +12,7 @@ import tests.constants as constant
 from app.dependencies import get_transactions_repo
 from app.infrastructure.db.repos.transactions import TransactionsRepo
 from app.infrastructure.web.setup import setup_app
-from app.usecases.interfaces.clients.queues.queue import IQueueClient
+from app.usecases.interfaces.clients.amqp.queue import IQueueClient
 from app.usecases.interfaces.repos.transactions import ITransactionsRepo
 from app.usecases.interfaces.services.vaa_manager import IVaaManager
 from app.usecases.schemas.relays import Status
@@ -25,24 +26,22 @@ from tests.mocks.clients.rabbitmq import MockRabbitmqClient, QueueResult
 # Database Connection
 @pytest_asyncio.fixture
 async def test_db_url():
-    return "postgres://{username}:{password}@{host}:{port}/{database_name}".format(
-        username=os.getenv("POSTGRES_USER", "postgres"),
-        password=os.getenv("POSTGRES_PASSWORD", "postgres"),
-        host=os.getenv("POSTGRES_HOST", "localhost"),
-        port=os.getenv("POSTGRES_PORT", "5444"),
-        database_name=os.getenv("POSTGRES_DB", "spy_listener_dev_test"),
-    )
+    username = os.getenv("POSTGRES_USER", "postgres")
+    password = os.getenv("POSTGRES_PASSWORD", "postgres")
+    host = os.getenv("POSTGRES_HOST", "localhost")
+    port = os.getenv("POSTGRES_PORT", "5444")
+    database_name = os.getenv("POSTGRES_DB", "ax_relayer_dev_test")
+    return f"postgres://{username}:{password}@{host}:{port}/{database_name}"
 
 
 # RabbitMQ Connection
 @pytest_asyncio.fixture
 async def test_rmq_url():
-    return "amqp://{username}:{password}@{host}:{port}".format(
-        username=os.getenv("RMQ_USERNAME", "guest"),
-        password=os.getenv("RMQ_PASSWORD", "guest"),
-        host=os.getenv("RMQ_HOST", "localhost"),
-        port=os.getenv("RMQ_PORT", "5673"),
-    )
+    username = os.getenv("RMQ_USERNAME", "guest")
+    password = os.getenv("RMQ_PASSWORD", "guest")
+    host = os.getenv("RMQ_HOST", "localhost")
+    port = os.getenv("RMQ_PORT", "5673")
+    return f"amqp://{username}:{password}@{host}:{port}"
 
 
 @pytest_asyncio.fixture
@@ -125,9 +124,9 @@ async def many_inserted_transactions(
 @pytest_asyncio.fixture
 async def create_transaction_repo_adapter() -> CreateRepoAdapter:
     return CreateRepoAdapter(
-        emitter_address=constant.TEST_ADDRESS,
-        from_address=constant.TEST_ADDRESS,
-        to_address=constant.TEST_ADDRESS,
+        emitter_address=constant.TEST_EMITTER_ADDRESS,
+        from_address=constant.TEST_USER_ADDRESS,
+        to_address=constant.TEST_USER_ADDRESS,
         source_chain_id=constant.TEST_SOURCE_CHAIN_ID,
         dest_chain_id=constant.TEST_DESTINATION_CHAIN_ID,
         amount=constant.TEST_AMOUNT,

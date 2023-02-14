@@ -1,18 +1,22 @@
 SHELL := /bin/bash
 
+rev_id = ""
+migration_message = ""
+
 .ONESHELL:
 
 .PHONY: test run
 
+requirements.txt: requirements.in
+	pip-compile --quiet --generate-hashes --allow-unsafe --resolver=backtracking --output-file=$@
 
-make run-container:
-	docker-compose up -d
+migration:
+	@if [ -z $(rev_id)] || [ -z $(migration_message)]; \
+	then \
+		echo -e "\n\nERROR: make migration requires both a rev_id and a migration_message.\nEXAMPLE: make migration rev_id=0001 migration_message=\"my message\"\n\n"; \
+	else \
+		alembic revision --autogenerate --rev-id "$(rev_id)" -m "$(migration_message)"; \
+	fi
 
-
-# TODO: Call more than one service
-test: build
-	function removeContainers {
-		docker-compose -p spy_listener_ci rm -s -f test_db
-	}
-	trap removeContainers EXIT
-	docker-compose -p spy_listener_ci run --rm ci
+migrate:
+	alembic upgrade head

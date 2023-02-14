@@ -2,7 +2,7 @@ from pydantic import BaseModel, Field
 
 
 class QueueException(Exception):
-    """Errors rasised when interacting with RabbitMQ."""
+    """Errors raised when interacting with RabbitMQ."""
 
     detail: str
 
@@ -24,6 +24,11 @@ class QueueMessage(BaseModel):
     to_address: str = Field(
         ...,
         description="The account address of the recipient.",
+        example="0xE37c0D48d3F0D7E9b2b5E29c5D5b2c7B9fE37c0D",
+    )
+    from_address: str = Field(
+        ...,
+        description="The account address of the sender.",
         example="0xE37c0D48d3F0D7E9b2b5E29c5D5b2c7B9fE37c0D",
     )
     sequence: int = Field(

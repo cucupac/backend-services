@@ -1,3 +1,4 @@
+# pylint: disable=unused-argument
 import codecs
 
 import pytest
@@ -11,14 +12,14 @@ from app.usecases.schemas.vaa import ParsedPayload, ParsedVaa
 
 
 @pytest.mark.asyncio
-async def test_process_success(
+async def test_publish_success(
     vaa_manager: IVaaManager,
     transactions_repo: ITransactionsRepo,
     test_db: Database,
 ) -> None:
-
+    """Test that successful publishing of message gets properly handled."""
     # Setup
-    test_parsed_vaa: ParsedVaa = vaa_manager._parse_vaa(vaa=constant.TEST_VAA_BYTES)
+    test_parsed_vaa: ParsedVaa = vaa_manager.parse_vaa(vaa=constant.TEST_VAA_BYTES)
 
     # Action
     await vaa_manager.process(vaa=constant.TEST_VAA_BYTES)
@@ -52,14 +53,15 @@ async def test_process_success(
 
 
 @pytest.mark.asyncio
-async def test_process_fail(
+async def test_publish_fail(
     vaa_manager_queue_fail: IVaaManager,
     transactions_repo: ITransactionsRepo,
     test_db: Database,
 ) -> None:
+    """Test that failure to publish message gets properly handled"""
 
     # Setup
-    test_parsed_vaa: ParsedVaa = vaa_manager_queue_fail._parse_vaa(
+    test_parsed_vaa: ParsedVaa = vaa_manager_queue_fail.parse_vaa(
         vaa=constant.TEST_VAA_BYTES
     )
 
@@ -97,7 +99,7 @@ async def test_process_fail(
 @pytest.mark.asyncio
 async def test_parse_vaa(vaa_manager: IVaaManager) -> None:
 
-    test_parsed_vaa = vaa_manager._parse_vaa(vaa=constant.TEST_VAA_BYTES)
+    test_parsed_vaa = vaa_manager.parse_vaa(vaa=constant.TEST_VAA_BYTES)
 
     assert isinstance(test_parsed_vaa, ParsedVaa)
 
@@ -105,6 +107,6 @@ async def test_parse_vaa(vaa_manager: IVaaManager) -> None:
 @pytest.mark.asyncio
 async def test_parse_payload(vaa_manager: IVaaManager) -> None:
 
-    test_parsed_vaa = vaa_manager._parse_payload(payload=constant.TEST_VAA_PAYLOAD)
+    test_parsed_vaa = vaa_manager.parse_payload(payload=constant.TEST_VAA_PAYLOAD)
 
     assert isinstance(test_parsed_vaa, ParsedPayload)

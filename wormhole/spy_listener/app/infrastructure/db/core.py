@@ -1,17 +1,16 @@
-import databases
+from databases import Database
 
-from app.dependencies import get_logger
+from app.dependencies import logger
 from app.settings import settings
 
 DATABASE = None
 
 
-async def get_or_create_database():
-    global DATABASE
+async def get_or_create_database() -> Database:
+    global DATABASE  # pylint: disable = global-statement
     if DATABASE is not None:
         return DATABASE
-    DATABASE = databases.Database(settings.db_url, min_size=5)
+    DATABASE = Database(settings.db_url, min_size=5)
     await DATABASE.connect()
-    logger = await get_logger()
-    logger.info(message="[Database]: Connected to database!")
+    logger.info("[Database]: Established connection.")
     return DATABASE

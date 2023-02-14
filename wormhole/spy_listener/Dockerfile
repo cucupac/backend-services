@@ -8,18 +8,30 @@ RUN pip install --no-cache-dir --upgrade -r /app/requirements.txt
 
 COPY . /app
 
-# Database Environment Variables
-ENV DB_URL=postgres://postgres:postgres@localhost:5432/spy_listener_dev
-
-# Server Environment Variables
+# Environment Variables
+# Server
 ENV OPENAPI_URL="/openapi.json"
-ENV SERVER_PORT=8000
-
+ENV SPY_LISTENER_SERVER_PORT=8000
 ENV ENVIRONMENT=development
-
 ENV SPY_SERVICE_FILTERS=inject_at_deployment
 
-EXPOSE $SERVER_PORT
+# Database 
+ENV DB_URL=postgres://postgres:postgres@localhost:5432/ax_relayer_dev
+
+# Wormhole
+ENV GUARDIAN_SPY_URL=inject_at_deployment
+ENV SPY_SERVICE_FILTERS=inject_at_deployment
+
+# RMQ
+ENV RMQ_HOST=inject_at_deployment
+ENV RMQ_PORT=5672
+ENV RMQ_USERNAME=inject_at_deployment
+ENV RMQ_PASSWORD=inject_at_deployment
+ENV EXCHANGE_NAME=vaa_exchange
+ENV ROUTING_KEY=wormhole_vaa
+ENV QUEUE_NAME=vaa_queue
+
+EXPOSE $SPY_LISTENER_SERVER_PORT
 
 CMD ["python", "-m", "app"]
 

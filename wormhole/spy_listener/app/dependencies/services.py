@@ -4,7 +4,7 @@ from app.usecases.services.vaa_manager import VaaManager
 
 
 async def get_vaa_manager() -> IVaaManager:
-    """Instantiates and returns the Challenge Validation Service."""
+    """Instantiates and returns the VAA Manager Service."""
 
     transaction_repo = await get_transactions_repo()
     queue_client = await get_rmq_client()
