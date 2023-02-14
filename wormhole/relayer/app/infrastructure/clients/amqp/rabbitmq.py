@@ -16,9 +16,8 @@ class RabbitmqClient(IQueueClient):
         self.vaa_delivery = vaa_delivery
 
     async def start_consumption(self) -> None:
-        """Consumes messages from RabbitMQ."""
+        """Starts listening for messages to consume."""
 
-        # Start listening
         try:
             await self.queue.consume(self.__on_message)
         except Exception as e:

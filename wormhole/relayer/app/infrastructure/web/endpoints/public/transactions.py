@@ -7,7 +7,7 @@ from app.usecases.interfaces.clients.ws.websocket import IWebsocketClient
 transactions_router = APIRouter(tags=["Transactions"])
 
 
-@transactions_router.websocket("/ws/{address}")  # client_id = ethereum address
+@transactions_router.websocket("/ws/{address}")
 async def websocket_endpoint(
     websocket: WebSocket,
     address: constr(max_length=42, min_length=42) = Path(...),

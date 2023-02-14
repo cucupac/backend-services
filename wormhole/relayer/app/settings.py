@@ -19,8 +19,6 @@ class Settings(BaseSettings):
     openapi_url: str = "/openapi.json"
 
     # Wormhole
-    guardian_spy_url: str
-    spy_service_filters: str
     chain_lookup: str
 
     # Database Settings

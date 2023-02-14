@@ -2,7 +2,7 @@ from pydantic import BaseModel, Field
 
 
 class QueueException(Exception):
-    """Errors rasised when interacting with RabbitMQ."""
+    """Errors raised when interacting with RabbitMQ."""
 
     detail: str
 

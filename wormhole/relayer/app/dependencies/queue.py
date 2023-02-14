@@ -1,3 +1,4 @@
+# pylint: disable = global-statement
 from aio_pika import RobustConnection, connect_robust
 from aio_pika.abc import AbstractQueue
 
@@ -9,8 +10,8 @@ queue = None
 
 
 async def get_queue() -> AbstractQueue:
-    global queue  # pylint: disable = global-statement
-    global connection  # pylint: disable = global-statement
+    global queue
+    global connection
 
     if queue is None:
         event_loop = await get_event_loop()

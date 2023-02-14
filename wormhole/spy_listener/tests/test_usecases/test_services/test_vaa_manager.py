@@ -17,7 +17,7 @@ async def test_publish_success(
     transactions_repo: ITransactionsRepo,
     test_db: Database,
 ) -> None:
-    """Test that successful publishing of message gets properly handled"""
+    """Test that successful publishing of message gets properly handled."""
     # Setup
     test_parsed_vaa: ParsedVaa = vaa_manager.parse_vaa(vaa=constant.TEST_VAA_BYTES)
 

@@ -12,14 +12,13 @@ COPY . /app
 
 # Server
 ENV OPENAPI_URL="/openapi.json"
-ENV RELAYER_SERVER_PORT=8000
+ENV RELAYER_SERVER_PORT=9000
 ENV ENVIRONMENT=development
 
 # Database 
 ENV DB_URL=postgres://postgres:postgres@localhost:5432/ax_relayer_dev
 
 # Wormhole
-ENV GUARDIAN_SPY_URL=inject_at_deployment
 ENV CHAIN_LOOKUP=inject_at_deployment
 
 # RMQ
@@ -34,7 +33,7 @@ ENV QUEUE_NAME=vaa_queue
 # EVM
 ENV RELAYER_PRIVATE_KEY=inject_at_deployment
 ENV RELAYER_ADDRESS=inject_at_deployment
-ENV  WORMHOLE_BRIDGE_ABI=inject_at_deployment
+ENV WORMHOLE_BRIDGE_ABI=inject_at_deployment
 
 EXPOSE $RELAYER_SERVER_PORT
 

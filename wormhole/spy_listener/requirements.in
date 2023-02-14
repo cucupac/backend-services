@@ -52,7 +52,7 @@ pipdeptree==2.3.3
 platformdirs==2.6.2
 pluggy==1.0.0
 protobuf==4.21.12
-psycopg2==2.9.5
+psycopg2-binary==2.9.5
 pydantic==1.10.4
 pylint==2.16.1
 pytest==7.2.0

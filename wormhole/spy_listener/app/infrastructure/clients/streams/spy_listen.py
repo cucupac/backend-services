@@ -23,7 +23,7 @@ class StreamClient(IStreamClient):
                     settings.guardian_spy_url
                 ) as channel:
 
-                    logger.info("[StreamClient]: Connected to stream!")
+                    logger.info("[StreamClient]: Connected to stream.")
                     stub = spy_pb2_grpc.SpyRPCServiceStub(channel)
 
                     request = spy_pb2.SubscribeSignedVAARequest(

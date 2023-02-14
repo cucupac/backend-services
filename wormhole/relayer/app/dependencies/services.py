@@ -4,7 +4,7 @@ from app.usecases.services.vaa_delivery import VaaDelivery
 
 
 async def get_vaa_delivery() -> IVaaDelivery:
-    """Instantiates and returns the Challenge Validation Service."""
+    """Instantiates and returns the VAA Delivery Service."""
 
     transaction_repo = await get_relays_repo()
     evm_client = await get_evm_client()

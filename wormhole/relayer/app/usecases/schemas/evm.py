@@ -6,7 +6,7 @@ class TransactionHash(HexBytes):
 
 
 class EvmClientException(Exception):
-    """Errors rasised when interacting with EVM nodes."""
+    """Errors raised when interacting with EVM nodes."""
 
     detail: str
 

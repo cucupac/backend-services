@@ -1,3 +1,4 @@
+# pylint: disable = global-statement
 from aio_pika import ExchangeType, RobustConnection, connect_robust
 from aio_pika.abc import AbstractExchange
 
@@ -9,8 +10,8 @@ exchange = None
 
 
 async def get_exchange() -> AbstractExchange:
-    global connection  # pylint: disable = global-statement
-    global exchange  # pylint: disable = global-statement
+    global connection
+    global exchange
 
     if connection is None:
         event_loop = await get_event_loop()

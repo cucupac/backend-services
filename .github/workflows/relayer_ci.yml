@@ -24,8 +24,6 @@ env:
   EXCHANGE_NAME: ${{ secrets.EXCHANGE_NAME }}
   ROUTING_KEY: ${{ secrets.ROUTING_KEY }}
   QUEUE_NAME: ${{ secrets.QUEUE_NAME }}
-  GUARDIAN_SPY_URL: "https://spy.example.com"
-  SPY_SERVICE_FILTERS: "example"
   CHAIN_LOOKUP: "example"
   DB_URL: "postgresql://user:password@localhost/example"
   RELAYER_PRIVATE_KEY: "0x"

@@ -4,7 +4,7 @@ from app.usecases.interfaces.clients.amqp.queue import IQueueClient
 
 
 async def get_rabbitmq_client() -> IQueueClient:
-    """Instantiate and return RabbitMQ client."""
+    """Instantiate and return RabbitmqClient."""
 
     queue = await get_queue()
     vaa_delivery_service = await get_vaa_delivery()
