@@ -12,10 +12,6 @@ class IWebsocketClient(ABC):
         """Open web socket connection and store it in dictionary."""
 
     @abstractmethod
-    async def close_connection(self, address: str) -> None:
-        """Close web socket connection."""
-
-    @abstractmethod
     async def notify_client(
         self,
         address: str,

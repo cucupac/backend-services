@@ -39,7 +39,7 @@ class EvmClient(IEvmClient):
                 transaction=signed_transaction.rawTransaction
             )
         except Exception as e:
-            self.logger.error("[EvmClient]: VAA delivery failed. Error: %s", str(e))
+            self.logger.error("[EvmClient]: VAA delivery failed. Error: %s", e)
             raise EvmClientError(detail=str(e)) from e
 
     async def __craft_transaction(

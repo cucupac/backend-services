@@ -8,29 +8,29 @@ from app.usecases.schemas.relays import Status
 
 
 class WebsocketClient(IWebsocketClient):
-    def __init__(self, logger: Logger):
-        self.clients: Mapping[str, WebSocket] = {}
-        self.logger = logger
+
+    _instance: IWebsocketClient = None
+
+    def __new__(cls, logger: Logger) -> IWebsocketClient:
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+            cls._instance.logger: Logger = logger
+            cls._instance.clients: Mapping[str, WebSocket] = {}
+        return cls._instance
 
     async def open_connection(self, address: str, connection: WebSocket) -> None:
         """Open websocket connection and store it in dictionary."""
         await connection.accept()
 
+        self.clients[address] = connection
+
         try:
             while True:
                 await connection.receive_text()
         except WebSocketDisconnect as e:
-            print(f"\n\nError: {e}\n\n")
-
-    async def close_connection(self, address: str) -> None:
-        """Close websocket connection."""
-
-        connection = self.clients.get(address)
-        # 1. close connection
-        await connection.close(reason="Connection closed.")
-
-        # 2. remove from dictionary
-        del self.clients[address]
+            self.logger.info("[WebsocketClient]: Disconnect: %s.", e)
+            address = connection.scope.get("path").split("/")[-1]
+            del self.clients[address]
 
     async def notify_client(
         self,

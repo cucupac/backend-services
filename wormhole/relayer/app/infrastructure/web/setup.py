@@ -16,17 +16,19 @@ from app.settings import settings
 
 
 def setup_app():
-    app = FastAPI(
+    fastapi_app = FastAPI(
         title="Ax Protocol Spy Listener",
         description="Facilitates message passing between chains.",
         openapi_url=settings.openapi_url,
     )
-    app.include_router(health.health_router, prefix="/metrics/health")
-    app.include_router(transactions.transactions_router, prefix="/public/transactions")
+    fastapi_app.include_router(health.health_router, prefix="/metrics/health")
+    fastapi_app.include_router(
+        transactions.transactions_router, prefix="/public/transactions"
+    )
 
     # CORS (Cross-Origin Resource Sharing)
     origins = ["*"]
-    app.add_middleware(
+    fastapi_app.add_middleware(
         CORSMiddleware,
         allow_origins=origins,
         allow_credentials=True,
@@ -34,13 +36,13 @@ def setup_app():
         allow_headers=["*"],
     )
 
-    return app
+    return fastapi_app
 
 
-fastapi_app = setup_app()
+app = setup_app()
 
 
-@fastapi_app.on_event("startup")
+@app.on_event("startup")
 async def startup_event():
     await get_event_loop()
     await get_client_session()
@@ -49,7 +51,7 @@ async def startup_event():
     await queue_client.start_consumption()
 
 
-@fastapi_app.on_event("shutdown")
+@app.on_event("shutdown")
 async def shutdown_event():
     # Close RabbitMQ connection
     queue_connection = await get_connection()

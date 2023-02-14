@@ -42,14 +42,3 @@ test:
 	@echo Running relayer unit tests...
 	coverage run --source app -m pytest tests --color=yes
 	coverage report --fail-under=50
-
-# Call more than one service
-# test: build
-# 	function removeContainers {
-# 		docker-compose -p relayer_ci rm -s -f test_db
-# 	}
-# 	trap removeContainers EXIT
-# 	docker-compose -p relayer_ci run --rm ci
-
-
-# test comment 5
