@@ -69,6 +69,6 @@ def main(reload=False):
         "app.infrastructure.web.setup:app",
         loop="uvloop",
         host=settings.server_host,
-        port=settings.spy_listener_server_port,
+        port=settings.server_port,
         **kwargs,
     )

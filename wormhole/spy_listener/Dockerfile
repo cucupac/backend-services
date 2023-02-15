@@ -11,7 +11,7 @@ COPY . /app
 # Environment Variables
 # Server
 ENV OPENAPI_URL="/openapi.json"
-ENV SPY_LISTENER_SERVER_PORT=8000
+ENV SERVER_PORT=8000
 ENV ENVIRONMENT=development
 ENV SPY_SERVICE_FILTERS=inject_at_deployment
 
@@ -31,7 +31,7 @@ ENV EXCHANGE_NAME=vaa_exchange
 ENV ROUTING_KEY=wormhole_vaa
 ENV QUEUE_NAME=vaa_queue
 
-EXPOSE $SPY_LISTENER_SERVER_PORT
+EXPOSE $SERVER_PORT
 
 CMD ["python", "-m", "app"]
 

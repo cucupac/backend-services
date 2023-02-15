@@ -1,0 +1,16 @@
+version: "3.8"
+
+services:
+  # ****************************************************************************
+  #
+  #  Main Containers
+  #
+  # ****************************************************************************
+  gas_system:
+    build:
+      dockerfile: Dockerfile
+    ports:
+      - "10000:10000"
+    container_name: gas_system
+    env_file:
+      - .env

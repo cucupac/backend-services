@@ -73,6 +73,6 @@ def main(reload=False):
         "app.infrastructure.web.setup:app",
         loop="uvloop",
         host=settings.server_host,
-        port=settings.relayer_server_port,
+        port=settings.server_port,
         **kwargs,
     )
