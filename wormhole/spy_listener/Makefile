@@ -41,4 +41,4 @@ push:
 test:
 	@echo Running spy_listener unit tests...
 	coverage run --source app -m pytest tests --color=yes
-	coverage report --fail-under=50
+	coverage report --fail-under=80

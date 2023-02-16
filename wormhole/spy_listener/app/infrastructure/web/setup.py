@@ -14,7 +14,7 @@ from app.infrastructure.web.endpoints.metrics import health
 from app.settings import settings
 
 
-def setup_app():
+def setup_app() -> FastAPI:
     app = FastAPI(
         title="Ax Protocol Spy Listener",
         description="Facilitates message passing between chains.",
@@ -39,7 +39,7 @@ fastapi_app = setup_app()
 
 
 @fastapi_app.on_event("startup")
-async def startup_event():
+async def startup_event() -> None:
     await get_event_loop()
     await get_client_session()
     await get_or_create_database()
@@ -48,7 +48,7 @@ async def startup_event():
 
 
 @fastapi_app.on_event("shutdown")
-async def shutdown_event():
+async def shutdown_event() -> None:
     # Close RabbitMQ connection
     connection = await get_connection()
     await connection.close()
@@ -63,7 +63,7 @@ async def shutdown_event():
 
 @click.command()
 @click.option("--reload", is_flag=True)
-def main(reload=False):
+def main(reload=False) -> None:
     kwargs = {"reload": reload}
     uvicorn.run(
         "app.infrastructure.web.setup:app",

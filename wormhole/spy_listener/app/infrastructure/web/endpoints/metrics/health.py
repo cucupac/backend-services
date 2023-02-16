@@ -6,6 +6,6 @@ health_router = APIRouter(tags=["Metrics"])
 
 
 @health_router.get("")
-async def health_check():
+async def health_check() -> dict:
 
     return {"status": "healthy", "datetime": datetime.now().isoformat()}
