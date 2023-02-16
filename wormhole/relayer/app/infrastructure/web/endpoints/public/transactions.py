@@ -12,5 +12,5 @@ async def websocket_endpoint(
     websocket: WebSocket,
     address: constr(max_length=42, min_length=42) = Path(...),
     websocket_client: IWebsocketClient = Depends(get_websocket_client),
-):
+) -> None:
     await websocket_client.open_connection(address=address, connection=websocket)

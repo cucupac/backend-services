@@ -8,7 +8,8 @@ from fastapi import FastAPI
 from httpx import AsyncClient
 
 import tests.constants as constant
-from app.dependencies import get_relays_repo
+from app.dependencies import get_relays_repo, logger
+from app.infrastructure.clients.ws.websocket import WebsocketClient
 from app.infrastructure.db.repos.relays import RelaysRepo
 from app.infrastructure.web.setup import setup_app
 from app.usecases.interfaces.clients.http.evm import IEvmClient
@@ -25,23 +26,13 @@ from tests.mocks.clients.ws.websocket import MockWebsocketClient
 
 # Database Connection
 @pytest_asyncio.fixture
-async def test_db_url():
+async def test_db_url() -> str:
     username = os.getenv("POSTGRES_USER", "postgres")
     password = os.getenv("POSTGRES_PASSWORD", "postgres")
     host = os.getenv("POSTGRES_HOST", "localhost")
     port = os.getenv("POSTGRES_PORT", "5444")
     database_name = os.getenv("POSTGRES_DB", "ax_relayer_dev_test")
     return f"postgres://{username}:{password}@{host}:{port}/{database_name}"
-
-
-# RabbitMQ Connection
-@pytest_asyncio.fixture
-async def test_rmq_url():
-    username = os.getenv("RMQ_USERNAME", "guest")
-    password = os.getenv("RMQ_PASSWORD", "guest")
-    host = os.getenv("RMQ_HOST", "localhost")
-    port = os.getenv("RMQ_PORT", "5673")
-    return f"amqp://{username}:{password}@{host}:{port}"
 
 
 @pytest_asyncio.fixture
@@ -75,6 +66,11 @@ async def test_websocket_client() -> IWebsocketClient:
     return MockWebsocketClient()
 
 
+@pytest_asyncio.fixture
+async def websocket_client() -> IWebsocketClient:
+    return WebsocketClient(logger=logger)
+
+
 # Services
 @pytest_asyncio.fixture
 async def vaa_delivery(
@@ -99,6 +95,32 @@ async def vaa_delivery_fail(
         relays_repo=relays_repo,
         evm_client=test_evm_client_fail,
         websocket_client=test_websocket_client,
+    )
+
+
+@pytest_asyncio.fixture
+async def vaa_delivery_websocket(
+    test_evm_client_success: IEvmClient,
+    relays_repo: IRelaysRepo,
+    websocket_client: IWebsocketClient,
+) -> IVaaDelivery:
+    return VaaDelivery(
+        relays_repo=relays_repo,
+        evm_client=test_evm_client_success,
+        websocket_client=websocket_client,
+    )
+
+
+@pytest_asyncio.fixture
+async def vaa_delivery_websocket_fail(
+    test_evm_client_fail: IEvmClient,
+    relays_repo: IRelaysRepo,
+    websocket_client: IWebsocketClient,
+) -> IVaaDelivery:
+    return VaaDelivery(
+        relays_repo=relays_repo,
+        evm_client=test_evm_client_fail,
+        websocket_client=websocket_client,
     )
 
 

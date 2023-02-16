@@ -1,3 +1,5 @@
+from typing import Optional
+
 from databases import Database
 
 from app.dependencies import logger
@@ -13,4 +15,8 @@ async def get_or_create_database() -> Database:
     DATABASE = Database(settings.db_url, min_size=5)
     await DATABASE.connect()
     logger.info("[Database]: Established connection.")
+    return DATABASE
+
+
+async def get_database() -> Optional[Database]:
     return DATABASE

@@ -1325,14 +1325,21 @@ pytest==7.2.1 \
     # via
     #   -r requirements.in
     #   pytest-asyncio
+    #   pytest-dotenv
 pytest-asyncio==0.20.3 \
     --hash=sha256:83cbf01169ce3e8eb71c6c278ccb0574d1a7a3bb8eaaf5e50e0ad342afb33b36 \
     --hash=sha256:f129998b209d04fcc65c96fc85c11e5316738358909a8399e93be553d7656442
     # via -r requirements.in
+pytest-dotenv==0.5.2 \
+    --hash=sha256:2dc6c3ac6d8764c71c6d2804e902d0ff810fa19692e95fe138aefc9b1aa73732 \
+    --hash=sha256:40a2cece120a213898afaa5407673f6bd924b1fa7eafce6bda0e8abffe2f710f
+    # via -r requirements.in
 python-dotenv==0.21.1 \
     --hash=sha256:1c93de8f636cde3ce377292818d0e440b6e45a82f215c3744979151fa8151c49 \
     --hash=sha256:41e12e0318bebc859fcc4d97d4db8d20ad21721a6aa5047dd59f090391cb549a
-    # via -r requirements.in
+    # via
+    #   -r requirements.in
+    #   pytest-dotenv
 pyyaml==6.0 \
     --hash=sha256:01b45c0191e6d66c470b6cf1b9531a771a83c1c4208272ead47a3ae4f2f603bf \
     --hash=sha256:0283c35a6a9fbf047493e3a0ce8d79ef5030852c51e9d911a27badfde0605293 \
