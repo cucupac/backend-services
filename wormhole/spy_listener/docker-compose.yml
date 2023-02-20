@@ -8,7 +8,6 @@ services:
   # ****************************************************************************
   spy_listener:
     build:
-      context: ./wormhole/spy_listener
       dockerfile: Dockerfile
     ports:
       - "8000:8000"

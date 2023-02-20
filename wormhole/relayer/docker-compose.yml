@@ -8,7 +8,6 @@ services:
   # ****************************************************************************
   relayer:
     build:
-      context: ./wormhole/relayer
       dockerfile: Dockerfile
     ports:
       - "9000:9000"
