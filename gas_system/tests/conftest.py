@@ -11,10 +11,10 @@ import tests.constants as constant
 from app.dependencies import get_example_repo
 from app.infrastructure.db.repos.example import ExampleRepo
 from app.infrastructure.web.setup import setup_app
-from app.usecases.interfaces.clients.http.evm import IEvmClient
+from app.usecases.interfaces.clients.http.blockchain import IBlockchainClient
 from app.usecases.interfaces.repos.example import IExampleRepo
-from app.usecases.interfaces.services.example import IExampleService
-from app.usecases.services.example import ExampleService
+from app.usecases.interfaces.services.remote_price_manager import IExampleService
+from app.usecases.services.remote_price_manager import ExampleService
 
 # Mocks
 from tests.mocks.clients.http.evm import EvmResult, MockEvmClient
@@ -48,19 +48,19 @@ async def example_repo(test_db: Database) -> IExampleRepo:
 
 
 @pytest_asyncio.fixture
-async def test_evm_client_success() -> IEvmClient:
+async def test_evm_client_success() -> IBlockchainClient:
     return MockEvmClient(result=EvmResult.SUCCESS)
 
 
 @pytest_asyncio.fixture
-async def test_evm_client_fail() -> IEvmClient:
+async def test_evm_client_fail() -> IBlockchainClient:
     return MockEvmClient(result=EvmResult.FAILURE)
 
 
 # Services
 @pytest_asyncio.fixture
 async def example_service(
-    test_evm_client_success: IEvmClient,
+    test_evm_client_success: IBlockchainClient,
     example_repo: IExampleRepo,
 ) -> IExampleService:
     return ExampleService(
@@ -71,7 +71,7 @@ async def example_service(
 
 @pytest_asyncio.fixture
 async def example_service_fail(
-    test_evm_client_fail: IEvmClient,
+    test_evm_client_fail: IBlockchainClient,
     example_repo: IExampleRepo,
 ) -> IExampleService:
     return ExampleService(

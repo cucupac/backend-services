@@ -26,6 +26,10 @@ class Settings(BaseSettings):
     admin_private_key: str
     admin_address: str
     wormhole_bridge_abi: str
+    mock_fee: int
+
+    # Tasks
+    update_fees_frequency: int = 60 * 60 * 24
 
     class Config:
         env_file = DOTENV_FILE

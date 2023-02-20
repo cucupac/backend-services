@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
 
 
-class IExampleService(ABC):
+class IRemotePriceManager(ABC):
     pass

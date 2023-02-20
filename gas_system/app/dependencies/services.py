@@ -1,6 +1,6 @@
 from app.dependencies import get_evm_client, get_example_repo
-from app.usecases.interfaces.services.example import IExampleService
-from app.usecases.services.example import ExampleService
+from app.usecases.interfaces.services.remote_price_manager import IExampleService
+from app.usecases.services.remote_price_manager import ExampleService
 
 
 async def get_example_service() -> IExampleService:

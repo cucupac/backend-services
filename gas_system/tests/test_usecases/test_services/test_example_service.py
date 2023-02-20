@@ -5,7 +5,4 @@ import pytest
 from databases import Database
 
 import tests.constants as constant
-from app.usecases.interfaces.services.example import IExampleService
-
-
-
+from app.usecases.interfaces.services.remote_price_manager import IExampleService
