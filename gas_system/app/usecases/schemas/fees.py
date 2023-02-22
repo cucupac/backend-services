@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import List
+from typing import List, Mapping
 
 from pydantic import BaseModel
 
@@ -17,4 +17,11 @@ class Chains(int, Enum):
 
 class MinimumFees(BaseModel):
     remote_chain_ids: List[Chains]
-    fees: List[int]
+    remote_fees: List[int]
+
+
+class FeeUpdate(BaseModel):
+    chain_id: int
+    updates: Mapping[int, int]
+    transaction_hash: str
+    error: str

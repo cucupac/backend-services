@@ -7,11 +7,12 @@ from app.dependencies import get_client_session, get_event_loop
 from app.infrastructure.db.core import get_or_create_database
 from app.infrastructure.web.endpoints.metrics import health
 from app.settings import settings
+from app.usecases.tasks.events.startup import start_fee_update_task
 
 
 def setup_app():
     fastapi_app = FastAPI(
-        title="Ax Protocol Spy Listener",
+        title="Ax Protocol Relayer Gas System",
         description="Facilitates message passing between chains.",
         openapi_url=settings.openapi_url,
     )
@@ -38,6 +39,7 @@ async def startup_event():
     await get_event_loop()
     await get_client_session()
     await get_or_create_database()
+    await start_fee_update_task()
 
 
 @app.on_event("shutdown")

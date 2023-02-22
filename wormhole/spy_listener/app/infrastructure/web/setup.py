@@ -16,8 +16,8 @@ from app.settings import settings
 
 def setup_app() -> FastAPI:
     app = FastAPI(
-        title="Ax Protocol Spy Listener",
-        description="Facilitates message passing between chains.",
+        title="Ax Protocol Wormhole Spy Listener",
+        description="Listens to messages emitted by Wormhole's Guardian Spy.",
         openapi_url=settings.openapi_url,
     )
     app.include_router(health.health_router, prefix="/metrics/health")

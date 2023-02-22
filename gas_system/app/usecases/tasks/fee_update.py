@@ -1,28 +1,30 @@
 import asyncio
+from logging import Logger
 
-from app.dependencies import logger
 from app.settings import settings
+from app.usecases.interfaces.services.remote_price_manager import IRemotePriceManager
+from app.usecases.interfaces.tasks.fee_update import IUpdateFeeTask
 
 
-class UpdateFeesTask:
-    def __init__(self, db: Database, something_repo: ISomethingRepo):
-        self.db = db
-        self.something_repo = something_repo
+class UpdateFeesTask(IUpdateFeeTask):
+    def __init__(self, remote_price_manager: IRemotePriceManager, logger: Logger):
+        self.remote_price_manager = remote_price_manager
+        self.logger = logger
 
-    async def start_task(self):
+    async def start_task(self) -> None:
+        """Starts automated task to periodically update remote fees."""
         while True:
             try:
                 await self.task()
             except asyncio.CancelledError:  # pylint: disable = try-except-raise
                 raise
             except Exception as e:  # pylint: disable = broad-except
-                logger.exception(e)
+                self.logger.exception(e)
 
             await asyncio.sleep(settings.update_fees_frequency)
 
     async def task(self):
-        """Refresh tokens for all linked brokerages that require it."""
-
-        # 1. call update_remote_prices on remote_price_manager service
-
-        # 2. store stuff in db
+        """Update remote fees."""
+        self.logger.info("[UpdateFeesTask]: Task started.")
+        await self.remote_price_manager.update_remote_fees()
+        self.logger.info("[UpdateFeesTask]: Sleeping now...")

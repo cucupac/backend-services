@@ -1,7 +1,7 @@
 from app.infrastructure.db.core import get_or_create_database
-from app.infrastructure.db.repos.example import ExampleRepo
-from app.usecases.interfaces.repos.example import IExampleRepo
+from app.infrastructure.db.repos.fee_updates import FeeUpdateRepo
+from app.usecases.interfaces.repos.fee_updates import IFeeUpdateRepo
 
 
-async def get_example_repo() -> IExampleRepo:
-    return ExampleRepo(db=await get_or_create_database())
+async def get_fee_update_repo() -> IFeeUpdateRepo:
+    return FeeUpdateRepo(db=await get_or_create_database())

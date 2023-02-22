@@ -18,9 +18,6 @@ class Settings(BaseSettings):
     server_prefix: str = ""
     openapi_url: str = "/openapi.json"
 
-    # Wormhole
-    chain_lookup: str
-
     # Database Settings
     db_url: str
 
@@ -33,10 +30,19 @@ class Settings(BaseSettings):
     routing_key: str
     queue_name: str
 
+    # RPC Urls
+    ethereum_rpc: str
+    bsc_rpc: str
+    polygon_rpc: str
+    avalanche_rpc: str
+    fantom_rpc: str
+    moonbeam_rpc: str
+    arbitrum_rpc: str
+    celo_rpc: str
+
     # EVM
     relayer_private_key: str
     relayer_address: str
-    wormhole_bridge_abi: str
 
     class Config:
         env_file = DOTENV_FILE

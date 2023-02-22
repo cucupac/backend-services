@@ -1,12 +1,13 @@
-from app.dependencies import get_event_loop
-
-# import task here
+from app.dependencies import get_event_loop, get_remote_price_manager, logger
+from app.usecases.tasks.fee_update import UpdateFeesTask
 
 
 async def start_fee_update_task():
     loop = await get_event_loop()
+    remote_price_manager = await get_remote_price_manager()
 
-    # stuff the task needs here
+    get_update_fees_task = UpdateFeesTask(
+        remote_price_manager=remote_price_manager, logger=logger
+    )
 
-    # get_holdings_task = TaskNameHere()
-    # loop.create_task(get_holdings_task.start_task())
+    loop.create_task(get_update_fees_task.start_task())

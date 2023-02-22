@@ -14,7 +14,7 @@ class Settings(BaseSettings):
     environment: str = "development"
     log_level: str = "info"
     server_host: str = "0.0.0.0"
-    server_port: int
+    server_port: int = 10000
     server_prefix: str = ""
     openapi_url: str = "/openapi.json"
 
@@ -22,11 +22,22 @@ class Settings(BaseSettings):
     db_url: str
 
     # EVM
-    chain_lookup: str
     admin_private_key: str
     admin_address: str
-    wormhole_bridge_abi: str
     mock_fee: int
+
+    # RPC Urls
+    ethereum_rpc: str
+    bsc_rpc: str
+    polygon_rpc: str
+    avalanche_rpc: str
+    fantom_rpc: str
+    moonbeam_rpc: str
+    arbitrum_rpc: str
+    celo_rpc: str
+
+    # Price Client
+    price_client_base_url: str
 
     # Tasks
     update_fees_frequency: int = 60 * 60 * 24

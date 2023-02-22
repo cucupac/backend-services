@@ -1,10 +1,9 @@
-import base64
-import json
-
-from app.dependencies import logger
+from app.dependencies import CHAIN_DATA, WORMHOLE_BRIDGE_ABI, get_client_session, logger
+from app.infrastructure.clients.http.coinbase import CoinbaseClient
 from app.infrastructure.clients.http.evm import EvmClient
 from app.settings import settings
 from app.usecases.interfaces.clients.http.blockchain import IBlockchainClient
+from app.usecases.interfaces.clients.http.prices import IPriceClient
 from app.usecases.schemas.fees import Chains, MinimumFees
 
 
@@ -18,10 +17,18 @@ async def get_evm_client() -> IBlockchainClient:
         mock_set_send_fees_params.fees.append(settings.mock_fee)
 
     return EvmClient(
-        abi=json.loads(base64.b64decode(settings.wormhole_bridge_abi)),
-        chain_lookup=json.loads(
-            base64.b64decode(settings.chain_lookup).decode("utf-8")
-        ),
+        abi=WORMHOLE_BRIDGE_ABI,
+        chain_data=CHAIN_DATA,
         mock_set_send_fees_params=mock_set_send_fees_params,
         logger=logger,
+    )
+
+
+async def get_coinbase_client() -> IPriceClient:
+    """Instantiate and return Coinbase client."""
+
+    client_session = await get_client_session()
+
+    return CoinbaseClient(
+        client_session=client_session, base_url=settings.price_client_base_url
     )

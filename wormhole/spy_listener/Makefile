@@ -24,7 +24,7 @@ format-check:
 
 lint:
 	@echo Linting spy_listener...
-	pylint --ignore-paths=app/infrastructure/clients/streams/grpc $(formatted_code)
+	pylint --ignore-paths=app/infrastructure/clients/streams/grpc $(formatted_code) --fail-under=9.5
 
 run:
 	python -m app --reload

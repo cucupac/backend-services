@@ -18,8 +18,8 @@ ENV ENVIRONMENT=development
 # Database 
 ENV DB_URL=postgres://postgres:postgres@localhost:5432/ax_relayer_dev
 
-# Wormhole
-ENV CHAIN_LOOKUP=inject_at_deployment
+# RPC Urls
+
 
 # RMQ
 ENV RMQ_HOST=inject_at_deployment
@@ -33,7 +33,6 @@ ENV QUEUE_NAME=vaa_queue
 # EVM
 ENV RELAYER_PRIVATE_KEY=inject_at_deployment
 ENV RELAYER_ADDRESS=inject_at_deployment
-ENV WORMHOLE_BRIDGE_ABI=inject_at_deployment
 
 EXPOSE $SERVER_PORT
 

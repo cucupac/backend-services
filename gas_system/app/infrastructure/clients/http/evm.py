@@ -19,12 +19,12 @@ class EvmClient(IBlockchainClient):
     def __init__(
         self,
         abi: List[Mapping[str, Any]],
-        chain_lookup: Mapping[str, str],
+        chain_data: Mapping[str, str],
         mock_set_send_fees_params: MinimumFees,
         logger: Logger,
     ) -> None:
         self.abi = abi
-        self.chain_lookup = chain_lookup
+        self.chain_data = chain_data
         self.logger = logger
         self.mock_set_send_fees_params = mock_set_send_fees_params
 
@@ -33,16 +33,16 @@ class EvmClient(IBlockchainClient):
     ) -> TransactionHash:
         """Sends transaction to the blockchain."""
 
-        web3_client = Web3(Web3.HTTPProvider(self.chain_lookup[local_chain_id]["rpc"]))
+        web3_client = Web3(Web3.HTTPProvider(self.chain_data[local_chain_id]["rpc"]))
 
         contract = web3_client.eth.contract(
-            address=self.chain_lookup[str(local_chain_id)]["bridge_contract"],
+            address=self.chain_data[str(local_chain_id)]["bridge_contract"],
             abi=self.abi,
         )
 
         try:
             signed_transaction = await self.__craft_transaction(
-                data=remote_data, contract=contract, web3_client=web3_client
+                remote_data=remote_data, contract=contract, web3_client=web3_client
             )
 
             return web3_client.eth.send_raw_transaction(
@@ -61,7 +61,7 @@ class EvmClient(IBlockchainClient):
         gas_price_estimate = web3_client.eth.gas_price
 
         transaction = contract.functions.setSendFees(
-            remote_data.remote_chain_ids, remote_data.fees
+            remote_data.remote_chain_ids, remote_data.remote_fees
         ).buildTransaction(
             {
                 "from": settings.admin_address,
@@ -78,14 +78,14 @@ class EvmClient(IBlockchainClient):
     async def estimate_fees(self, chain_id: str) -> ComputeCosts:
         """Estimates a transaction's gas information."""
 
-        web3_client = Web3(Web3.HTTPProvider(self.chain_lookup[chain_id]["rpc"]))
+        web3_client = Web3(Web3.HTTPProvider(self.chain_data[chain_id]["rpc"]))
 
         contract = web3_client.eth.contract(
-            address=self.chain_lookup[chain_id]["bridge_contract"],
+            address=self.chain_data[chain_id]["bridge_contract"],
             abi=self.abi,
         )
 
-        # TODO: This estimatio uses mock fee vlaues. Ensure gas unit estimation is accurate.
+        # TODO: Esnsure gas estimation is accurate.
         estimated_gas_units = contract.functions.setSendFees(
             self.mock_set_send_fees_params.remote_chain_ids,
             self.mock_set_send_fees_params.fees,

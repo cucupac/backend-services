@@ -21,8 +21,6 @@ ENV DB_URL=postgres://postgres:postgres@localhost:5432/ax_relayer_dev
 # EVM
 ENV ADMIN_PRIVATE_KEY=inject_at_deployment
 ENV ADMIN_ADDRESS=inject_at_deployment
-ENV WORMHOLE_BRIDGE_ABI=inject_at_deployment
-ENV CHAIN_LOOKUP=inject_at_deployment
 
 EXPOSE $SERVER_PORT
 

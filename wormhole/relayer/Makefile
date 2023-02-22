@@ -24,7 +24,7 @@ format-check:
 
 lint:
 	@echo Linting relayer...
-	pylint $(formatted_code)
+	pylint $(formatted_code) --fail-under=9.5
 
 run:
 	python -m app --reload

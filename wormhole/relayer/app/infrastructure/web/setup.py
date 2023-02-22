@@ -17,7 +17,7 @@ from app.settings import settings
 
 def setup_app() -> FastAPI:
     fastapi_app = FastAPI(
-        title="Ax Protocol Spy Listener",
+        title="Ax Protocol Wormhole Relayer",
         description="Facilitates message passing between chains.",
         openapi_url=settings.openapi_url,
     )

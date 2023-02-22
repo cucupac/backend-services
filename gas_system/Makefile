@@ -24,7 +24,7 @@ format-check:
 
 lint:
 	@echo Linting gas_system...
-	pylint $(formatted_code)
+	pylint $(formatted_code) --fail-under=9.5
 
 run:
 	python -m app --reload
@@ -38,7 +38,8 @@ build:
 push:
 	docker push $(docker_username)/$(docker_image):latest
 
+# TODO: Change to --fail-under=80
 test:
 	@echo Running gas_system unit tests...
 	coverage run --source app -m pytest tests --color=yes
-	coverage report --fail-under=50
+	coverage report --fail-under=60

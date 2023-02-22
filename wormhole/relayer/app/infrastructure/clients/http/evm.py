@@ -13,21 +13,26 @@ from app.usecases.schemas.evm import EvmClientError, TransactionHash
 
 
 class EvmClient(IEvmClient):
-    def __init__(self, abi: List[Mapping[str, Any]], logger: Logger) -> None:
+    def __init__(
+        self,
+        abi: List[Mapping[str, Any]],
+        chain_data: Mapping[str, str],
+        logger: Logger,
+    ) -> None:
         self.abi = abi
         self.logger = logger
+        self.chain_data = chain_data
 
     async def deliver(self, vaa: bytes, dest_chain_id: int) -> TransactionHash:
         """Sends transaction to the destination blockchain."""
 
-        chain_lookup: Mapping[str, str] = json.loads(
-            base64.b64decode(settings.chain_lookup).decode("utf-8")
+        web3_client = Web3(
+            Web3.HTTPProvider(self.chain_data[str(dest_chain_id)]["rpc"])
         )
 
-        web3_client = Web3(Web3.HTTPProvider(chain_lookup[str(dest_chain_id)]["rpc"]))
-
         contract = web3_client.eth.contract(
-            address=chain_lookup[str(dest_chain_id)]["bridge_contract"], abi=self.abi
+            address=self.chain_data[str(dest_chain_id)]["bridge_contract"],
+            abi=self.abi,
         )
 
         try:

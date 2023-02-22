@@ -46,11 +46,10 @@ class CoinbaseClient(IPriceClient):
                     raise PriceClientException(
                         f"CoinbaseClient Error: Response status: {response.status}, Response JSON: {response_json}"
                     ) from e
-                else:
-                    raise PriceClientError(
-                        status=response.status,
-                        detail=error.detail,
-                    )
+                raise PriceClientError(
+                    status=response.status,
+                    detail=error.detail,
+                )
 
             return response_json
 
