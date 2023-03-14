@@ -1,3 +1,5 @@
+from typing import Optional
+
 from hexbytes import HexBytes
 from pydantic import BaseModel
 
@@ -21,3 +23,4 @@ class BlockchainClientError(BlockchainClientException):
 class ComputeCosts(BaseModel):
     gas_price: int
     gas_units: int
+    native_value_usd: Optional[float]

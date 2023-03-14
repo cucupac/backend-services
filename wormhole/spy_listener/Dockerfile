@@ -15,12 +15,12 @@ ENV SERVER_PORT=8000
 ENV ENVIRONMENT=development
 ENV SPY_SERVICE_FILTERS=inject_at_deployment
 
-# Database 
-ENV DB_URL=postgres://postgres:postgres@localhost:5432/ax_relayer_dev
-
 # Wormhole
 ENV GUARDIAN_SPY_URL=inject_at_deployment
 ENV SPY_SERVICE_FILTERS=inject_at_deployment
+
+# Database 
+ENV DB_URL=postgres://postgres:postgres@localhost:5432/ax_relayer_dev
 
 # RMQ
 ENV RMQ_HOST=inject_at_deployment

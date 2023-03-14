@@ -1,7 +1,7 @@
 SHELL := /bin/bash
 
-docker_image = spy_listener
-docker_username = ax_protocol
+docker_image = wormhole-spy-listener
+docker_username = axprotocol
 formatted_code := app/ tests/
 rev_id = ""
 migration_message = ""

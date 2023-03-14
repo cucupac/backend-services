@@ -1,7 +1,7 @@
 SHELL := /bin/bash
 
-docker_image = gas_system
-docker_username = ax_protocol
+docker_image = gas-system
+docker_username = axprotocol
 formatted_code := app/ tests/
 rev_id = ""
 migration_message = ""

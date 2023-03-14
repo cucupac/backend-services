@@ -30,7 +30,6 @@ class Settings(BaseSettings):
     rmq_port: int
     rmq_username: str
     rmq_password: str
-
     exchange_name: str
     routing_key: str
     queue_name: str

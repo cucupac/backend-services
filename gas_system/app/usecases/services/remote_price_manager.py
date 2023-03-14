@@ -1,11 +1,12 @@
 import math
+from typing import Mapping
 
 from app.dependencies import CHAIN_DATA
 from app.usecases.interfaces.clients.http.blockchain import IBlockchainClient
 from app.usecases.interfaces.clients.http.prices import IPriceClient
 from app.usecases.interfaces.repos.fee_updates import IFeeUpdateRepo
 from app.usecases.interfaces.services.remote_price_manager import IRemotePriceManager
-from app.usecases.schemas.blockchain import BlockchainClientError
+from app.usecases.schemas.blockchain import BlockchainClientError, ComputeCosts
 from app.usecases.schemas.fees import FeeUpdate, MinimumFees
 
 
@@ -25,29 +26,30 @@ class RemotePriceManager(IRemotePriceManager):
         """Updates gas prices for remote computation in local native token."""
 
         # Estimate fees for each chain
-        compute_costs = {}
-        for chain_id in CHAIN_DATA:
-            compute_costs[chain_id] = await self.blockchain_client.estimate_fees(
-                chain_id=chain_id
+        compute_costs: Mapping[int, ComputeCosts] = {}
+        for local_chain_id, data in CHAIN_DATA.items():
+            costs = await self.blockchain_client.estimate_fees(chain_id=local_chain_id)
+            price_data = await self.price_client.fetch_prices(
+                asset_symbol=data["native"]
             )
+            costs.native_value_usd = float(price_data.get("USD"))
+            compute_costs[local_chain_id] = costs
 
         # Construct fee information
-        fee_updates = {}
-        for local_chain_id, local_chain_data in CHAIN_DATA.items():
-            local_native_price_data = await self.price_client.fetch_prices(
-                asset_symbol=local_chain_data["native"]
-            )
-            remote_fee_updates = {}
-            for remote_chain_id, remote_chain_data in CHAIN_DATA.items():
+        fee_updates: Mapping[int, Mapping[int, int]] = {}
+        for local_chain_id in CHAIN_DATA:
+            local_compute_costs = compute_costs.get(local_chain_id)
+            remote_fee_updates: Mapping[int, int] = {}
+            for remote_chain_id in CHAIN_DATA:
                 if remote_chain_id != local_chain_id:
-                    local_native_priced_in_remote = local_native_price_data[
-                        remote_chain_data["native"]
-                    ]
-                    remote_compute_costs = compute_costs[remote_chain_id]
-                    remote_fee_in_local_native = (
+                    remote_compute_costs = compute_costs.get(remote_chain_id)
+                    remote_fee_usd = (
                         remote_compute_costs.gas_units
                         * remote_compute_costs.gas_price
-                        / local_native_priced_in_remote
+                        * remote_compute_costs.native_value_usd
+                    )
+                    remote_fee_in_local_native = (
+                        remote_fee_usd / local_compute_costs.native_value_usd
                     )
                     remote_fee_updates[remote_chain_id] = math.ceil(
                         remote_fee_in_local_native

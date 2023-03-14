@@ -19,7 +19,14 @@ ENV ENVIRONMENT=development
 ENV DB_URL=postgres://postgres:postgres@localhost:5432/ax_relayer_dev
 
 # RPC Urls
-
+ENV ETHEREUM_RPC=inject_at_deployment
+ENV BSC_RPC=inject_at_deployment
+ENV POLYGON_RPC=inject_at_deployment
+ENV AVALANCHE_RPC=inject_at_deployment
+ENV FANTOM_RPC=inject_at_deployment
+ENV MOONBEAM_RPC=inject_at_deployment
+ENV ARBITRUM_RPC=inject_at_deployment
+ENV CELO_RPC=inject_at_deployment
 
 # RMQ
 ENV RMQ_HOST=inject_at_deployment

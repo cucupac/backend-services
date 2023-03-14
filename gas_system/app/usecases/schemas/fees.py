@@ -1,5 +1,6 @@
+from datetime import datetime
 from enum import Enum
-from typing import List, Mapping
+from typing import List, Mapping, Optional
 
 from pydantic import BaseModel
 
@@ -23,5 +24,11 @@ class MinimumFees(BaseModel):
 class FeeUpdate(BaseModel):
     chain_id: int
     updates: Mapping[int, int]
-    transaction_hash: str
-    error: str
+    transaction_hash: Optional[str]
+    error: Optional[str]
+
+
+class FeeUpdateInDb(FeeUpdate):
+    id: int
+    created_at: datetime
+    updated_at: datetime
