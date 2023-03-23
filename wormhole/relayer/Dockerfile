@@ -11,9 +11,9 @@ COPY . /app
 # Environment Variables
 
 # Server
+ENV ENVIRONMENT=development
 ENV OPENAPI_URL="/openapi.json"
 ENV SERVER_PORT=9000
-ENV ENVIRONMENT=development
 
 # Database 
 ENV DB_URL=postgres://postgres:postgres@localhost:5432/ax_relayer_dev
@@ -29,10 +29,7 @@ ENV ARBITRUM_RPC=inject_at_deployment
 ENV CELO_RPC=inject_at_deployment
 
 # RMQ
-ENV RMQ_HOST=inject_at_deployment
-ENV RMQ_PORT=5672
-ENV RMQ_USERNAME=inject_at_deployment
-ENV RMQ_PASSWORD=inject_at_deployment
+ENV RMQ_URL=inject_at_deployment
 ENV EXCHANGE_NAME=vaa_exchange
 ENV ROUTING_KEY=wormhole_vaa
 ENV QUEUE_NAME=vaa_queue

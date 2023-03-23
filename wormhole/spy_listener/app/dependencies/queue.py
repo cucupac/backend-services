@@ -17,7 +17,7 @@ async def get_exchange() -> AbstractExchange:
         event_loop = await get_event_loop()
 
         connection = await connect_robust(
-            f"amqp://{settings.rmq_username}:{settings.rmq_password}@{settings.rmq_host}:{settings.rmq_port}",
+            settings.rmq_url,
             loop=event_loop,
         )
 

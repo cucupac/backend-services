@@ -9,7 +9,6 @@ DATABASE = None
 
 
 async def get_or_create_database() -> Database:
-    print("WE GOT HERE")
     global DATABASE  # pylint: disable=global-statement
     if DATABASE is not None:
         return DATABASE

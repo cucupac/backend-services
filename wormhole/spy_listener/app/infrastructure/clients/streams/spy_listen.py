@@ -22,7 +22,6 @@ class StreamClient(IStreamClient):
                 async with grpc.aio.insecure_channel(
                     settings.guardian_spy_url
                 ) as channel:
-
                     logger.info("[StreamClient]: Connected to stream.")
                     stub = spy_pb2_grpc.SpyRPCServiceStub(channel)
 

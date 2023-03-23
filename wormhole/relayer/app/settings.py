@@ -22,10 +22,7 @@ class Settings(BaseSettings):
     db_url: str
 
     # RabbitMQ
-    rmq_host: str
-    rmq_port: int
-    rmq_username: str
-    rmq_password: str
+    rmq_url: str
     exchange_name: str
     routing_key: str
     queue_name: str
