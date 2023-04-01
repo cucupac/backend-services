@@ -40,11 +40,11 @@ app = setup_app()
 
 @app.on_event("startup")
 async def startup_event() -> None:
-    await get_event_loop()
+    event_loop = await get_event_loop()
     await get_client_session()
     await get_or_create_database()
     stream_client = await get_stream_client()
-    await stream_client.start()
+    await stream_client.start(loop=event_loop)
 
 
 @app.on_event("shutdown")

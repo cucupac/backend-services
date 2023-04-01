@@ -27,6 +27,7 @@ env:
   RELAYER_ADDRESS: "0x"
   WORMHOLE_BRIDGE_ABI: "example"
   RMQ_URL: "amqp://user:password@localhost:5672"
+  RECONNECT_WAIT_TIME: 2
 
 jobs:
   run-ci:

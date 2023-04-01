@@ -21,6 +21,7 @@ class Settings(BaseSettings):
     # Wormhole
     guardian_spy_url: str
     spy_service_filters: str
+    reconnect_wait_time: int
 
     # Database Settings
     db_url: str

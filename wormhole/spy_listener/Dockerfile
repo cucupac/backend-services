@@ -17,6 +17,7 @@ ENV SERVER_PORT=8000
 # Wormhole
 ENV GUARDIAN_SPY_URL=inject_at_deployment
 ENV SPY_SERVICE_FILTERS=inject_at_deployment
+ENV RECONNECT_WAIT_TIME=2
 
 # Database 
 ENV DB_URL=postgres://postgres:postgres@localhost:5432/ax_relayer_dev
