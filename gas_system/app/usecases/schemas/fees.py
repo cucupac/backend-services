@@ -1,19 +1,9 @@
 from datetime import datetime
-from enum import Enum
 from typing import List, Mapping, Optional
 
 from pydantic import BaseModel
 
-
-class Chains(int, Enum):
-    ETHEREUM = 1
-    BSC = 56
-    POLYGON = 137
-    AVALANCHE = 43114
-    FANTOM = 250
-    MOONBEAM = 1284
-    ARBITRUM = 42161
-    CELO = 42220
+from app.usecases.schemas.blockchain import Chains
 
 
 class MinimumFees(BaseModel):

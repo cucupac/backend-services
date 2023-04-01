@@ -22,9 +22,10 @@ class Settings(BaseSettings):
     db_url: str
 
     # EVM
-    admin_private_key: str
-    admin_address: str
+    wh_bridge_admin_private_key: str
+    wh_bridge_admin_address: str
     mock_fee: int
+    evm_wormhole_bridge: str
 
     # RPC Urls
     ethereum_rpc: str
@@ -32,15 +33,14 @@ class Settings(BaseSettings):
     polygon_rpc: str
     avalanche_rpc: str
     fantom_rpc: str
-    moonbeam_rpc: str
     arbitrum_rpc: str
     celo_rpc: str
 
     # Price Client
     price_client_base_url: str
 
-    # Tasks
-    update_fees_frequency: int = 60 * 60 * 24
+    # Tasks TODO: change back to once a day
+    update_fees_frequency: int = 10
 
     class Config:
         env_file = DOTENV_FILE

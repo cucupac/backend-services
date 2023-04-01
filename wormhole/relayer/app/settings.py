@@ -33,9 +33,10 @@ class Settings(BaseSettings):
     polygon_rpc: str
     avalanche_rpc: str
     fantom_rpc: str
-    moonbeam_rpc: str
     arbitrum_rpc: str
     celo_rpc: str
+    gnosis_rpc: str
+    optimism_rpc: str
 
     # EVM
     relayer_private_key: str
