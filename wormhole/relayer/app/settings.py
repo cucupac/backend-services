@@ -35,12 +35,11 @@ class Settings(BaseSettings):
     fantom_rpc: str
     arbitrum_rpc: str
     celo_rpc: str
-    gnosis_rpc: str
-    optimism_rpc: str
 
     # EVM
     relayer_private_key: str
     relayer_address: str
+    evm_wormhole_bridge: str
 
     class Config:
         env_file = DOTENV_FILE

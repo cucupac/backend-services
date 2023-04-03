@@ -87,5 +87,5 @@ async def test_deliver_fail(
     )
 
     assert test_relay["status"] == Status.FAILED
-    assert test_relay["error"] == constant.EVM_CLIENT_ERROR_DETAIL
+    assert test_relay["error"] == constant.BLOCKCHAIN_CLIENT_ERROR_DETAIL
     assert test_relay["transaction_hash"] is None

@@ -12,7 +12,7 @@ TEST_VAA_PAYLOAD = b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x0
 ####################################
 
 # Other Constants
-EVM_CLIENT_ERROR_DETAIL = "[EvmClient]: Error - VAA delivery failed."
+BLOCKCHAIN_CLIENT_ERROR_DETAIL = "[EvmClient]: Error - VAA delivery failed."
 TEST_TRANSACTION_HASH = (
     "0xa4100d05fcbf2e93dfa8e8742fe7d8ba58529774b0c7e7b72f58b0e5f8de3d5e"
 )

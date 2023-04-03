@@ -1,10 +1,8 @@
 from typing import Any, List, Mapping
 
-import web3.eth
 from eth_account.datastructures import SignedTransaction
 from web3 import Web3
 from web3.contract import Contract
-from web3.types import TxParams
 
 from app.settings import settings
 from app.usecases.interfaces.clients.http.bridge import IBridgeClient
@@ -64,4 +62,4 @@ class WormholeBridgeClient(IBridgeClient):
         )
 
         # TODO: Esnsure gas estimation is accurate.
-        return web3.eth.estimate_gas(transaction)
+        return web3_client.eth.estimate_gas(transaction)
