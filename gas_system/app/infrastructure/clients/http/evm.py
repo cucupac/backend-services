@@ -3,7 +3,6 @@ from typing import Mapping
 
 from web3 import Web3
 
-from app.settings import settings
 from app.usecases.interfaces.clients.http.blockchain import IBlockchainClient
 from app.usecases.interfaces.clients.http.bridge import IBridgeClient
 from app.usecases.schemas.blockchain import (
@@ -32,6 +31,8 @@ class EvmClient(IBlockchainClient):
 
         web3_client = Web3(Web3.HTTPProvider(self.chain_data[local_chain_id]["rpc"]))
 
+        post_london_upgrade = self.chain_data[local_chain_id]["post_london_upgrade"]
+
         contract = web3_client.eth.contract(
             address=self.bridge_client.address,
             abi=self.bridge_client.abi,
@@ -39,7 +40,10 @@ class EvmClient(IBlockchainClient):
 
         try:
             signed_transaction = await self.bridge_client.craft_transaction(
-                remote_data=remote_data, contract=contract, web3_client=web3_client
+                remote_data=remote_data,
+                contract=contract,
+                web3_client=web3_client,
+                post_london_upgrade=post_london_upgrade,
             )
 
             return web3_client.eth.send_raw_transaction(
@@ -53,6 +57,7 @@ class EvmClient(IBlockchainClient):
         """Estimates a transaction's gas information."""
 
         web3_client = Web3(Web3.HTTPProvider(self.chain_data[chain_id]["rpc"]))
+        post_london_upgrade = self.chain_data[chain_id]["post_london_upgrade"]
 
         contract = web3_client.eth.contract(
             address=self.bridge_client.address,
@@ -60,7 +65,9 @@ class EvmClient(IBlockchainClient):
         )
 
         estimated_gas_units = await self.bridge_client.estimate_gas_units(
-            contract=contract, web3_client=web3_client
+            contract=contract,
+            web3_client=web3_client,
+            post_london_upgrade=post_london_upgrade,
         )
 
         return ComputeCosts(

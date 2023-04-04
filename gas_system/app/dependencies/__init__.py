@@ -7,5 +7,5 @@ from .logger import logger
 from .event_loop import get_event_loop
 from .client_session import get_client_session
 from .repos import get_fee_update_repo
-from .http_clients import get_evm_client, get_coinbase_client
+from .http_clients import get_evm_client, get_coinbase_client, get_coingecko_client
 from .services import get_remote_price_manager

@@ -72,7 +72,8 @@ async def remote_price_manager(
     test_price_client: IPriceClient,
 ) -> IRemotePriceManager:
     return RemotePriceManager(
-        price_client=test_price_client,
+        primary_price_client=test_price_client,
+        secondary_price_client=test_price_client,
         blockchain_client=test_evm_client_success,
         fee_update_repo=fee_updates_repo,
     )

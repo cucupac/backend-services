@@ -37,10 +37,11 @@ class Settings(BaseSettings):
     celo_rpc: str
 
     # Price Client
-    price_client_base_url: str
+    primary_price_client_base_url: str
+    secondary_price_client_base_url: str
 
     # Tasks TODO: change back to once a day
-    update_fees_frequency: int = 10
+    update_fees_frequency: int = 30
 
     class Config:
         env_file = DOTENV_FILE

@@ -1,5 +1,6 @@
 from app.dependencies import CHAIN_DATA, WORMHOLE_BRIDGE_ABI, get_client_session, logger
 from app.infrastructure.clients.http.coinbase import CoinbaseClient
+from app.infrastructure.clients.http.coingecko import CoingeckoClient
 from app.infrastructure.clients.http.evm import EvmClient
 from app.infrastructure.clients.http.wormhole_bridge import WormholeBridgeClient
 from app.settings import settings
@@ -30,7 +31,17 @@ async def get_coinbase_client() -> IPriceClient:
     client_session = await get_client_session()
 
     return CoinbaseClient(
-        client_session=client_session, base_url=settings.price_client_base_url
+        client_session=client_session, base_url=settings.primary_price_client_base_url
+    )
+
+
+async def get_coingecko_client() -> IPriceClient:
+    """Instantiate and return Coinbase client."""
+
+    client_session = await get_client_session()
+
+    return CoingeckoClient(
+        client_session=client_session, base_url=settings.secondary_price_client_base_url
     )
 
 
