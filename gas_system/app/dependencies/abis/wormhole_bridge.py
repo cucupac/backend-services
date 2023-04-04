@@ -320,4 +320,5 @@ ABI = [
         "stateMutability": "view",
         "type": "function",
     },
+    {"stateMutability": "payable", "type": "receive"},
 ]
