@@ -4,5 +4,5 @@ from typing import Mapping, Union
 
 class IPriceClient(ABC):
     @abstractmethod
-    async def fetch_prices(self, chain_data: dict) -> Mapping[str, Union[str, int]]:
+    async def fetch_usd_prices(self) -> Mapping[str, float]:
         """Fetches desired asset price in terms of many currencies."""

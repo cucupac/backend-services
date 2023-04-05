@@ -8,19 +8,16 @@ from app.usecases.interfaces.repos.fee_updates import IFeeUpdateRepo
 from app.usecases.interfaces.services.remote_price_manager import IRemotePriceManager
 from app.usecases.schemas.blockchain import BlockchainClientError, ComputeCosts
 from app.usecases.schemas.fees import FeeUpdate, MinimumFees
-from app.usecases.schemas.prices import PriceClientException
 
 
 class RemotePriceManager(IRemotePriceManager):
     def __init__(
         self,
-        primary_price_client: IPriceClient,
-        secondary_price_client: IPriceClient,
+        price_client: IPriceClient,
         blockchain_client: IBlockchainClient,
         fee_update_repo: IFeeUpdateRepo,
     ):
-        self.primary_price_client = primary_price_client
-        self.secondary_price_client = secondary_price_client
+        self.price_client = price_client
         self.blockchain_client = blockchain_client
         self.fee_update_repo = fee_update_repo
 
@@ -28,25 +25,16 @@ class RemotePriceManager(IRemotePriceManager):
     async def update_remote_fees(self) -> None:
         """Updates gas prices for remote computation in local native token."""
 
+        price_data = await self.price_client.fetch_usd_prices()
+
         # Estimate fees for each chain
         compute_costs: Mapping[int, ComputeCosts] = {}
         for local_chain_id, data in CHAIN_DATA.items():
             costs = await self.blockchain_client.estimate_fees(chain_id=local_chain_id)
 
-            try:
-                price_data = await self.primary_price_client.fetch_prices(data)
-                costs.native_value_usd = float(price_data.get("USD"))
-            except PriceClientException as e:
-                if "Response status: 400" in str(e):
-                    price_data = await self.secondary_price_client.fetch_prices(data)
-                    costs.native_value_usd = float(price_data.get("usd"))
-                else:
-                    raise e
+            costs.native_value_usd = price_data[data["native"]]
 
             compute_costs[local_chain_id] = costs
-            print(
-                f"\nFee info for {data['name']}\nnative: {data['native']} {compute_costs[local_chain_id]}"
-            )
 
         # Construct fee information
         fee_updates: Mapping[int, Mapping[int, int]] = {}
@@ -95,6 +83,3 @@ class RemotePriceManager(IRemotePriceManager):
                         error=error,
                     )
                 )
-            print(
-                f"\nSuccessfully updated remote fees for chain with chain_id={local_chain_id}"
-            )

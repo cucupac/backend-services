@@ -18,7 +18,7 @@ from app.usecases.interfaces.clients.http.prices import IPriceClient
 from app.usecases.interfaces.repos.fee_updates import IFeeUpdateRepo
 from app.usecases.interfaces.services.remote_price_manager import IRemotePriceManager
 from app.usecases.services.remote_price_manager import RemotePriceManager
-from tests.mocks.clients.http.coinbase import MockPriceClient
+from tests.mocks.clients.http.coingecko import MockPriceClient
 
 # Mocks
 from tests.mocks.clients.http.evm import EvmResult, MockEvmClient
@@ -72,8 +72,7 @@ async def remote_price_manager(
     test_price_client: IPriceClient,
 ) -> IRemotePriceManager:
     return RemotePriceManager(
-        primary_price_client=test_price_client,
-        secondary_price_client=test_price_client,
+        price_client=test_price_client,
         blockchain_client=test_evm_client_success,
         fee_update_repo=fee_updates_repo,
     )

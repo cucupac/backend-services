@@ -29,10 +29,11 @@ class WormholeBridgeClient(IBridgeClient):
     ) -> SignedTransaction:
         """Craft a raw transaction to be sent to the blockchain."""
 
-        max_priority_fee = web3_client.eth.max_priority_fee
         gas_price_estimate = web3_client.eth.gas_price
 
-        if post_london_upgrade is True:
+        if post_london_upgrade:
+            max_priority_fee = web3_client.eth.max_priority_fee
+
             transaction = contract.functions.setSendFees(
                 remote_data.remote_chain_ids, remote_data.remote_fees
             ).buildTransaction(
@@ -67,10 +68,12 @@ class WormholeBridgeClient(IBridgeClient):
         self, contract: Contract, web3_client: Web3, post_london_upgrade: bool
     ) -> int:
         """Estimates a transaction's gas information."""
-        max_priority_fee = web3_client.eth.max_priority_fee
+
         gas_price_estimate = web3_client.eth.gas_price
 
-        if post_london_upgrade is True:
+        if post_london_upgrade:
+            max_priority_fee = web3_client.eth.max_priority_fee
+
             transaction = contract.functions.setSendFees(
                 self.mock_set_send_fees_params.remote_chain_ids,
                 self.mock_set_send_fees_params.remote_fees,
