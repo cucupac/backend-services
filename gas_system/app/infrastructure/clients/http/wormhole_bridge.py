@@ -29,35 +29,25 @@ class WormholeBridgeClient(IBridgeClient):
     ) -> SignedTransaction:
         """Craft a raw transaction to be sent to the blockchain."""
 
+        transaction_builder = {
+            "from": settings.wh_bridge_admin_address,
+            "nonce": web3_client.eth.get_transaction_count(
+                settings.wh_bridge_admin_address
+            ),
+        }
+
         gas_price_estimate = web3_client.eth.gas_price
 
         if post_london_upgrade:
             max_priority_fee = web3_client.eth.max_priority_fee
-
-            transaction = contract.functions.setSendFees(
-                remote_data.remote_chain_ids, remote_data.remote_fees
-            ).buildTransaction(
-                {
-                    "from": settings.wh_bridge_admin_address,
-                    "nonce": web3_client.eth.get_transaction_count(
-                        settings.wh_bridge_admin_address
-                    ),
-                    "maxFeePerGas": gas_price_estimate + max_priority_fee,
-                    "maxPriorityFeePerGas": max_priority_fee,
-                }
-            )
+            transaction_builder["maxFeePerGas"] = gas_price_estimate + max_priority_fee
+            transaction_builder["maxPriorityFeePerGas"] = max_priority_fee
         else:
-            transaction = contract.functions.setSendFees(
-                remote_data.remote_chain_ids, remote_data.remote_fees
-            ).buildTransaction(
-                {
-                    "from": settings.wh_bridge_admin_address,
-                    "nonce": web3_client.eth.get_transaction_count(
-                        settings.wh_bridge_admin_address
-                    ),
-                    "gasPrice": gas_price_estimate,
-                }
-            )
+            transaction_builder["gasPrice"] = gas_price_estimate
+
+        transaction = contract.functions.setSendFees(
+            remote_data.remote_chain_ids, remote_data.remote_fees
+        ).buildTransaction(transaction_builder)
 
         return web3_client.eth.account.sign_transaction(
             transaction_dict=transaction,
@@ -69,37 +59,26 @@ class WormholeBridgeClient(IBridgeClient):
     ) -> int:
         """Estimates a transaction's gas information."""
 
+        transaction_builder = {
+            "from": settings.wh_bridge_admin_address,
+            "nonce": web3_client.eth.get_transaction_count(
+                settings.wh_bridge_admin_address
+            ),
+        }
+
         gas_price_estimate = web3_client.eth.gas_price
 
         if post_london_upgrade:
             max_priority_fee = web3_client.eth.max_priority_fee
-
-            transaction = contract.functions.setSendFees(
-                self.mock_set_send_fees_params.remote_chain_ids,
-                self.mock_set_send_fees_params.remote_fees,
-            ).buildTransaction(
-                {
-                    "from": settings.wh_bridge_admin_address,
-                    "nonce": web3_client.eth.get_transaction_count(
-                        settings.wh_bridge_admin_address
-                    ),
-                    "maxFeePerGas": gas_price_estimate + max_priority_fee,
-                    "maxPriorityFeePerGas": max_priority_fee,
-                }
-            )
+            transaction_builder["maxFeePerGas"] = gas_price_estimate + max_priority_fee
+            transaction_builder["maxPriorityFeePerGas"] = max_priority_fee
         else:
-            transaction = contract.functions.setSendFees(
-                self.mock_set_send_fees_params.remote_chain_ids,
-                self.mock_set_send_fees_params.remote_fees,
-            ).buildTransaction(
-                {
-                    "from": settings.wh_bridge_admin_address,
-                    "nonce": web3_client.eth.get_transaction_count(
-                        settings.wh_bridge_admin_address
-                    ),
-                    "gasPrice": gas_price_estimate,
-                }
-            )
+            transaction_builder["gasPrice"] = gas_price_estimate
+
+        transaction = contract.functions.setSendFees(
+            self.mock_set_send_fees_params.remote_chain_ids,
+            self.mock_set_send_fees_params.remote_fees,
+        ).buildTransaction(transaction_builder)
 
         # TODO: Esnsure gas estimation is accurate.
         return web3_client.eth.estimate_gas(transaction)

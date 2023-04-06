@@ -24,7 +24,6 @@ ENV BSC_RPC=inject_at_deployment
 ENV POLYGON_RPC=inject_at_deployment
 ENV AVALANCHE_RPC=inject_at_deployment
 ENV FANTOM_RPC=inject_at_deployment
-ENV MOONBEAM_RPC=inject_at_deployment
 ENV ARBITRUM_RPC=inject_at_deployment
 ENV CELO_RPC=inject_at_deployment
 

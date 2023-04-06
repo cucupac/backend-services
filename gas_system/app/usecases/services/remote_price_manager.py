@@ -66,7 +66,6 @@ class RemotePriceManager(IRemotePriceManager):
                         ),
                         local_chain_id=chain_id,
                     )
-
                 except BlockchainClientError as e:
                     transaction_hash = None
                     error = e.detail

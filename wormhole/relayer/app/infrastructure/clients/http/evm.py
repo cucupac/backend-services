@@ -3,8 +3,8 @@ from typing import Mapping
 
 from web3 import Web3
 
-from app.usecases.interfaces.clients.http.evm import IEvmClient
 from app.usecases.interfaces.clients.http.bridge import IBridgeClient
+from app.usecases.interfaces.clients.http.evm import IEvmClient
 from app.usecases.schemas.blockchain import BlockchainClientError, TransactionHash
 
 
@@ -33,7 +33,12 @@ class EvmClient(IEvmClient):
 
         try:
             signed_transaction = await self.bridge_client.craft_transaction(
-                payload=payload, contract=contract, web3_client=web3_client
+                payload=payload,
+                contract=contract,
+                web3_client=web3_client,
+                post_london_upgrade=self.chain_data[dest_chain_id][
+                    "post_london_upgrade"
+                ],
             )
 
             return web3_client.eth.send_raw_transaction(

@@ -8,10 +8,6 @@ from fastapi import FastAPI
 from httpx import AsyncClient
 
 from app.infrastructure.db.repos.fee_updates import FeeUpdateRepo
-
-# import tests.constants as constant
-# from app.dependencies import get_example_repo
-# from app.infrastructure.db.repos.example import ExampleRepo
 from app.infrastructure.web.setup import setup_app
 from app.usecases.interfaces.clients.http.blockchain import IBlockchainClient
 from app.usecases.interfaces.clients.http.prices import IPriceClient
@@ -78,6 +74,7 @@ async def remote_price_manager(
     )
 
 
+# TODO: test this failing case
 # @pytest_asyncio.fixture
 # async def example_service_fail(
 #     test_evm_client_fail: IBlockchainClient,

@@ -71,7 +71,7 @@ class CoingeckoClient(IPriceClient):
         for index, coingecko_id in enumerate(self.id_lookup):
             endpoint += coingecko_id
             if index != len(self.id_lookup) - 1:
-                endpoint += "%2"
+                endpoint += "%2C"
             else:
                 endpoint += "&vs_currencies=usd&precision=18"
 

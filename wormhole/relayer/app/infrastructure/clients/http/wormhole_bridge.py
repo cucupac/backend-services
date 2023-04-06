@@ -18,22 +18,30 @@ class WormholeBridgeClient(IBridgeClient):
         self.address = address
 
     async def craft_transaction(
-        self, payload: bytes, contract: Contract, web3_client: Web3
+        self,
+        payload: bytes,
+        contract: Contract,
+        web3_client: Web3,
+        post_london_upgrade: bool,
     ) -> SignedTransaction:
         """Craft a raw transaction to be sent to the blockchain."""
 
-        max_priority_fee = web3_client.eth.max_priority_fee
+        transaction_builder = {
+            "from": settings.relayer_address,
+            "nonce": web3_client.eth.get_transaction_count(settings.relayer_address),
+        }
+
         gas_price_estimate = web3_client.eth.gas_price
 
+        if post_london_upgrade:
+            max_priority_fee = web3_client.eth.max_priority_fee
+            transaction_builder["maxFeePerGas"] = gas_price_estimate + max_priority_fee
+            transaction_builder["maxPriorityFeePerGas"] = max_priority_fee
+        else:
+            transaction_builder["gasPrice"] = gas_price_estimate
+
         transaction = contract.functions.processMessage(payload).buildTransaction(
-            {
-                "from": settings.relayer_address,
-                "nonce": web3_client.eth.get_transaction_count(
-                    settings.relayer_address
-                ),
-                "maxFeePerGas": gas_price_estimate + max_priority_fee,
-                "maxPriorityFeePerGas": max_priority_fee,
-            }
+            transaction_builder
         )
 
         return web3_client.eth.account.sign_transaction(

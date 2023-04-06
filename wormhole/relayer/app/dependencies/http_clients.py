@@ -1,9 +1,9 @@
 from app.dependencies import CHAIN_DATA, WORMHOLE_BRIDGE_ABI, logger
 from app.infrastructure.clients.http.evm import EvmClient
 from app.infrastructure.clients.http.wormhole_bridge import WormholeBridgeClient
-from app.usecases.interfaces.clients.http.evm import IEvmClient
-from app.usecases.interfaces.clients.http.bridge import IBridgeClient
 from app.settings import settings
+from app.usecases.interfaces.clients.http.bridge import IBridgeClient
+from app.usecases.interfaces.clients.http.evm import IEvmClient
 
 
 async def get_evm_client() -> IEvmClient:
