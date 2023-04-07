@@ -76,7 +76,7 @@ async def test_websocket_fail(
         expected_data = {
             "transaction_hash": None,
             "status": Status.FAILED,
-            "error": constant.EVM_CLIENT_ERROR_DETAIL,
+            "error": constant.BLOCKCHAIN_CLIENT_ERROR_DETAIL,
         }
 
         data = websocket.receive_json()

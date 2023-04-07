@@ -14,23 +14,20 @@ class Settings(BaseSettings):
     environment: str = "development"
     log_level: str = "info"
     server_host: str = "0.0.0.0"
-    spy_listener_server_port: int
+    server_port: int = 8000
     server_prefix: str = ""
     openapi_url: str = "/openapi.json"
 
     # Wormhole
     guardian_spy_url: str
     spy_service_filters: str
+    reconnect_wait_time: int
 
     # Database Settings
     db_url: str
 
     # RabbitMQ
-    rmq_host: str
-    rmq_port: int
-    rmq_username: str
-    rmq_password: str
-
+    rmq_url: str
     exchange_name: str
     routing_key: str
     queue_name: str

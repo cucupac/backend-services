@@ -17,7 +17,7 @@ from app.settings import settings
 
 def setup_app() -> FastAPI:
     fastapi_app = FastAPI(
-        title="Ax Protocol Spy Listener",
+        title="Ax Protocol Wormhole Relayer",
         description="Facilitates message passing between chains.",
         openapi_url=settings.openapi_url,
     )
@@ -73,6 +73,6 @@ def main(reload=False) -> None:
         "app.infrastructure.web.setup:app",
         loop="uvloop",
         host=settings.server_host,
-        port=settings.relayer_server_port,
+        port=settings.server_port,
         **kwargs,
     )

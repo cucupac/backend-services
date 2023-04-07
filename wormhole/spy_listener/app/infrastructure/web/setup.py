@@ -15,16 +15,16 @@ from app.settings import settings
 
 
 def setup_app() -> FastAPI:
-    app = FastAPI(
-        title="Ax Protocol Spy Listener",
-        description="Facilitates message passing between chains.",
+    fastapi_app = FastAPI(
+        title="Ax Protocol Wormhole Spy Listener",
+        description="Listens to messages emitted by Wormhole's Guardian Spy.",
         openapi_url=settings.openapi_url,
     )
-    app.include_router(health.health_router, prefix="/metrics/health")
+    fastapi_app.include_router(health.health_router, prefix="/metrics/health")
 
     # CORS (Cross-Origin Resource Sharing)
     origins = ["*"]
-    app.add_middleware(
+    fastapi_app.add_middleware(
         CORSMiddleware,
         allow_origins=origins,
         allow_credentials=True,
@@ -32,22 +32,22 @@ def setup_app() -> FastAPI:
         allow_headers=["*"],
     )
 
-    return app
+    return fastapi_app
 
 
-fastapi_app = setup_app()
+app = setup_app()
 
 
-@fastapi_app.on_event("startup")
+@app.on_event("startup")
 async def startup_event() -> None:
-    await get_event_loop()
+    event_loop = await get_event_loop()
     await get_client_session()
     await get_or_create_database()
     stream_client = await get_stream_client()
-    await stream_client.start()
+    await stream_client.start(loop=event_loop)
 
 
-@fastapi_app.on_event("shutdown")
+@app.on_event("shutdown")
 async def shutdown_event() -> None:
     # Close RabbitMQ connection
     connection = await get_connection()
@@ -69,6 +69,6 @@ def main(reload=False) -> None:
         "app.infrastructure.web.setup:app",
         loop="uvloop",
         host=settings.server_host,
-        port=settings.spy_listener_server_port,
+        port=settings.server_port,
         **kwargs,
     )

@@ -1,0 +1,93 @@
+name: gas_system_ci
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "gas_system/**"
+  pull_request:
+    paths:
+      - "gas_system/**"
+
+env:
+  # DB
+  POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+  POSTGRES_HOST: ${{ secrets.POSTGRES_HOST }}
+  POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+  POSTGRES_PORT: ${{ secrets.POSTGRES_PORT }}
+  POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+  DB_URL: "postgresql://user:password@localhost/example"
+  # Endpoints
+  PRICE_CLIENT_BASE_URL: ${{ secrets.PRICE_CLIENT_BASE_URL }}
+  # Addresses
+  EVM_WORMHOLE_BRIDGE: "0x"
+  WH_BRIDGE_ADMIN_PRIVATE_KEY: "0x"
+  WH_BRIDGE_ADMIN_ADDRESS: "0x"
+  # RPCs
+  ETHEREUM_RPC: ${{ secrets.ETHEREUM_RPC }}
+  BSC_RPC: ${{ secrets.BSC_RPC }}
+  POLYGON_RPC: ${{ secrets.POLYGON_RPC }}
+  AVALANCHE_RPC: ${{ secrets.AVALANCHE_RPC }}
+  FANTOM_RPC: ${{ secrets.FANTOM_RPC }}
+  ARBITRUM_RPC: ${{ secrets.ARBITRUM_RPC }}
+  CELO_RPC: ${{ secrets.CELO_RPC }}
+  # Misc
+  MOCK_FEE: "1000000000000000"
+
+jobs:
+  run-ci:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up python
+        id: setup-python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+
+      - name: Install dependencies
+        run: |
+          pip install -r gas_system/requirements.txt
+
+      - name: Create containers
+        id: create-containers
+        run: |
+          docker run -d \
+          --name test_ax_database \
+          --env POSTGRES_HOST=db \
+          --env POSTGRES_PORT=5444 \
+          --env POSTGRES_USER=postgres \
+          --env POSTGRES_PASSWORD=postgres \
+          --env POSTGRES_DB=ax_relayer_dev_test \
+          -p 5444:5444 \
+          library/postgres:12-alpine -p 5444
+
+      - name: Database setup
+        id: database-setup
+        run: |
+          python ci/initialize_database.py
+          alembic upgrade head
+
+      - name: Lint apps
+        id: lint
+        run: |
+          cd gas_system
+          make lint
+        continue-on-error: false
+
+      - name: Format check
+        id: format_check
+        run: |
+          cd gas_system
+          make format-check
+        continue-on-error: false
+
+      - name: Run tests
+        id: tests
+        run: |
+          cd gas_system
+          make test
+        continue-on-error: false

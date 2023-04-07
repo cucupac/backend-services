@@ -1,0 +1,15 @@
+[run]
+omit =
+    # omit anything in a .local directory anywhere
+    */.local/*
+
+    # omit __main__.py
+    app/__main__.py
+
+[report]
+omit =
+    # omit anything in a .local directory anywhere
+    */.local/*
+    
+    # omit __main__.py
+    app/__main__.py

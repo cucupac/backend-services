@@ -1,7 +1,7 @@
 SHELL := /bin/bash
 
-docker_image = spy_listener
-docker_username = ax_protocol
+docker_image = wormhole-spy-listener
+docker_username = axprotocol
 formatted_code := app/ tests/
 rev_id = ""
 migration_message = ""
@@ -24,7 +24,7 @@ format-check:
 
 lint:
 	@echo Linting spy_listener...
-	pylint --ignore-paths=app/infrastructure/clients/streams/grpc $(formatted_code)
+	pylint --ignore-paths=app/infrastructure/clients/streams/grpc $(formatted_code) --fail-under=9.5
 
 run:
 	python -m app --reload

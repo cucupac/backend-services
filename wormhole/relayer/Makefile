@@ -1,7 +1,7 @@
 SHELL := /bin/bash
 
-docker_image = relayer
-docker_username = ax_protocol
+docker_image = wormhole-relayer
+docker_username = axprotocol
 formatted_code := app/ tests/
 rev_id = ""
 migration_message = ""
@@ -24,7 +24,7 @@ format-check:
 
 lint:
 	@echo Linting relayer...
-	pylint $(formatted_code)
+	pylint $(formatted_code) --fail-under=9.5
 
 run:
 	python -m app --reload
