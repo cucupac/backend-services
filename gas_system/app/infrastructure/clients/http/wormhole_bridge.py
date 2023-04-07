@@ -4,6 +4,7 @@ from eth_account.datastructures import SignedTransaction
 from web3 import Web3
 from web3.contract import Contract
 
+from app.dependencies import BRIDGE_DATA
 from app.settings import settings
 from app.usecases.interfaces.clients.http.bridge import IBridgeClient
 from app.usecases.schemas.fees import MinimumFees
@@ -45,8 +46,12 @@ class WormholeBridgeClient(IBridgeClient):
         else:
             transaction_builder["gasPrice"] = gas_price_estimate
 
+        wormhole_chain_ids = await self.__translate_bridge_ids(
+            chain_ids=remote_data.remote_chain_ids
+        )
+
         transaction = contract.functions.setSendFees(
-            remote_data.remote_chain_ids, remote_data.remote_fees
+            wormhole_chain_ids, remote_data.remote_fees
         ).buildTransaction(transaction_builder)
 
         return web3_client.eth.account.sign_transaction(
@@ -75,10 +80,22 @@ class WormholeBridgeClient(IBridgeClient):
         else:
             transaction_builder["gasPrice"] = gas_price_estimate
 
+        wormhole_chain_ids = await self.__translate_bridge_ids(
+            chain_ids=self.mock_set_send_fees_params.remote_chain_ids,
+        )
+
         transaction = contract.functions.setSendFees(
-            self.mock_set_send_fees_params.remote_chain_ids,
+            wormhole_chain_ids,
             self.mock_set_send_fees_params.remote_fees,
         ).buildTransaction(transaction_builder)
 
-        # TODO: Esnsure gas estimation is accurate.
+        # TODO: Esnsure gas estimation is accurate, and add a margin
         return web3_client.eth.estimate_gas(transaction)
+
+    async def __translate_bridge_ids(self, chain_ids: List[int]) -> List[int]:
+        """Translates actual chain IDs to Wormhole chain IDs."""
+
+        return [
+            BRIDGE_DATA[actual_chain_id]["wormhole"]["chain_id"]
+            for actual_chain_id in chain_ids
+        ]

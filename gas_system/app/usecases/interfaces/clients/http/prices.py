@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Mapping, Union
+from typing import Mapping
 
 
 class IPriceClient(ABC):

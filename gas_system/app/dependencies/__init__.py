@@ -2,6 +2,7 @@
 various classes and utility funtions."""
 
 from .chain_data import CHAIN_DATA
+from .bridge_data import BRIDGE_DATA
 from .abis.wormhole_bridge import ABI as WORMHOLE_BRIDGE_ABI
 from .logger import logger
 from .event_loop import get_event_loop

@@ -28,7 +28,6 @@ class EvmClient(IBlockchainClient):
         self, remote_data: MinimumFees, local_chain_id: str
     ) -> TransactionHash:
         """Sends transaction to the blockchain."""
-
         web3_client = Web3(Web3.HTTPProvider(self.chain_data[local_chain_id]["rpc"]))
 
         contract = web3_client.eth.contract(

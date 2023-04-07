@@ -27,4 +27,4 @@ class UpdateFeesTask(IUpdateFeeTask):
         """Update remote fees."""
         self.logger.info("[UpdateFeesTask]: Task started.")
         await self.remote_price_manager.update_remote_fees()
-        self.logger.info("[UpdateFeesTask]: Sleeping now...")
+        self.logger.info("[UpdateFeesTask]: Task completed. Sleeping now...")

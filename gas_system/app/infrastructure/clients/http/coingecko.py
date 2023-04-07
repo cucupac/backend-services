@@ -80,7 +80,7 @@ class CoingeckoClient(IPriceClient):
             endpoint=endpoint,
         )
 
-        price_dict = dict()
+        price_dict = {}
         for coingecko_id, value in response_json.items():
             price_dict[CHAIN_DATA[self.id_lookup[coingecko_id]]["native"]] = value[
                 "usd"

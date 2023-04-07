@@ -20,7 +20,7 @@ async def test_remote_price_manager(
     # Process message
     await remote_price_manager.update_remote_fees()
 
-    for local_chain_id in CHAIN_DATA:
+    for local_chain_id, local_data in CHAIN_DATA.items():
         test_fee_update = await test_db.fetch_one(
             """SELECT * FROM fee_updates WHERE fee_updates.chain_id=:chain_id
             """,
@@ -31,17 +31,15 @@ async def test_remote_price_manager(
 
         # Construct expected updates dictionary here
         expected_updates: Mapping[str, int] = {}
-        for remote_chain_id in CHAIN_DATA:
+        for remote_chain_id, remote_data in CHAIN_DATA.items():
             if remote_chain_id != local_chain_id:
                 remote_cost_usd = (
                     constant.MOCK_GAS_UNITS
                     * constant.MOCK_GAS_PRICE
-                    * float(
-                        constant.MOCK_USD_VALUES[CHAIN_DATA[remote_chain_id]["native"]]
-                    )
+                    * float(constant.MOCK_USD_VALUES[remote_data["native"]])
                 )
                 local_cost_native = remote_cost_usd / float(
-                    constant.MOCK_USD_VALUES[CHAIN_DATA[local_chain_id]["native"]]
+                    constant.MOCK_USD_VALUES[local_data["native"]]
                 )
                 expected_updates[str(remote_chain_id)] = math.ceil(local_cost_native)
 
