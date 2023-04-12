@@ -3,12 +3,7 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.dependencies import (
-    get_client_session,
-    get_connection,
-    get_event_loop,
-    get_rabbitmq_client,
-)
+from app.dependencies import get_client_session, get_event_loop, get_reddis_client
 from app.infrastructure.db.core import get_or_create_database
 from app.infrastructure.web.endpoints.metrics import health
 from app.infrastructure.web.endpoints.public import transactions
@@ -44,18 +39,15 @@ app = setup_app()
 
 @app.on_event("startup")
 async def startup_event() -> None:
-    await get_event_loop()
+    loop = await get_event_loop()
     await get_client_session()
     await get_or_create_database()
-    queue_client = await get_rabbitmq_client()
-    await queue_client.start_consumption()
+    redis_client = await get_reddis_client()
+    await redis_client.start(loop=loop)
 
 
 @app.on_event("shutdown")
 async def shutdown_event() -> None:
-    # Close RabbitMQ connection
-    queue_connection = await get_connection()
-    await queue_connection.close()
     # Close client session
     client_session = await get_client_session()
     await client_session.close()

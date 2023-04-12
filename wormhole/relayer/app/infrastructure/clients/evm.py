@@ -3,8 +3,8 @@ from typing import Mapping
 
 from web3 import Web3
 
-from app.usecases.interfaces.clients.http.bridge import IBridgeClient
-from app.usecases.interfaces.clients.http.evm import IEvmClient
+from app.usecases.interfaces.clients.bridge import IBridgeClient
+from app.usecases.interfaces.clients.evm import IEvmClient
 from app.usecases.schemas.blockchain import BlockchainClientError, TransactionHash
 
 

@@ -9,19 +9,19 @@ from httpx import AsyncClient
 
 import tests.constants as constant
 from app.dependencies import get_relays_repo, logger
-from app.infrastructure.clients.ws.websocket import WebsocketClient
+from app.infrastructure.clients.websocket import WebsocketClient
 from app.infrastructure.db.repos.relays import RelaysRepo
 from app.infrastructure.web.setup import setup_app
-from app.usecases.interfaces.clients.http.evm import IEvmClient
-from app.usecases.interfaces.clients.ws.websocket import IWebsocketClient
+from app.usecases.interfaces.clients.evm import IEvmClient
+from app.usecases.interfaces.clients.websocket import IWebsocketClient
 from app.usecases.interfaces.repos.relays import IRelaysRepo
 from app.usecases.interfaces.services.vaa_delivery import IVaaDelivery
 from app.usecases.schemas.relays import Status, UpdateRepoAdapter
 from app.usecases.services.vaa_delivery import VaaDelivery
 
 # Mocks
-from tests.mocks.clients.http.evm import EvmResult, MockEvmClient
-from tests.mocks.clients.ws.websocket import MockWebsocketClient
+from tests.mocks.clients.evm import EvmResult, MockEvmClient
+from tests.mocks.clients.websocket import MockWebsocketClient
 
 
 # Database Connection

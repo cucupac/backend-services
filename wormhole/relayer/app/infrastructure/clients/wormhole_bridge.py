@@ -5,7 +5,7 @@ from web3 import Web3
 from web3.contract import Contract
 
 from app.settings import settings
-from app.usecases.interfaces.clients.http.bridge import IBridgeClient
+from app.usecases.interfaces.clients.bridge import IBridgeClient
 
 
 class WormholeBridgeClient(IBridgeClient):

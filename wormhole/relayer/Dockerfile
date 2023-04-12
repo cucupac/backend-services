@@ -27,11 +27,12 @@ ENV FANTOM_RPC=inject_at_deployment
 ENV ARBITRUM_RPC=inject_at_deployment
 ENV CELO_RPC=inject_at_deployment
 
-# RMQ
-ENV RMQ_URL=inject_at_deployment
-ENV EXCHANGE_NAME=vaa_exchange
-ENV ROUTING_KEY=wormhole_vaa
-ENV QUEUE_NAME=vaa_queue
+# REDIS
+ENV REDIS_HOST=inject_at_deployment
+ENV REDIS_PORT=inject_at_deployment
+ENV REDIS_DB=inject_at_deployment
+ENV REDIS_PASSWORD=inject_at_deployment
+ENV REDIS_ZSET=inject_at_deployment
 
 # EVM
 ENV RELAYER_PRIVATE_KEY=inject_at_deployment

@@ -21,11 +21,15 @@ class Settings(BaseSettings):
     # Database Settings
     db_url: str
 
-    # RabbitMQ
-    rmq_url: str
-    exchange_name: str
-    routing_key: str
-    queue_name: str
+    # Redis
+    redis_consumption_frequency: int = 1
+    redis_reconnect_frequency: int = 5
+    redis_min_message_age: int = 15
+    redis_host: str
+    redis_port: str
+    redis_db: int
+    redis_password: str
+    redis_zset: str
 
     # RPC Urls
     ethereum_rpc: str

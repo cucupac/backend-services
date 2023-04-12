@@ -12,7 +12,7 @@ import tests.constants as constant
 from app.dependencies import get_transactions_repo
 from app.infrastructure.db.repos.transactions import TransactionsRepo
 from app.infrastructure.web.setup import setup_app
-from app.usecases.interfaces.clients.amqp.queue import IQueueClient
+from app.usecases.interfaces.clients.unique_set import IUniqueSetClient
 from app.usecases.interfaces.repos.transactions import ITransactionsRepo
 from app.usecases.interfaces.services.vaa_manager import IVaaManager
 from app.usecases.schemas.relays import Status
@@ -20,7 +20,7 @@ from app.usecases.schemas.transactions import CreateRepoAdapter, TransactionsJoi
 from app.usecases.services.vaa_manager import VaaManager
 
 # Mocks
-from tests.mocks.clients.rabbitmq import MockRabbitmqClient, QueueResult
+from tests.mocks.clients.unique_set import MockUniqueSetClient, UniqueSetResult
 
 
 # Database Connection
@@ -53,30 +53,33 @@ async def transactions_repo(test_db: Database) -> ITransactionsRepo:
 
 # Clients
 @pytest_asyncio.fixture
-async def test_queue_client_success() -> IQueueClient:
-    return MockRabbitmqClient(result=QueueResult.SUCCESS)
+async def test_unique_set_client_success() -> IUniqueSetClient:
+    return MockUniqueSetClient(result=UniqueSetResult.SUCCESS)
 
 
 @pytest_asyncio.fixture
-async def test_queue_client_fail() -> IQueueClient:
-    return MockRabbitmqClient(result=QueueResult.FAILURE)
+async def test_unique_set_client_fail() -> IUniqueSetClient:
+    return MockUniqueSetClient(result=UniqueSetResult.FAILURE)
 
 
 # Services
 @pytest_asyncio.fixture
 async def vaa_manager(
-    test_queue_client_success: IQueueClient, transactions_repo: ITransactionsRepo
+    test_unique_set_client_success: IUniqueSetClient,
+    transactions_repo: ITransactionsRepo,
 ) -> IVaaManager:
     return VaaManager(
-        transactions_repo=transactions_repo, queue=test_queue_client_success
+        transactions_repo=transactions_repo, unique_set=test_unique_set_client_success
     )
 
 
 @pytest_asyncio.fixture
-async def vaa_manager_queue_fail(
-    test_queue_client_fail: IQueueClient, transactions_repo: ITransactionsRepo
+async def vaa_manager_unique_set_fail(
+    test_unique_set_client_fail: IUniqueSetClient, transactions_repo: ITransactionsRepo
 ) -> IVaaManager:
-    return VaaManager(transactions_repo=transactions_repo, queue=test_queue_client_fail)
+    return VaaManager(
+        transactions_repo=transactions_repo, unique_set=test_unique_set_client_fail
+    )
 
 
 # Database-inserted Objects

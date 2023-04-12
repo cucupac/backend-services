@@ -18,6 +18,7 @@ class StreamClient(IStreamClient):
         self.vaa_manager = vaa_manager
 
     async def start(self, loop: AbstractEventLoop) -> None:
+        """Starts GRPC connection."""
         loop.create_task(self.connect())
 
     async def connect(self) -> None:
@@ -33,7 +34,6 @@ class StreamClient(IStreamClient):
                 async with grpc.aio.insecure_channel(
                     target=settings.guardian_spy_url, options=channel_options
                 ) as channel:
-
                     logger.info("[StreamClient]: Connected to stream.")
                     stub = spy_pb2_grpc.SpyRPCServiceStub(channel)
 
@@ -52,7 +52,6 @@ class StreamClient(IStreamClient):
                 await asyncio.sleep(settings.reconnect_wait_time)
 
     def __get_filters(self) -> List[spy_pb2.FilterEntry]:
-
         filter_list = json.loads(
             base64.b64decode(settings.spy_service_filters).decode("utf-8")
         )

@@ -3,7 +3,7 @@ from typing import Mapping, Optional
 
 from fastapi import WebSocket, WebSocketDisconnect
 
-from app.usecases.interfaces.clients.ws.websocket import IWebsocketClient
+from app.usecases.interfaces.clients.websocket import IWebsocketClient
 from app.usecases.schemas.relays import Status
 
 

@@ -1,12 +1,12 @@
 import json
 
-from app.usecases.interfaces.clients.http.evm import IEvmClient
-from app.usecases.interfaces.clients.ws.websocket import IWebsocketClient
+from app.usecases.interfaces.clients.evm import IEvmClient
+from app.usecases.interfaces.clients.websocket import IWebsocketClient
 from app.usecases.interfaces.repos.relays import IRelaysRepo
 from app.usecases.interfaces.services.vaa_delivery import IVaaDelivery
 from app.usecases.schemas.blockchain import BlockchainClientError
-from app.usecases.schemas.queue import QueueMessage
 from app.usecases.schemas.relays import Status, UpdateRepoAdapter
+from app.usecases.schemas.unique_set import UniqueSetMessage
 
 
 class VaaDelivery(IVaaDelivery):
@@ -20,10 +20,10 @@ class VaaDelivery(IVaaDelivery):
         self.evm_client = evm_client
         self.websocket_client = websocket_client
 
-    async def process(self, queue_message: bytes) -> None:
-        """Process message from queue."""
+    async def process(self, set_message: bytes) -> None:
+        """Process message from unique set."""
 
-        message = QueueMessage(**json.loads(queue_message.decode()))
+        message = UniqueSetMessage(**json.loads(set_message.decode()))
 
         # Send Vaa to destination chain
         try:

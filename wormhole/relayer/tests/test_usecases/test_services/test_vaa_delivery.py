@@ -19,7 +19,7 @@ async def test_deliver(
     inserted_transaction: None,
 ) -> None:
     """Test that successful delivery of message gets properly handled"""
-    mock_queue_message = json.dumps(
+    mock_set_message = json.dumps(
         {
             "dest_chain_id": constant.TEST_DESTINATION_CHAIN_ID,
             "to_address": constant.TEST_USER_ADDRESS,
@@ -32,7 +32,7 @@ async def test_deliver(
     ).encode()
 
     # Process message
-    await vaa_delivery.process(queue_message=mock_queue_message)
+    await vaa_delivery.process(set_message=mock_set_message)
 
     # Assertions
     test_relay = await test_db.fetch_one(
@@ -59,7 +59,7 @@ async def test_deliver_fail(
     inserted_transaction: None,
 ) -> None:
     """Test that failure to deliver message gets properly handled"""
-    mock_queue_message = json.dumps(
+    mock_set_message = json.dumps(
         {
             "dest_chain_id": constant.TEST_DESTINATION_CHAIN_ID,
             "to_address": constant.TEST_USER_ADDRESS,
@@ -72,7 +72,7 @@ async def test_deliver_fail(
     ).encode()
 
     # Process message
-    await vaa_delivery_fail.process(queue_message=mock_queue_message)
+    await vaa_delivery_fail.process(set_message=mock_set_message)
 
     # Assertions
     test_relay = await test_db.fetch_one(

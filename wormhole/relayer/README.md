@@ -1,3 +1,3 @@
 # Relayer
 
-Receives messages from the [AMQP queue](https://rabbitmq.com/), delivers the messages, and pays the corresponding gas fees at the destination chain.
+Receives messages from [Redis](https://redis.io/), delivers the messages, and pays the corresponding gas fees at the destination chain.

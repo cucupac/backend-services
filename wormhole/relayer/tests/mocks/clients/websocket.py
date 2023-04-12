@@ -1,7 +1,7 @@
 from typing import Optional
 
-from app.infrastructure.clients.ws.websocket import WebSocket
-from app.usecases.interfaces.clients.ws.websocket import IWebsocketClient
+from app.infrastructure.clients.websocket import WebSocket
+from app.usecases.interfaces.clients.websocket import IWebsocketClient
 from app.usecases.schemas.relays import Status
 
 
