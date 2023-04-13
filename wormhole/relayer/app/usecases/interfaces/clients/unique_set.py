@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from asyncio import AbstractEventLoop
 
 
 class IUniqueSetClient(ABC):
@@ -8,5 +7,5 @@ class IUniqueSetClient(ABC):
         """Consumes messages from unique set."""
 
     @abstractmethod
-    async def start(self, loop: AbstractEventLoop) -> None:
+    async def start(self) -> None:
         """Adds consumption loop to event loop."""

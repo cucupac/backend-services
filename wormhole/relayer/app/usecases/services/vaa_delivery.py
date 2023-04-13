@@ -1,4 +1,5 @@
 import json
+from logging import Logger
 
 from app.usecases.interfaces.clients.evm import IEvmClient
 from app.usecases.interfaces.clients.websocket import IWebsocketClient
@@ -15,10 +16,12 @@ class VaaDelivery(IVaaDelivery):
         relays_repo: IRelaysRepo,
         evm_client: IEvmClient,
         websocket_client: IWebsocketClient,
+        logger: Logger,
     ):
         self.relays_repo = relays_repo
         self.evm_client = evm_client
         self.websocket_client = websocket_client
+        self.logger = logger
 
     async def process(self, set_message: bytes) -> None:
         """Process message from unique set."""
@@ -39,6 +42,7 @@ class VaaDelivery(IVaaDelivery):
             error = None
             status = Status.SUCCESS
             transaction_hash = transaction_hash_bytes.hex()
+            self.logger.info("[VaaDelivery]: Delivery transaction successful.")
 
         # Notify client via web socket
         await self.websocket_client.notify_client(

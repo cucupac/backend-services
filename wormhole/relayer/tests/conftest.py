@@ -82,6 +82,7 @@ async def vaa_delivery(
         relays_repo=relays_repo,
         evm_client=test_evm_client_success,
         websocket_client=test_websocket_client,
+        logger=logger,
     )
 
 
@@ -95,6 +96,7 @@ async def vaa_delivery_fail(
         relays_repo=relays_repo,
         evm_client=test_evm_client_fail,
         websocket_client=test_websocket_client,
+        logger=logger,
     )
 
 
@@ -108,6 +110,7 @@ async def vaa_delivery_websocket(
         relays_repo=relays_repo,
         evm_client=test_evm_client_success,
         websocket_client=websocket_client,
+        logger=logger,
     )
 
 
@@ -121,6 +124,7 @@ async def vaa_delivery_websocket_fail(
         relays_repo=relays_repo,
         evm_client=test_evm_client_fail,
         websocket_client=websocket_client,
+        logger=logger,
     )
 
 

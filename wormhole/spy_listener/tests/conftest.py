@@ -9,7 +9,7 @@ from fastapi import FastAPI
 from httpx import AsyncClient
 
 import tests.constants as constant
-from app.dependencies import get_transactions_repo
+from app.dependencies import get_transactions_repo, logger
 from app.infrastructure.db.repos.transactions import TransactionsRepo
 from app.infrastructure.web.setup import setup_app
 from app.usecases.interfaces.clients.unique_set import IUniqueSetClient
@@ -69,7 +69,9 @@ async def vaa_manager(
     transactions_repo: ITransactionsRepo,
 ) -> IVaaManager:
     return VaaManager(
-        transactions_repo=transactions_repo, unique_set=test_unique_set_client_success
+        transactions_repo=transactions_repo,
+        unique_set=test_unique_set_client_success,
+        logger=logger,
     )
 
 
@@ -78,7 +80,9 @@ async def vaa_manager_unique_set_fail(
     test_unique_set_client_fail: IUniqueSetClient, transactions_repo: ITransactionsRepo
 ) -> IVaaManager:
     return VaaManager(
-        transactions_repo=transactions_repo, unique_set=test_unique_set_client_fail
+        transactions_repo=transactions_repo,
+        unique_set=test_unique_set_client_fail,
+        logger=logger,
     )
 
 

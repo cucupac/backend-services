@@ -1,10 +1,10 @@
 import asyncio
-from asyncio import AbstractEventLoop
 from datetime import datetime, timezone
 from logging import Logger
 
 from redis import Redis, exceptions
 
+from app.dependencies import get_event_loop
 from app.settings import settings
 from app.usecases.interfaces.clients.unique_set import IUniqueSetClient
 from app.usecases.interfaces.services.vaa_delivery import IVaaDelivery
@@ -31,18 +31,20 @@ class RedisClient(IUniqueSetClient):
         return items
         """
         self.logger = logger
-        self.reconnecting = False
+        self.consumption_task = None
 
         if self.connection.ping():
             self.logger.info("[RedisClient]: Established connection.")
 
-    async def start(self, loop: AbstractEventLoop) -> None:
+    async def start(self) -> None:
         """Add consumption loop to event loop."""
-        loop.create_task(self.start_consumption())
+        loop = await get_event_loop()
+        self.consumption_task = loop.create_task(self.start_consumption())
 
-    async def __reconnect(self):
-        self.reconnecting = True
+    async def __reconnect(self) -> None:
+        self.consumption_task.cancel()
         while True:
+            print("entenred while loop in __reconnect()")
             try:
                 self.connection = Redis(
                     host=settings.redis_host,
@@ -52,14 +54,17 @@ class RedisClient(IUniqueSetClient):
                 )
                 self.connection.ping()
             except exceptions.ConnectionError:
-                self.logger.info(
+                self.logger.error(
                     "[RedisClient]: Connection error, attempting reconnect..."
                 )
+                print("before sleep in __reconnect() except")
                 await asyncio.sleep(settings.redis_reconnect_frequency)
+                print("after sleep in __reconnect() except")
             else:
-                self.reconnecting = False
-                self.logger.info("[RedisClient]: Reconnection successful...")
-                return
+                self.logger.info("[RedisClient]: Reconnection successful.")
+                loop = await get_event_loop()
+                self.consumption_task = loop.create_task(self.start_consumption())
+                return  # TODO: might not need this
 
     async def start_consumption(self) -> None:
         """Starts listening for messages to consume."""
@@ -67,6 +72,7 @@ class RedisClient(IUniqueSetClient):
         script_sha = self.connection.script_load(self.script)
 
         while True:
+            print("got here.")
             await asyncio.sleep(settings.redis_consumption_frequency)
             current_date = datetime.now(timezone.utc)
             current_time = current_date.timestamp()
@@ -79,8 +85,7 @@ class RedisClient(IUniqueSetClient):
                 self.logger.error(
                     "[RedisClient]: Connection error, attempting reconnect..."
                 )
-                if not self.reconnecting:
-                    await self.__reconnect()
+                await self.__reconnect()
             except exceptions.RedisError as e:
                 self.logger.error("[RedisClient]: Unexpected error: %s", str(e))
             else:
@@ -92,4 +97,4 @@ class RedisClient(IUniqueSetClient):
 
         self.logger.info("[RedisClient]: Received message: %s.", str(message))
 
-        await self.vaa_delivery.process(message=message)
+        await self.vaa_delivery.process(set_message=message)

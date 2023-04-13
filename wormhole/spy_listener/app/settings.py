@@ -29,7 +29,7 @@ class Settings(BaseSettings):
     # Redis
     redis_consumption_frequency: int = 1
     redis_reconnect_frequency: int = 5
-    redis_min_message_age: int = 15
+    redis_min_message_age: int = 10
     redis_host: str
     redis_port: str
     redis_db: int

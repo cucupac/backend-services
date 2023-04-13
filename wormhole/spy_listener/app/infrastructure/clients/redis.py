@@ -25,6 +25,9 @@ class RedisClient(IUniqueSetClient):
         self.logger = logger
         self.reconnecting = False
 
+        if self.connection.ping():
+            self.logger.info("[RedisClient]: Established connection.")
+
     async def __reconnect(self):
         self.reconnecting = True
         while True:
@@ -46,13 +49,17 @@ class RedisClient(IUniqueSetClient):
                 self.logger.info("[RedisClient]: Reconnection successful.")
                 return
 
-    async def publish(self, message: UniqueSetMessage) -> None:
+    async def publish(self, message: UniqueSetMessage) -> int:
         """Publishes message to unique set."""
         set_message = json.dumps(message.dict()).encode()
         current_date = datetime.now(timezone.utc)
         current_time = current_date.timestamp()
         try:
-            self.connection.zadd(settings.redis_zset, {set_message: current_time})
+            result = self.connection.zadd(
+                settings.redis_zset, {set_message: current_time}
+            )
+            self.logger.info("[RedisClient]: Message published:\n%s", message)
+            return result
         except exceptions.ConnectionError as e:
             self.logger.error(
                 "[RedisClient]: Connection error, attempting reconnect..."
@@ -67,5 +74,3 @@ class RedisClient(IUniqueSetClient):
             )
             # TODO: add message to in-memory set (but do this somewhere else...?)
             raise UniqueSetError(detail=str(e)) from e
-
-        self.logger.info("[RedisClient]: Message published:\n%s", message)

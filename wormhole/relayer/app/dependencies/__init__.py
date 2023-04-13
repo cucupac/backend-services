@@ -1,6 +1,7 @@
 """This file allows for easy importing of 
 various classes and utility funtions."""
 
+from .chain_id_lookup import CHAIN_ID_LOOKUP
 from .chain_data import CHAIN_DATA
 from .abis.wormhole_bridge import ABI as WORMHOLE_BRIDGE_ABI
 from .logger import logger

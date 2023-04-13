@@ -5,5 +5,5 @@ from app.usecases.schemas.unique_set import UniqueSetMessage
 
 class IUniqueSetClient(ABC):
     @abstractmethod
-    async def publish(self, message: UniqueSetMessage) -> None:
+    async def publish(self, message: UniqueSetMessage) -> int:
         """Publishes message to RabbitMQ."""
