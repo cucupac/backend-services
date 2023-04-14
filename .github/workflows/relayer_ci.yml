@@ -19,11 +19,8 @@ env:
   POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
   DB_URL: "postgresql://user:password@localhost/example"
   # Unique Set
-  REDIS_HOST: ${{ secrets.REDIS_HOST }}
-  REDIS_PORT: ${{ secrets.REDIS_PORT }}
-  REDIS_DB: ${{ secrets.REDIS_DB }}
-  REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
   REDIS_ZSET: ${{ secrets.REDIS_ZSET }}
+  REDIS_URL: ${{ secrets.REDIS_URL }}
   # Addresses
   RELAYER_PRIVATE_KEY: "0x"
   RELAYER_ADDRESS: "0x"

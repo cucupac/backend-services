@@ -42,8 +42,7 @@ async def startup_event() -> None:
     await get_event_loop()
     await get_client_session()
     await get_or_create_database()
-    redis_client = await get_reddis_client()
-    await redis_client.start()
+    await get_reddis_client()
 
 
 @app.on_event("shutdown")

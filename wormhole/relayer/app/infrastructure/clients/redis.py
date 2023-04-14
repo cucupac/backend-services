@@ -1,11 +1,11 @@
 import asyncio
+from asyncio import AbstractEventLoop
 from datetime import datetime, timezone
 from logging import Logger
 
 import aioredis
 from aioredis import Redis, exceptions
 
-from app.dependencies import get_event_loop
 from app.settings import settings
 from app.usecases.interfaces.clients.unique_set import IUniqueSetClient
 from app.usecases.interfaces.services.vaa_delivery import IVaaDelivery
@@ -13,9 +13,7 @@ from app.usecases.interfaces.services.vaa_delivery import IVaaDelivery
 
 class RedisClient(IUniqueSetClient):
     def __init__(
-        self,
-        vaa_delivery: IVaaDelivery,
-        logger: Logger,
+        self, vaa_delivery: IVaaDelivery, logger: Logger, loop: AbstractEventLoop
     ) -> None:
         self.vaa_delivery = vaa_delivery
         self.script = """
@@ -26,23 +24,18 @@ class RedisClient(IUniqueSetClient):
         return items
         """
         self.logger = logger
-        self.consumption_task = None
+        loop.create_task(self.__start_consumption())
 
     async def __connect(self) -> Redis:
-        redis_url = f"redis://:{settings.redis_password}@{settings.redis_host}:{settings.redis_port}/{settings.redis_db}"
+        """Connect to Redis."""
         redis = await aioredis.from_url(
-            redis_url, encoding="utf-8", decode_responses=True
+            settings.redis_url, encoding="utf-8", decode_responses=True
         )
         if await redis.ping():
             self.logger.info("[RedisClient]: Established connection.")
         return redis
 
-    async def start(self) -> None:
-        """Add consumption loop to event loop."""
-        loop = await get_event_loop()
-        self.consumption_task = loop.create_task(self.start_consumption())
-
-    async def start_consumption(self) -> None:
+    async def __start_consumption(self) -> None:
         """Starts listening for messages to consume."""
         while True:
             try:
@@ -60,7 +53,7 @@ class RedisClient(IUniqueSetClient):
                     )
                     for message in messages:
                         await self.__on_message(message=message)
-            except exceptions.ConnectionError as e:
+            except exceptions.ConnectionError:
                 self.logger.error(
                     "[RedisClient]: Connection error, attempting reconnect..."
                 )

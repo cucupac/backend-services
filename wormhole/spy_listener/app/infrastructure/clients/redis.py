@@ -1,53 +1,44 @@
 import asyncio
 import json
+from asyncio import AbstractEventLoop
 from datetime import datetime, timezone
 from logging import Logger
 
-from redis import Redis, exceptions
+import aioredis
+from aioredis import Redis, exceptions
 
 from app.settings import settings
 from app.usecases.interfaces.clients.unique_set import IUniqueSetClient
 from app.usecases.schemas.unique_set import UniqueSetError, UniqueSetMessage
 
-# TODO: on reconnect, need some way to retreive in-memory messages
-
 
 class RedisClient(IUniqueSetClient):
     """Redis client singleton."""
 
-    def __init__(self, logger: Logger) -> None:
-        self.connection = Redis(
-            host=settings.redis_host,
-            port=settings.redis_port,
-            db=settings.redis_db,
-            password=settings.redis_password,
-        )
+    def __init__(self, logger: Logger, loop: AbstractEventLoop) -> None:
         self.logger = logger
-        self.reconnecting = False
+        self.redis = None
+        loop.create_task(self.__manage_connection())
 
-        if self.connection.ping():
-            self.logger.info("[RedisClient]: Established connection.")
+    async def __connect(self) -> Redis:
+        self.redis = await aioredis.from_url(
+            settings.redis_url, encoding="utf-8", decode_responses=True
+        )
+        if await self.redis.ping():
+            self.logger.info("[RedisClient]: Connection established.")
 
-    async def __reconnect(self):
-        self.reconnecting = True
+    async def __manage_connection(self) -> None:
         while True:
             try:
-                self.connection = Redis(
-                    host=settings.redis_host,
-                    port=settings.redis_port,
-                    db=settings.redis_db,
-                    password=settings.redis_password,
-                )
-                self.connection.ping()
-            except exceptions.ConnectionError:
-                self.logger.info(
-                    "[RedisClient]: Connection error, attempting reconnect..."
-                )
-                await asyncio.sleep(settings.redis_reconnect_frequency)
-            else:
-                self.reconnecting = False
-                self.logger.info("[RedisClient]: Reconnection successful.")
-                return
+                if not self.redis:
+                    await self.__connect()
+                else:
+                    await self.redis.ping()
+            except (exceptions.ConnectionError, exceptions.RedisError) as e:
+                self.logger.error("[RedisClient]: Connection error: %s", str(e))
+                self.redis = None
+
+            await asyncio.sleep(settings.redis_reconnect_frequency)
 
     async def publish(self, message: UniqueSetMessage) -> int:
         """Publishes message to unique set."""
@@ -55,22 +46,18 @@ class RedisClient(IUniqueSetClient):
         current_date = datetime.now(timezone.utc)
         current_time = current_date.timestamp()
         try:
-            result = self.connection.zadd(
+            result = await self.redis.zadd(
                 settings.redis_zset, {set_message: current_time}
             )
             self.logger.info("[RedisClient]: Message published:\n%s", message)
             return result
         except exceptions.ConnectionError as e:
             self.logger.error(
-                "[RedisClient]: Connection error, attempting reconnect..."
+                "[RedisClient]: Message not published due to connection error, attempting reconnect..."
             )
-            # TODO: add message to in-memory set (but do this somewhere else...?)
-            if not self.reconnecting:
-                await self.__reconnect()
             raise UniqueSetError(detail=str(e)) from e
         except exceptions.RedisError as e:
             self.logger.error(
                 "[RedisClient]: Message not published.\nError: %s", str(e)
             )
-            # TODO: add message to in-memory set (but do this somewhere else...?)
             raise UniqueSetError(detail=str(e)) from e

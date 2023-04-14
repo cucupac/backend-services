@@ -28,11 +28,8 @@ ENV ARBITRUM_RPC=inject_at_deployment
 ENV CELO_RPC=inject_at_deployment
 
 # REDIS
-ENV REDIS_HOST=inject_at_deployment
-ENV REDIS_PORT=inject_at_deployment
-ENV REDIS_DB=inject_at_deployment
-ENV REDIS_PASSWORD=inject_at_deployment
 ENV REDIS_ZSET=inject_at_deployment
+ENV REDIS_URL=inject_at_deployment
 
 # EVM
 ENV RELAYER_PRIVATE_KEY=inject_at_deployment

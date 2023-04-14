@@ -1,11 +1,5 @@
-from abc import ABC, abstractmethod
+from abc import ABC
 
 
 class IUniqueSetClient(ABC):
-    @abstractmethod
-    async def start_consumption(self) -> None:
-        """Consumes messages from unique set."""
-
-    @abstractmethod
-    async def start(self) -> None:
-        """Adds consumption loop to event loop."""
+    """Add public methods here, if any ever exist."""

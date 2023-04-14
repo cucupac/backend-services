@@ -32,7 +32,6 @@ class VaaManager(IVaaManager):
 
         parsed_vaa = self.parse_vaa(vaa=vaa)
 
-        # Convert vaa bytes to hexadecimal string
         vaa_hex = codecs.encode(bytes(vaa), "hex_codec").decode()
 
         vaa_unique_set = frozenset(
@@ -57,6 +56,7 @@ class VaaManager(IVaaManager):
                     )
                 )
             except UniqueSetException as e:
+                # TODO: add message to in-memory set
                 error = e.detail
                 status = Status.FAILED
                 message_added = False
