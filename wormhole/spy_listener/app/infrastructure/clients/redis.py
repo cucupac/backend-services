@@ -21,9 +21,7 @@ class RedisClient(IUniqueSetClient):
         loop.create_task(self.__manage_connection())
 
     async def __connect(self) -> Redis:
-        self.redis = await aioredis.from_url(
-            settings.redis_url, encoding="utf-8", decode_responses=True
-        )
+        self.redis = await aioredis.from_url(settings.redis_url, encoding="utf-8")
         if await self.redis.ping():
             self.logger.info("[RedisClient]: Connection established.")
 

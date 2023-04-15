@@ -28,9 +28,7 @@ class RedisClient(IUniqueSetClient):
 
     async def __connect(self) -> Redis:
         """Connect to Redis."""
-        redis = await aioredis.from_url(
-            settings.redis_url, encoding="utf-8", decode_responses=True
-        )
+        redis = await aioredis.from_url(settings.redis_url, encoding="utf-8")
         if await redis.ping():
             self.logger.info("[RedisClient]: Established connection.")
         return redis
@@ -67,4 +65,4 @@ class RedisClient(IUniqueSetClient):
 
         self.logger.info("[RedisClient]: Received message: %s.", str(message))
 
-        await self.vaa_delivery.process(message=message)
+        await self.vaa_delivery.process(set_message=message)
