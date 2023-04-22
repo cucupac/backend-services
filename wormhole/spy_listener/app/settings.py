@@ -29,6 +29,7 @@ class Settings(BaseSettings):
     # Redis
     redis_consumption_frequency: int = 1
     redis_reconnect_frequency: int = 5
+    redis_in_memory_cache_periodicity: int = 15
     redis_min_message_age: int = 10
     redis_zset: str
     redis_url: str

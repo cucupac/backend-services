@@ -3,7 +3,12 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.dependencies import get_client_session, get_event_loop, get_stream_client
+from app.dependencies import (
+    get_client_session,
+    get_event_loop,
+    get_reddis_client,
+    get_stream_client,
+)
 from app.infrastructure.db.core import get_or_create_database
 from app.infrastructure.web.endpoints.metrics import health
 from app.settings import settings
@@ -51,6 +56,9 @@ async def shutdown_event() -> None:
     DATABASE = await get_or_create_database()
     if DATABASE.is_connected:
         await DATABASE.disconnect()
+    # Close redis connection
+    redis_client = await get_reddis_client()
+    await redis_client.close_connection()
 
 
 @click.command()

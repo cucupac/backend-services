@@ -19,3 +19,6 @@ class MockUniqueSetClient(IUniqueSetClient):
         if self.result == UniqueSetResult.SUCCESS:
             return
         raise UniqueSetError(detail=constant.UNIQUE_SET_ERROR_DETAIL)
+
+    async def close_connection(self) -> None:
+        return
