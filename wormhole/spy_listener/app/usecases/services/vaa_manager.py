@@ -56,7 +56,6 @@ class VaaManager(IVaaManager):
                     )
                 )
             except UniqueSetException as e:
-                # TODO: add message to in-memory set
                 error = e.detail
                 status = Status.FAILED
                 message_added = False
@@ -65,28 +64,27 @@ class VaaManager(IVaaManager):
                 status = Status.PENDING
 
             # Store in database
-            if message_added:
-                await self.transactions_repo.create(
-                    transaction=CreateRepoAdapter(
-                        emitter_address=parsed_vaa.emitter_address,
-                        from_address=parsed_vaa.payload.from_address,
-                        to_address=f"0x{parsed_vaa.payload.to_address:040x}",
-                        source_chain_id=parsed_vaa.emitter_chain,
-                        dest_chain_id=parsed_vaa.payload.dest_chain_id,
-                        amount=parsed_vaa.payload.amount,
-                        sequence=parsed_vaa.sequence,
-                        relay_error=error,
-                        relay_status=status,
-                        relay_message=vaa_hex,
-                    ),
-                )
+            await self.transactions_repo.create(
+                transaction=CreateRepoAdapter(
+                    emitter_address=parsed_vaa.emitter_address,
+                    from_address=parsed_vaa.payload.from_address,
+                    to_address=f"0x{parsed_vaa.payload.to_address:040x}",
+                    source_chain_id=parsed_vaa.emitter_chain,
+                    dest_chain_id=parsed_vaa.payload.dest_chain_id,
+                    amount=parsed_vaa.payload.amount,
+                    sequence=parsed_vaa.sequence,
+                    relay_error=error,
+                    relay_status=status,
+                    relay_message=vaa_hex,
+                ),
+            )
 
-                if len(self.recent_vaas) >= 100:
-                    # Remove the oldest (from beginning)
-                    self.recent_vaas.pop(next(iter(self.recent_vaas)))
+            if len(self.recent_vaas) >= 100:
+                # Remove the oldest (from beginning)
+                self.recent_vaas.pop(next(iter(self.recent_vaas)))
 
-                # Add the newest (to end)
-                self.recent_vaas[vaa_unique_set] = True
+            # Add the newest (to end)
+            self.recent_vaas[vaa_unique_set] = True
 
     def parse_vaa(self, vaa: bytes) -> ParsedVaa:
         """Extracts utilizable data from VAA bytes."""

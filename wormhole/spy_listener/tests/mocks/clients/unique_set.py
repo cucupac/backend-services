@@ -15,9 +15,9 @@ class MockUniqueSetClient(IUniqueSetClient):
         self.result = result
 
     async def publish(self, message: UniqueSetMessage) -> None:
-        """Publishes message to RabbitMQ."""
+        """Publishes message to unique set."""
         if self.result == UniqueSetResult.SUCCESS:
-            return
+            return 1
         raise UniqueSetError(detail=constant.UNIQUE_SET_ERROR_DETAIL)
 
     async def close_connection(self) -> None:

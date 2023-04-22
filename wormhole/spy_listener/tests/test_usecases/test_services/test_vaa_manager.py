@@ -39,7 +39,7 @@ async def test_publish_success(
 
     assert test_transaction["emitter_address"] == test_parsed_vaa.emitter_address
     assert test_transaction["from_address"] == test_parsed_vaa.payload.from_address
-    assert test_transaction["to_address"] == test_parsed_vaa.payload.to_address
+    assert test_transaction["to_address"] == hex(test_parsed_vaa.payload.to_address)
     assert test_transaction["source_chain_id"] == test_parsed_vaa.emitter_chain
     assert test_transaction["dest_chain_id"] == test_parsed_vaa.payload.dest_chain_id
     assert test_transaction["amount"] == test_parsed_vaa.payload.amount
@@ -83,7 +83,7 @@ async def test_publish_fail(
 
     assert test_transaction["emitter_address"] == test_parsed_vaa.emitter_address
     assert test_transaction["from_address"] == test_parsed_vaa.payload.from_address
-    assert test_transaction["to_address"] == test_parsed_vaa.payload.to_address
+    assert test_transaction["to_address"] == hex(test_parsed_vaa.payload.to_address)
     assert test_transaction["source_chain_id"] == test_parsed_vaa.emitter_chain
     assert test_transaction["dest_chain_id"] == test_parsed_vaa.payload.dest_chain_id
     assert test_transaction["amount"] == test_parsed_vaa.payload.amount

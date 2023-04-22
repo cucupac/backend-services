@@ -46,7 +46,7 @@ class StreamClient(IStreamClient):
 
             except grpc.aio.AioRpcError as e:
                 logger.error(
-                    "[StreamClient]: connection dropped.\nError: %s\n\nAttempting to reconnect...",
+                    "[StreamClient]: Connection dropped.\nError: %s\n\nAttempting to reconnect...",
                     str(e),
                 )
                 await asyncio.sleep(settings.reconnect_wait_time)
