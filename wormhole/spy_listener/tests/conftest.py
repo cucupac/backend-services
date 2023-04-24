@@ -10,12 +10,14 @@ from httpx import AsyncClient
 
 import tests.constants as constant
 from app.dependencies import get_transactions_repo, logger
+from app.infrastructure.db.repos.relays import RelaysRepo
 from app.infrastructure.db.repos.transactions import TransactionsRepo
 from app.infrastructure.web.setup import setup_app
 from app.usecases.interfaces.clients.unique_set import IUniqueSetClient
+from app.usecases.interfaces.repos.relays import IRelaysRepo
 from app.usecases.interfaces.repos.transactions import ITransactionsRepo
 from app.usecases.interfaces.services.vaa_manager import IVaaManager
-from app.usecases.schemas.relays import Status
+from app.usecases.schemas.relays import Status, UpdateRepoAdapter
 from app.usecases.schemas.transactions import CreateRepoAdapter, TransactionsJoinRelays
 from app.usecases.services.vaa_manager import VaaManager
 
@@ -49,6 +51,11 @@ async def test_db(test_db_url) -> Database:
 @pytest_asyncio.fixture
 async def transactions_repo(test_db: Database) -> ITransactionsRepo:
     return TransactionsRepo(db=test_db)
+
+
+@pytest_asyncio.fixture
+async def relays_repo(test_db: Database) -> IRelaysRepo:
+    return RelaysRepo(db=test_db)
 
 
 # Clients
@@ -127,10 +134,23 @@ async def create_transaction_repo_adapter() -> CreateRepoAdapter:
         source_chain_id=constant.TEST_SOURCE_CHAIN_ID,
         dest_chain_id=constant.TEST_DESTINATION_CHAIN_ID,
         amount=constant.TEST_AMOUNT,
-        sequence=0,
+        sequence=constant.TEST_SEQUENCE,
         relay_status=Status.PENDING,
         relay_error=None,
         relay_message=constant.TEST_VAA,
+    )
+
+
+# Repo Adapters
+@pytest_asyncio.fixture
+async def update_relays_repo_adapter() -> UpdateRepoAdapter:
+    return UpdateRepoAdapter(
+        emitter_address=constant.TEST_EMITTER_ADDRESS,
+        source_chain_id=constant.TEST_SOURCE_CHAIN_ID,
+        sequence=constant.TEST_SEQUENCE,
+        error=None,
+        status=Status.PENDING,
+        from_cache=True,
     )
 
 

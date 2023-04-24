@@ -44,7 +44,7 @@ class VaaManager(IVaaManager):
 
         if not self.recent_vaas.get(vaa_unique_set):
             try:
-                message_added = await self.unique_set.publish(
+                await self.unique_set.publish(
                     message=UniqueSetMessage(
                         dest_chain_id=parsed_vaa.payload.dest_chain_id,
                         to_address=parsed_vaa.payload.to_address,
@@ -58,7 +58,6 @@ class VaaManager(IVaaManager):
             except UniqueSetException as e:
                 error = e.detail
                 status = Status.FAILED
-                message_added = False
             else:
                 error = None
                 status = Status.PENDING

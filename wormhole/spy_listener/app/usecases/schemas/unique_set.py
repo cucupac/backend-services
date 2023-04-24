@@ -2,7 +2,7 @@ from pydantic import BaseModel, Field
 
 
 class UniqueSetException(Exception):
-    """Errors raised when interacting with RabbitMQ."""
+    """Errors raised when interacting with Redis."""
 
     detail: str
 

@@ -85,6 +85,11 @@ class TransactionsJoinRelays(TransactionInDB):
         description="The message that the consuming-relayer needs.",
         example="0CeC041cDB3AAB968C1a273bfC330aa410b5E2DF0CeC041cDB3AAB968C1a273bfC330aa410b5E2DF",
     )
+    relay_from_cache: Optional[bool] = Field(
+        None,
+        description="Whether or not the message was ever cached.",
+        example=False,
+    )
 
 
 class RetriveManyRepoAdapter(BaseModel):

@@ -3,22 +3,28 @@ import json
 from asyncio import AbstractEventLoop
 from datetime import datetime, timezone
 from logging import Logger
+from typing import List, Optional
 
 import aioredis
 from aioredis import Redis, exceptions
 
 from app.settings import settings
 from app.usecases.interfaces.clients.unique_set import IUniqueSetClient
+from app.usecases.interfaces.repos.relays import IRelaysRepo
+from app.usecases.schemas.relays import Status, UpdateRepoAdapter
 from app.usecases.schemas.unique_set import UniqueSetError, UniqueSetMessage
 
 
 class RedisClient(IUniqueSetClient):
     """Redis client singleton."""
 
-    def __init__(self, logger: Logger, loop: AbstractEventLoop) -> None:
+    def __init__(
+        self, logger: Logger, loop: AbstractEventLoop, relays_repo: IRelaysRepo
+    ) -> None:
         self.logger = logger
-        self.redis = None
-        self.message_cache = []
+        self.relays_repo = relays_repo
+        self.redis: Optional[Redis] = None
+        self.message_cache: List[UniqueSetMessage] = []
         loop.create_task(self.__manage_connection())
         loop.create_task(self.__process_message_cache())
 
@@ -45,16 +51,27 @@ class RedisClient(IUniqueSetClient):
             rescued_messages = []
             failed_rescues = []
             if self.message_cache and self.redis:
-                for index, message in enumerate(self.message_cache):
+                for message in self.message_cache:
                     try:
                         await self.publish(message=message)
                     except UniqueSetError:
-                        failed_rescues.append(index)
+                        failed_rescues.append(message)
                     else:
-                        rescued_messages.append(index)
+                        rescued_messages.append(message)
 
-                for index in rescued_messages:
-                    self.message_cache.pop(index)
+                        await self.relays_repo.update(
+                            relay=UpdateRepoAdapter(
+                                emitter_address=message.emitter_address,
+                                source_chain_id=message.emitter_chain,
+                                sequence=message.sequence,
+                                status=Status.PENDING,
+                                error=None,
+                                from_cache=True,
+                            )
+                        )
+
+                for message in rescued_messages:
+                    self.message_cache = [m for m in self.message_cache if m != message]
 
                 self.logger.info(
                     "[RedisClient]: Cached message results: %s succeeded, %s failed.",
@@ -71,24 +88,33 @@ class RedisClient(IUniqueSetClient):
         set_message = json.dumps(message.dict()).encode()
         current_date = datetime.now(timezone.utc)
         current_time = current_date.timestamp()
-        try:
-            result = await self.redis.zadd(
-                settings.redis_zset, {set_message: current_time}
-            )
-            self.logger.info("[RedisClient]: Message published:\n%s", message)
-            return result
-        except exceptions.ConnectionError as e:
-            self.logger.error(
-                "[RedisClient]: Message not published due to connection error, attempting reconnect..."
-            )
+        if self.redis:
+            try:
+                result = await self.redis.zadd(
+                    settings.redis_zset, {set_message: current_time}
+                )
+                self.logger.info(
+                    "[RedisClient]: Message published; emitter chain: %s, sequence: %s",
+                    message.emitter_chain,
+                    message.sequence,
+                )
+                return result
+            except exceptions.ConnectionError as e:
+                self.logger.error(
+                    "[RedisClient]: Connection error; message not published; attempting reconnect..."
+                )
+                self.message_cache.append(message)
+                raise UniqueSetError(detail=str(e)) from e
+            except exceptions.RedisError as e:
+                self.logger.error(
+                    "[RedisClient]: Unexpected error; message not published.\n\nError: %s",
+                    str(e),
+                )
+                self.message_cache.append(message)
+                raise UniqueSetError(detail=str(e)) from e
+        else:
             self.message_cache.append(message)
-            raise UniqueSetError(detail=str(e)) from e
-        except exceptions.RedisError as e:
-            self.logger.error(
-                "[RedisClient]: Message not published.\nError: %s", str(e)
-            )
-            self.message_cache.append(message)
-            raise UniqueSetError(detail=str(e)) from e
+            raise UniqueSetError(detail="Redis is not connected.")
 
     async def close_connection(self) -> None:
         """Closes external connection."""

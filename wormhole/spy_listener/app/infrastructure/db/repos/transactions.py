@@ -39,6 +39,7 @@ class TransactionsRepo(ITransactionsRepo):
                 error=transaction.relay_error,
                 message=transaction.relay_message,
                 transaction_hash=None,
+                from_cache=False,
             )
 
             await self.db.execute(insert_statement)
@@ -60,6 +61,7 @@ class TransactionsRepo(ITransactionsRepo):
             RELAYS.c.error.label("relay_error"),
             RELAYS.c.message.label("relay_message"),
             RELAYS.c.transaction_hash.label("relay_transaction_hash"),
+            RELAYS.c.from_cache.label("relay_from_cache"),
         ]
 
         query = (
@@ -105,6 +107,7 @@ class TransactionsRepo(ITransactionsRepo):
             RELAYS.c.error.label("relay_error"),
             RELAYS.c.message.label("relay_message"),
             RELAYS.c.transaction_hash.label("relay_transaction_hash"),
+            RELAYS.c.from_cache.label("relay_from_cache"),
         ]
 
         query = select(columns_to_select).select_from(j).where(and_(*query_conditions))

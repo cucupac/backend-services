@@ -3,7 +3,7 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.dependencies import get_client_session, get_event_loop, get_reddis_client
+from app.dependencies import get_client_session, get_event_loop, get_redis_client
 from app.infrastructure.db.core import get_or_create_database
 from app.infrastructure.web.endpoints.metrics import health
 from app.infrastructure.web.endpoints.public import transactions
@@ -42,7 +42,7 @@ async def startup_event() -> None:
     await get_event_loop()
     await get_client_session()
     await get_or_create_database()
-    await get_reddis_client()
+    await get_redis_client()
 
 
 @app.on_event("shutdown")

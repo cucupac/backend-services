@@ -3,8 +3,8 @@ from app.infrastructure.clients.redis import RedisClient
 from app.usecases.interfaces.clients.unique_set import IUniqueSetClient
 
 
-async def get_reddis_client() -> IUniqueSetClient:
-    """Instantiate and return RabbitmqClient."""
+async def get_redis_client() -> IUniqueSetClient:
+    """Instantiate and return RedisClient."""
 
     vaa_delivery_service = await get_vaa_delivery()
     loop = await get_event_loop()
