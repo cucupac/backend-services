@@ -1,23 +1,30 @@
 import codecs
 import hashlib
 import struct
+from logging import Logger
 from typing import Mapping
 
 from eth_abi import decode_abi
 
-from app.usecases.interfaces.clients.amqp.queue import IQueueClient
+from app.usecases.interfaces.clients.unique_set import IUniqueSetClient
 from app.usecases.interfaces.repos.transactions import ITransactionsRepo
 from app.usecases.interfaces.services.vaa_manager import IVaaManager
-from app.usecases.schemas.queue import QueueException, QueueMessage
 from app.usecases.schemas.relays import Status
 from app.usecases.schemas.transactions import CreateRepoAdapter
+from app.usecases.schemas.unique_set import UniqueSetException, UniqueSetMessage
 from app.usecases.schemas.vaa import ParsedPayload, ParsedVaa
 
 
 class VaaManager(IVaaManager):
-    def __init__(self, transactions_repo: ITransactionsRepo, queue: IQueueClient):
+    def __init__(
+        self,
+        transactions_repo: ITransactionsRepo,
+        unique_set: IUniqueSetClient,
+        logger: Logger,
+    ):
         self.transactions_repo: ITransactionsRepo = transactions_repo
-        self.queue: IQueueClient = queue
+        self.unique_set: IUniqueSetClient = unique_set
+        self.logger = logger
         self.recent_vaas: Mapping[frozenset, bool] = dict()
 
     async def process(self, vaa: bytes) -> None:
@@ -25,7 +32,6 @@ class VaaManager(IVaaManager):
 
         parsed_vaa = self.parse_vaa(vaa=vaa)
 
-        # Convert vaa bytes to hexadecimal string
         vaa_hex = codecs.encode(bytes(vaa), "hex_codec").decode()
 
         vaa_unique_set = frozenset(
@@ -38,8 +44,8 @@ class VaaManager(IVaaManager):
 
         if not self.recent_vaas.get(vaa_unique_set):
             try:
-                await self.queue.publish(
-                    message=QueueMessage(
+                await self.unique_set.publish(
+                    message=UniqueSetMessage(
                         dest_chain_id=parsed_vaa.payload.dest_chain_id,
                         to_address=parsed_vaa.payload.to_address,
                         from_address=parsed_vaa.payload.from_address,
@@ -49,8 +55,7 @@ class VaaManager(IVaaManager):
                         vaa_hex=vaa_hex,
                     )
                 )
-
-            except QueueException as e:
+            except UniqueSetException as e:
                 error = e.detail
                 status = Status.FAILED
             else:
@@ -62,7 +67,7 @@ class VaaManager(IVaaManager):
                 transaction=CreateRepoAdapter(
                     emitter_address=parsed_vaa.emitter_address,
                     from_address=parsed_vaa.payload.from_address,
-                    to_address=parsed_vaa.payload.to_address,
+                    to_address=f"0x{parsed_vaa.payload.to_address:040x}",
                     source_chain_id=parsed_vaa.emitter_chain,
                     dest_chain_id=parsed_vaa.payload.dest_chain_id,
                     amount=parsed_vaa.payload.amount,
@@ -116,14 +121,14 @@ class VaaManager(IVaaManager):
     def parse_payload(self, payload: bytes) -> ParsedPayload:
         """Extracts utilizable data from payload bytes."""
 
-        types = ["bytes", "uint256", "bytes", "uint256"]
-        from_address_bytes, dest_chain_id, to_address_bytes, amount = decode_abi(
+        types = ["bytes", "uint256", "uint256", "uint256"]
+        from_address_bytes, dest_chain_id, to_address_uint256, amount = decode_abi(
             types, payload
         )
 
         return ParsedPayload(
             from_address="0x" + str(from_address_bytes.hex()),
-            to_address="0x" + str(to_address_bytes.hex()),
+            to_address=to_address_uint256,
             dest_chain_id=dest_chain_id,
             amount=amount,
         )

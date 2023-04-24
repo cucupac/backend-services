@@ -5,8 +5,8 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.dependencies import (
     get_client_session,
-    get_connection,
     get_event_loop,
+    get_redis_client,
     get_stream_client,
 )
 from app.infrastructure.db.core import get_or_create_database
@@ -49,9 +49,6 @@ async def startup_event() -> None:
 
 @app.on_event("shutdown")
 async def shutdown_event() -> None:
-    # Close RabbitMQ connection
-    connection = await get_connection()
-    await connection.close()
     # Close client session
     client_session = await get_client_session()
     await client_session.close()
@@ -59,6 +56,9 @@ async def shutdown_event() -> None:
     DATABASE = await get_or_create_database()
     if DATABASE.is_connected:
         await DATABASE.disconnect()
+    # Close redis connection
+    redis_client = await get_redis_client()
+    await redis_client.close_connection()
 
 
 @click.command()

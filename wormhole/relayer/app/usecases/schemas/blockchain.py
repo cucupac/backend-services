@@ -1,7 +1,6 @@
 from enum import Enum
 
 from hexbytes import HexBytes
-from pydantic import BaseModel
 
 
 class Ecosystem(str, Enum):

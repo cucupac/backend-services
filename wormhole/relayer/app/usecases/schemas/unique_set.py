@@ -1,20 +1,8 @@
 from pydantic import BaseModel, Field
 
 
-class QueueException(Exception):
-    """Errors raised when interacting with RabbitMQ."""
-
-    detail: str
-
-
-class QueueError(QueueException):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args)
-        self.detail = kwargs.get("detail")
-
-
-class QueueMessage(BaseModel):
-    """Message sent to queue."""
+class UniqueSetMessage(BaseModel):
+    """Message received from unique set."""
 
     dest_chain_id: int = (
         Field(

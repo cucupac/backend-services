@@ -1,12 +1,13 @@
 import json
+from logging import Logger
 
-from app.usecases.interfaces.clients.http.evm import IEvmClient
-from app.usecases.interfaces.clients.ws.websocket import IWebsocketClient
+from app.usecases.interfaces.clients.evm import IEvmClient
+from app.usecases.interfaces.clients.websocket import IWebsocketClient
 from app.usecases.interfaces.repos.relays import IRelaysRepo
 from app.usecases.interfaces.services.vaa_delivery import IVaaDelivery
 from app.usecases.schemas.blockchain import BlockchainClientError
-from app.usecases.schemas.queue import QueueMessage
 from app.usecases.schemas.relays import Status, UpdateRepoAdapter
+from app.usecases.schemas.unique_set import UniqueSetMessage
 
 
 class VaaDelivery(IVaaDelivery):
@@ -15,15 +16,17 @@ class VaaDelivery(IVaaDelivery):
         relays_repo: IRelaysRepo,
         evm_client: IEvmClient,
         websocket_client: IWebsocketClient,
+        logger: Logger,
     ):
         self.relays_repo = relays_repo
         self.evm_client = evm_client
         self.websocket_client = websocket_client
+        self.logger = logger
 
-    async def process(self, queue_message: bytes) -> None:
-        """Process message from queue."""
+    async def process(self, set_message: bytes) -> None:
+        """Process message from unique set."""
 
-        message = QueueMessage(**json.loads(queue_message.decode()))
+        message = UniqueSetMessage(**json.loads(set_message.decode()))
 
         # Send Vaa to destination chain
         try:
@@ -39,6 +42,7 @@ class VaaDelivery(IVaaDelivery):
             error = None
             status = Status.SUCCESS
             transaction_hash = transaction_hash_bytes.hex()
+            self.logger.info("[VaaDelivery]: Delivery transaction successful.")
 
         # Notify client via web socket
         await self.websocket_client.notify_client(

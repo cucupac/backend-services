@@ -16,7 +16,7 @@ services:
       - .env
     depends_on:
       - db
-      - rabbitmq  
+      - redis 
   db:
     image: library/postgres:12-alpine
     container_name: ax_database
@@ -29,12 +29,12 @@ services:
     ports:
       - 5432:5432
 
-  rabbitmq:
-    image: rabbitmq:3-management-alpine
-    container_name: rabbitmq_broker
+  redis:
+    image: redis
+    container_name: local_redis
+    command: redis-server --requirepass your-password
     ports:
-      - 5672:5672
-      - 15672:15672
+      - "6379:6379"
 
   # ****************************************************************************
   #

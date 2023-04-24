@@ -2,7 +2,7 @@ from enum import Enum
 
 from hexbytes import HexBytes
 
-from app.usecases.interfaces.clients.http.evm import IEvmClient
+from app.usecases.interfaces.clients.evm import IEvmClient
 from app.usecases.schemas.blockchain import BlockchainClientError, TransactionHash
 from tests import constants as constant
 

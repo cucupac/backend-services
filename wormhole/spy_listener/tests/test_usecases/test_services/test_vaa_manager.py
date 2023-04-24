@@ -39,7 +39,7 @@ async def test_publish_success(
 
     assert test_transaction["emitter_address"] == test_parsed_vaa.emitter_address
     assert test_transaction["from_address"] == test_parsed_vaa.payload.from_address
-    assert test_transaction["to_address"] == test_parsed_vaa.payload.to_address
+    assert test_transaction["to_address"] == hex(test_parsed_vaa.payload.to_address)
     assert test_transaction["source_chain_id"] == test_parsed_vaa.emitter_chain
     assert test_transaction["dest_chain_id"] == test_parsed_vaa.payload.dest_chain_id
     assert test_transaction["amount"] == test_parsed_vaa.payload.amount
@@ -54,19 +54,19 @@ async def test_publish_success(
 
 @pytest.mark.asyncio
 async def test_publish_fail(
-    vaa_manager_queue_fail: IVaaManager,
+    vaa_manager_unique_set_fail: IVaaManager,
     transactions_repo: ITransactionsRepo,
     test_db: Database,
 ) -> None:
     """Test that failure to publish message gets properly handled"""
 
     # Setup
-    test_parsed_vaa: ParsedVaa = vaa_manager_queue_fail.parse_vaa(
+    test_parsed_vaa: ParsedVaa = vaa_manager_unique_set_fail.parse_vaa(
         vaa=constant.TEST_VAA_BYTES
     )
 
     # Action
-    await vaa_manager_queue_fail.process(vaa=constant.TEST_VAA_BYTES)
+    await vaa_manager_unique_set_fail.process(vaa=constant.TEST_VAA_BYTES)
 
     # Assertions
     # The message was stored in the database with correct information
@@ -83,13 +83,13 @@ async def test_publish_fail(
 
     assert test_transaction["emitter_address"] == test_parsed_vaa.emitter_address
     assert test_transaction["from_address"] == test_parsed_vaa.payload.from_address
-    assert test_transaction["to_address"] == test_parsed_vaa.payload.to_address
+    assert test_transaction["to_address"] == hex(test_parsed_vaa.payload.to_address)
     assert test_transaction["source_chain_id"] == test_parsed_vaa.emitter_chain
     assert test_transaction["dest_chain_id"] == test_parsed_vaa.payload.dest_chain_id
     assert test_transaction["amount"] == test_parsed_vaa.payload.amount
     assert test_transaction["sequence"] == test_parsed_vaa.sequence
     assert test_transaction["status"] == Status.FAILED
-    assert test_transaction["error"] == constant.QUEUE_ERROR_DETAIL
+    assert test_transaction["error"] == constant.UNIQUE_SET_ERROR_DETAIL
     assert (
         test_transaction["message"]
         == codecs.encode(bytes(constant.TEST_VAA_BYTES), "hex_codec").decode()
@@ -98,7 +98,6 @@ async def test_publish_fail(
 
 @pytest.mark.asyncio
 async def test_parse_vaa(vaa_manager: IVaaManager) -> None:
-
     test_parsed_vaa = vaa_manager.parse_vaa(vaa=constant.TEST_VAA_BYTES)
 
     assert isinstance(test_parsed_vaa, ParsedVaa)
@@ -106,7 +105,6 @@ async def test_parse_vaa(vaa_manager: IVaaManager) -> None:
 
 @pytest.mark.asyncio
 async def test_parse_payload(vaa_manager: IVaaManager) -> None:
-
     test_parsed_vaa = vaa_manager.parse_payload(payload=constant.TEST_VAA_PAYLOAD)
 
     assert isinstance(test_parsed_vaa, ParsedPayload)

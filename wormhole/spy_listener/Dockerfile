@@ -22,11 +22,9 @@ ENV RECONNECT_WAIT_TIME=2
 # Database 
 ENV DB_URL=postgres://postgres:postgres@localhost:5432/ax_relayer_dev
 
-# RMQ
-ENV RMQ_URL=inject_at_deployment
-ENV EXCHANGE_NAME=vaa_exchange
-ENV ROUTING_KEY=wormhole_vaa
-ENV QUEUE_NAME=vaa_queue
+# REDIS
+ENV REDIS_ZSET=inject_at_deployment
+ENV REDIS_URL=inject_at_deployment
 
 EXPOSE $SERVER_PORT
 

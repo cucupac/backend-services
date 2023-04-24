@@ -1,30 +1,30 @@
 from pydantic import BaseModel, Field
 
 
-class QueueException(Exception):
-    """Errors raised when interacting with RabbitMQ."""
+class UniqueSetException(Exception):
+    """Errors raised when interacting with Redis."""
 
     detail: str
 
 
-class QueueError(QueueException):
+class UniqueSetError(UniqueSetException):
     def __init__(self, *args, **kwargs):
         super().__init__(*args)
         self.detail = kwargs.get("detail")
 
 
-class QueueMessage(BaseModel):
-    """Message received from queue."""
+class UniqueSetMessage(BaseModel):
+    """Message sent to unique set."""
 
     dest_chain_id: int = (
         Field(
             ..., description="The Wormhole-ascribed destination-chain ID.", example=5
         ),
     )
-    to_address: str = Field(
+    to_address: int = Field(
         ...,
-        description="The account address of the recipient.",
-        example="0xE37c0D48d3F0D7E9b2b5E29c5D5b2c7B9fE37c0D",
+        description="The account address of the recipient in uint256 form.",
+        example=1373852553732571706168734657019477579977334871348,
     )
     from_address: str = Field(
         ...,

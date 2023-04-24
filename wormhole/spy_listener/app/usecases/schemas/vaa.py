@@ -14,10 +14,10 @@ class ParsedPayload(BaseModel):
         description="The source-chain address, from which money was transferred.",
         example="0x0E31Cc997F3C3bBD3091449eF03DAB3b7455A02D",
     )
-    to_address: str = Field(
+    to_address: int = Field(
         ...,
-        description="The destination-chain address that will receive money.",
-        example="0x0E31Cc997F3C3bBD3091449eF03DAB3b7455A02D",
+        description="The destination-chain address in uint256 that will receive money.",
+        example=1373852553732571706168734657019477579977334871348,
     )
     dest_chain_id: int = Field(
         ...,
