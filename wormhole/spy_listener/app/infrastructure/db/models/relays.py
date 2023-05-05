@@ -14,7 +14,7 @@ RELAYS = sa.Table(
         sa.ForeignKey(TRANSACTIONS.c.id),
         index=True,
     ),
-    sa.Column("message", sa.String, nullable=False),
+    sa.Column("message", sa.String, nullable=True),
     sa.Column("status", sa.String, nullable=False, default="pending"),
     sa.Column("transaction_hash", sa.String, nullable=True),
     sa.Column("error", sa.Text(), nullable=True),

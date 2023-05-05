@@ -2,7 +2,7 @@
 
 Revision ID: 0001
 Revises: 
-Create Date: 2023-05-05 13:17:48.960135
+Create Date: 2023-05-05 17:05:39.983199
 
 """
 from alembic import op
@@ -34,8 +34,8 @@ def upgrade():
     sa.Column('from_address', sa.String(), nullable=True),
     sa.Column('to_address', sa.String(), nullable=True),
     sa.Column('source_chain_id', sa.Integer(), nullable=False),
-    sa.Column('dest_chain_id', sa.Integer(), nullable=False),
-    sa.Column('amount', sa.BigInteger(), nullable=False),
+    sa.Column('dest_chain_id', sa.Integer(), nullable=True),
+    sa.Column('amount', sa.BigInteger(), nullable=True),
     sa.Column('sequence', sa.BigInteger(), nullable=True),
     sa.Column('created_at', sa.DateTime(), server_default=sa.text('now()'), nullable=False),
     sa.Column('updated_at', sa.DateTime(), server_default=sa.text('now()'), nullable=False),
@@ -47,7 +47,7 @@ def upgrade():
     op.create_table('relays',
     sa.Column('id', sa.BigInteger(), autoincrement=True, nullable=False),
     sa.Column('transaction_id', sa.BigInteger(), nullable=True),
-    sa.Column('message', sa.String(), nullable=False),
+    sa.Column('message', sa.String(), nullable=True),
     sa.Column('status', sa.String(), nullable=False),
     sa.Column('transaction_hash', sa.String(), nullable=True),
     sa.Column('error', sa.Text(), nullable=True),

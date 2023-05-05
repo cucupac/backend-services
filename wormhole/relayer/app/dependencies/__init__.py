@@ -10,5 +10,5 @@ from .client_session import get_client_session
 from .repos import get_relays_repo
 from .http_clients import get_evm_client, get_bridge_client
 from .ws_clients import get_websocket_client
-from .services import get_vaa_delivery
+from .services import get_vaa_delivery, get_message_processor
 from .redis import get_redis_client

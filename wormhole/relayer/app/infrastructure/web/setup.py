@@ -3,12 +3,12 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.usecases.tasks.events.startup import start_retry_queued_task
 from app.dependencies import get_client_session, get_event_loop, get_redis_client
 from app.infrastructure.db.core import get_or_create_database
 from app.infrastructure.web.endpoints.metrics import health
 from app.infrastructure.web.endpoints.public import transactions
 from app.settings import settings
+from app.usecases.tasks.events.startup import start_retry_failed_task
 
 
 def setup_app() -> FastAPI:
@@ -45,7 +45,7 @@ async def startup_event() -> None:
     await get_or_create_database()
     await get_redis_client()
     # Tasks
-    await start_retry_queued_task()
+    await start_retry_failed_task()
 
 
 @app.on_event("shutdown")

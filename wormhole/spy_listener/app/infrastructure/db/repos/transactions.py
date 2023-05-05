@@ -6,7 +6,7 @@ from sqlalchemy import and_, select
 from app.infrastructure.db.models.relays import RELAYS
 from app.infrastructure.db.models.transactions import TRANSACTIONS
 from app.usecases.interfaces.repos.transactions import ITransactionsRepo
-from app.usecases.schemas.relays import GrpcStatus
+from app.usecases.schemas.relays import CacheStatus, GrpcStatus, Status
 from app.usecases.schemas.transactions import (
     CreateRepoAdapter,
     RetriveManyRepoAdapter,
@@ -31,11 +31,11 @@ class TransactionsRepo(ITransactionsRepo):
             while sequence_to_insert < transaction.sequence:
                 insert_statement = TRANSACTIONS.insert().values(
                     emitter_address=transaction.emitter_address,
-                    from_address=transaction.from_address,
-                    to_address=transaction.to_address,
+                    from_address=None,
+                    to_address=None,
                     source_chain_id=transaction.source_chain_id,
-                    dest_chain_id=transaction.dest_chain_id,
-                    amount=transaction.amount,
+                    dest_chain_id=None,
+                    amount=None,
                     sequence=sequence_to_insert,
                 )
 
@@ -44,12 +44,12 @@ class TransactionsRepo(ITransactionsRepo):
 
                     insert_statement = RELAYS.insert().values(
                         transaction_id=transaction_id,
-                        status=transaction.relay_status,
-                        error=transaction.relay_error,
-                        message=transaction.relay_message,
+                        status=Status.FAILED,
+                        error="[gRPC Stream]: Missed VAA.",
+                        message=None,
                         transaction_hash=None,
                         grpc_status=GrpcStatus.FAILED,
-                        cache_status=transaction.cache_status,
+                        cache_status=CacheStatus.NEVER_CACHED,
                     )
 
                     await self.db.execute(insert_statement)

@@ -45,6 +45,9 @@ class Settings(BaseSettings):
     # BRIDGE
     bridge_client_base_url: str
 
+    # Tasks
+    retry_failed_frequency: int = 10
+
     class Config:
         env_file = DOTENV_FILE
 

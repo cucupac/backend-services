@@ -4,7 +4,9 @@ from app.dependencies import (
     get_websocket_client,
     logger,
 )
+from app.usecases.interfaces.services.message_processor import IVaaProcessor
 from app.usecases.interfaces.services.vaa_delivery import IVaaDelivery
+from app.usecases.services.message_processor import MessageProcessor
 from app.usecases.services.vaa_delivery import VaaDelivery
 
 
@@ -21,3 +23,9 @@ async def get_vaa_delivery() -> IVaaDelivery:
         websocket_client=websocket_client,
         logger=logger,
     )
+
+
+async def get_message_processor() -> IVaaProcessor:
+    """Instantiates and returns the Message Processor Service."""
+
+    return MessageProcessor()

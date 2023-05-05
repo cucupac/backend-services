@@ -16,7 +16,7 @@ from app.usecases.interfaces.clients.evm import IEvmClient
 from app.usecases.interfaces.clients.websocket import IWebsocketClient
 from app.usecases.interfaces.repos.relays import IRelaysRepo
 from app.usecases.interfaces.services.vaa_delivery import IVaaDelivery
-from app.usecases.schemas.relays import Status, UpdateRepoAdapter
+from app.usecases.schemas.relays import Status, UpdateRepoAdapter, CacheStatus
 from app.usecases.services.vaa_delivery import VaaDelivery
 
 # Mocks
@@ -133,7 +133,7 @@ async def vaa_delivery_websocket_fail(
 async def inserted_transaction(test_db: Database) -> None:
     async with test_db.transaction():
         transaction_id = await test_db.execute(
-            """INSERT INTO transactions (emitter_address, from_address, to_address, source_chain_id, dest_chain_id, amount, sequence) VALUES (:emitter_address, :from_address, :to_address, :source_chain_id, :dest_chain_id, :amount, :sequence) RETURNING id""",
+            """INSERT INTO transactions (emitter_address, from_address, to_address, source_chain_id, dest_chain_id, amount, sequence, cache_status) VALUES (:emitter_address, :from_address, :to_address, :source_chain_id, :dest_chain_id, :amount, :sequence, :cache_status) RETURNING id""",
             {
                 "emitter_address": constant.TEST_EMITTER_ADDRESS,
                 "from_address": constant.TEST_USER_ADDRESS,
@@ -142,6 +142,8 @@ async def inserted_transaction(test_db: Database) -> None:
                 "dest_chain_id": constant.TEST_DESTINATION_CHAIN_ID,
                 "amount": constant.TEST_AMOUNT,
                 "sequence": constant.TEST_SEQUENCE,
+                "cache_status": CacheStatus.NEVER_CACHED,
+                "grpc_status": "success",
             },
         )
         await test_db.execute(

@@ -33,6 +33,8 @@ env:
   FANTOM_RPC: ${{ secrets.FANTOM_RPC }}
   ARBITRUM_RPC: ${{ secrets.ARBITRUM_RPC }}
   CELO_RPC: ${{ secrets.CELO_RPC }}
+  # Bridge
+  BRIDGE_CLIENT_BASE_URL: ${{ secrets.BRIDGE_CLIENT_BASE_URL }}
 
 jobs:
   run-ci:

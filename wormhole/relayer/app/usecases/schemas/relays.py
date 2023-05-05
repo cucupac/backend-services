@@ -10,6 +10,12 @@ class Status(str, Enum):
     FAILED = "failed"
 
 
+class CacheStatus(str, Enum):
+    NEVER_CACHED = "never_cached"
+    CURRENTLY_CACHED = "currently_cached"
+    PREVIOUSLY_CACHED = "previously_cached"
+
+
 class UpdateRepoAdapter(BaseModel):
     emitter_address: str = Field(
         ...,
@@ -21,13 +27,13 @@ class UpdateRepoAdapter(BaseModel):
         description="The source chain's bridging-protocol-assigned chain ID.",
         example=5,
     )
-    sequence: Optional[int] = Field(
-        None,
+    sequence: int = Field(
+        ...,
         description="The bridging-protocol-assigned sequence of the transaction.",
         example=1,
     )
-    status: Status = Field(
-        ..., description="The status of the relay.", example=Status.SUCCESS
+    status: Optional[Status] = Field(
+        None, description="The status of the relay.", example=Status.SUCCESS
     )
     transaction_hash: Optional[str] = Field(
         None,
@@ -38,4 +44,27 @@ class UpdateRepoAdapter(BaseModel):
         None,
         description="Error pertaining to relay.",
         example="An error happend, and here's why.",
+    )
+
+
+class UpdateJoinedRepoAdapter(UpdateRepoAdapter):
+    from_address: Optional[str] = Field(
+        None,
+        description="The transaction's sender address.",
+        example="0x0CeC041cDB3AAB968C1a273bfC330aa410b5E2DF",
+    )
+    to_address: Optional[str] = Field(
+        None,
+        description="The transaction's recipient address.",
+        example="0x0CeC041cDB3AAB968C1a273bfC330aa410b5E2DF",
+    )
+    dest_chain_id: Optional[int] = Field(
+        None,
+        description="The destination chain's bridging-protocol-assigned chain ID.",
+        example=2,
+    )
+    amount: Optional[int] = Field(
+        None,
+        description="The amount of USX transferred.",
+        example=1e18,
     )
