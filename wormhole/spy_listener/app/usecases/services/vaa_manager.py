@@ -9,7 +9,7 @@ from eth_abi import decode_abi
 from app.usecases.interfaces.clients.unique_set import IUniqueSetClient
 from app.usecases.interfaces.repos.transactions import ITransactionsRepo
 from app.usecases.interfaces.services.vaa_manager import IVaaManager
-from app.usecases.schemas.relays import Status
+from app.usecases.schemas.relays import CacheStatus, Status
 from app.usecases.schemas.transactions import CreateRepoAdapter
 from app.usecases.schemas.unique_set import UniqueSetException, UniqueSetMessage
 from app.usecases.schemas.vaa import ParsedPayload, ParsedVaa
@@ -58,9 +58,11 @@ class VaaManager(IVaaManager):
             except UniqueSetException as e:
                 error = e.detail
                 status = Status.FAILED
+                cache_status = CacheStatus.CURRENTLY_CACHED
             else:
                 error = None
                 status = Status.PENDING
+                cache_status = CacheStatus.NEVER_CACHED
 
             # Store in database
             await self.transactions_repo.create(
@@ -75,6 +77,7 @@ class VaaManager(IVaaManager):
                     relay_error=error,
                     relay_status=status,
                     relay_message=vaa_hex,
+                    cache_status=cache_status,
                 ),
             )
 

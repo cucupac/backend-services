@@ -16,7 +16,9 @@ class RelaysRepo(IRelaysRepo):
 
         update_statement = (
             RELAYS.update()
-            .values(status=relay.status, error=relay.error, from_cache=relay.from_cache)
+            .values(
+                status=relay.status, error=relay.error, cache_status=relay.cache_status
+            )
             .where(
                 and_(
                     TRANSACTIONS.c.emitter_address == relay.emitter_address,

@@ -1,8 +1,8 @@
-"""initial schema
+"""Initial schema
 
 Revision ID: 0001
 Revises: 
-Create Date: 2023-04-24 13:34:30.178159
+Create Date: 2023-05-05 13:17:48.960135
 
 """
 from alembic import op
@@ -51,7 +51,8 @@ def upgrade():
     sa.Column('status', sa.String(), nullable=False),
     sa.Column('transaction_hash', sa.String(), nullable=True),
     sa.Column('error', sa.Text(), nullable=True),
-    sa.Column('from_cache', sa.Boolean(), nullable=True),
+    sa.Column('cache_status', sa.String(), nullable=False),
+    sa.Column('grpc_status', sa.String(), nullable=False),
     sa.Column('created_at', sa.DateTime(), server_default=sa.text('now()'), nullable=False),
     sa.Column('updated_at', sa.DateTime(), server_default=sa.text('now()'), nullable=False),
     sa.ForeignKeyConstraint(['transaction_id'], ['transactions.id'], ),

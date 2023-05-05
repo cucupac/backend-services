@@ -11,7 +11,7 @@ from aioredis import Redis, exceptions
 from app.settings import settings
 from app.usecases.interfaces.clients.unique_set import IUniqueSetClient
 from app.usecases.interfaces.repos.relays import IRelaysRepo
-from app.usecases.schemas.relays import Status, UpdateRepoAdapter
+from app.usecases.schemas.relays import CacheStatus, Status, UpdateRepoAdapter
 from app.usecases.schemas.unique_set import UniqueSetError, UniqueSetMessage
 
 
@@ -66,7 +66,7 @@ class RedisClient(IUniqueSetClient):
                                 sequence=message.sequence,
                                 status=Status.PENDING,
                                 error=None,
-                                from_cache=True,
+                                cache_status=CacheStatus.PREVIOUSLY_CACHED,
                             )
                         )
 

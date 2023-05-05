@@ -18,6 +18,8 @@ RELAYS = sa.Table(
     sa.Column("status", sa.String, nullable=False, default="pending"),
     sa.Column("transaction_hash", sa.String, nullable=True),
     sa.Column("error", sa.Text(), nullable=True),
+    sa.Column("cache_status", sa.String, nullable=False, default="never_cached"),
+    sa.Column("grpc_status", sa.String, nullable=False, default="success"),
     sa.Column("created_at", sa.DateTime, nullable=False, server_default=sa.func.now()),
     sa.Column(
         "updated_at",

@@ -9,6 +9,17 @@ class Status(str, Enum):
     FAILED = "failed"
 
 
+class CacheStatus(str, Enum):
+    NEVER_CACHED = "never_cached"
+    CURRENTLY_CACHED = "currently_cached"
+    PREVIOUSLY_CACHED = "previously_cached"
+
+
+class GrpcStatus(str, Enum):
+    SUCCESS = "success"
+    FAILED = "failed"
+
+
 class UpdateRepoAdapter(BaseModel):
     emitter_address: str = Field(
         ...,
@@ -33,8 +44,8 @@ class UpdateRepoAdapter(BaseModel):
         description="Error pertaining to relay.",
         example="An error happend, and here's why.",
     )
-    from_cache: Optional[bool] = Field(
-        None,
-        description="Whether or not the message was ever cached.",
-        example=False,
+    cache_status: CacheStatus = Field(
+        ...,
+        description="Informaiton on the relationship between the relay and the in-memory cache.",
+        example=CacheStatus.PREVIOUSLY_CACHED,
     )

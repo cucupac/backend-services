@@ -4,7 +4,12 @@ from databases import Database
 
 import tests.constants as constant
 from app.usecases.interfaces.repos.relays import IRelaysRepo
-from app.usecases.schemas.relays import Status, UpdateRepoAdapter
+from app.usecases.schemas.relays import (
+    CacheStatus,
+    GrpcStatus,
+    Status,
+    UpdateRepoAdapter,
+)
 
 
 @pytest.mark.asyncio
@@ -36,4 +41,5 @@ async def test_update(
     assert test_relay["transaction_hash"] is None
     assert test_relay["error"] is None
     assert test_relay["status"] == Status.PENDING
-    assert test_relay["from_cache"] is True
+    assert test_relay["cache_status"] == CacheStatus.PREVIOUSLY_CACHED
+    assert test_relay["grpc_status"] == GrpcStatus.SUCCESS

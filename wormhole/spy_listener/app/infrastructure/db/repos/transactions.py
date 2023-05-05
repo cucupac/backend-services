@@ -6,6 +6,7 @@ from sqlalchemy import and_, select
 from app.infrastructure.db.models.relays import RELAYS
 from app.infrastructure.db.models.transactions import TRANSACTIONS
 from app.usecases.interfaces.repos.transactions import ITransactionsRepo
+from app.usecases.schemas.relays import GrpcStatus
 from app.usecases.schemas.transactions import (
     CreateRepoAdapter,
     RetriveManyRepoAdapter,
@@ -19,6 +20,40 @@ class TransactionsRepo(ITransactionsRepo):
 
     async def create(self, transaction: CreateRepoAdapter) -> TransactionsJoinRelays:
         """Inserts and returns new transaction object."""
+
+        most_recent_record = await self.get_latest_sequence(
+            emitter_address=transaction.emitter_address,
+            source_chain_id=transaction.source_chain_id,
+        )
+
+        if most_recent_record.sequence != transaction.sequence - 1:
+            sequence_to_insert = most_recent_record.sequence + 1
+            while sequence_to_insert < transaction.sequence:
+                insert_statement = TRANSACTIONS.insert().values(
+                    emitter_address=transaction.emitter_address,
+                    from_address=transaction.from_address,
+                    to_address=transaction.to_address,
+                    source_chain_id=transaction.source_chain_id,
+                    dest_chain_id=transaction.dest_chain_id,
+                    amount=transaction.amount,
+                    sequence=sequence_to_insert,
+                )
+
+                async with self.db.transaction():
+                    transaction_id = await self.db.execute(insert_statement)
+
+                    insert_statement = RELAYS.insert().values(
+                        transaction_id=transaction_id,
+                        status=transaction.relay_status,
+                        error=transaction.relay_error,
+                        message=transaction.relay_message,
+                        transaction_hash=None,
+                        grpc_status=GrpcStatus.FAILED,
+                        cache_status=transaction.cache_status,
+                    )
+
+                    await self.db.execute(insert_statement)
+                sequence_to_insert += 1
 
         insert_statement = TRANSACTIONS.insert().values(
             emitter_address=transaction.emitter_address,
@@ -39,7 +74,7 @@ class TransactionsRepo(ITransactionsRepo):
                 error=transaction.relay_error,
                 message=transaction.relay_message,
                 transaction_hash=None,
-                from_cache=False,
+                cache_status=transaction.cache_status,
             )
 
             await self.db.execute(insert_statement)
@@ -61,7 +96,8 @@ class TransactionsRepo(ITransactionsRepo):
             RELAYS.c.error.label("relay_error"),
             RELAYS.c.message.label("relay_message"),
             RELAYS.c.transaction_hash.label("relay_transaction_hash"),
-            RELAYS.c.from_cache.label("relay_from_cache"),
+            RELAYS.c.cache_status.label("relay_cache_status"),
+            RELAYS.c.grpc_status.label("relay_grpc_status"),
         ]
 
         query = (
@@ -107,7 +143,8 @@ class TransactionsRepo(ITransactionsRepo):
             RELAYS.c.error.label("relay_error"),
             RELAYS.c.message.label("relay_message"),
             RELAYS.c.transaction_hash.label("relay_transaction_hash"),
-            RELAYS.c.from_cache.label("relay_from_cache"),
+            RELAYS.c.cache_status.label("relay_cache_status"),
+            RELAYS.c.grpc_status.label("relay_grpc_status"),
         ]
 
         query = select(columns_to_select).select_from(j).where(and_(*query_conditions))
@@ -115,3 +152,40 @@ class TransactionsRepo(ITransactionsRepo):
         results = await self.db.fetch_all(query)
 
         return [TransactionsJoinRelays(**result) for result in results]
+
+    async def get_latest_sequence(
+        self,
+        emitter_address: str,
+        source_chain_id: int,
+    ) -> Optional[TransactionsJoinRelays]:
+        """Get the latest transaction for the given emitter_address and source_chain_id."""
+
+        j = TRANSACTIONS.join(RELAYS, TRANSACTIONS.c.id == RELAYS.c.transaction_id)
+
+        columns_to_select = [
+            TRANSACTIONS,
+            RELAYS.c.id.label("relay_id"),
+            RELAYS.c.status.label("relay_status"),
+            RELAYS.c.error.label("relay_error"),
+            RELAYS.c.message.label("relay_message"),
+            RELAYS.c.transaction_hash.label("relay_transaction_hash"),
+            RELAYS.c.cache_status.label("relay_cache_status"),
+            RELAYS.c.grpc_status.label("relay_grpc_status"),
+        ]
+
+        query = (
+            select(columns_to_select)
+            .select_from(j)
+            .where(
+                and_(
+                    TRANSACTIONS.c.emitter_address == emitter_address,
+                    TRANSACTIONS.c.source_chain_id == source_chain_id,
+                )
+            )
+            .order_by(TRANSACTIONS.c.sequence.desc())
+            .limit(1)
+        )
+
+        result = await self.db.fetch_one(query)
+
+        return TransactionsJoinRelays(**result) if result else None

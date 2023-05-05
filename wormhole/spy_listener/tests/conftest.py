@@ -17,7 +17,7 @@ from app.usecases.interfaces.clients.unique_set import IUniqueSetClient
 from app.usecases.interfaces.repos.relays import IRelaysRepo
 from app.usecases.interfaces.repos.transactions import ITransactionsRepo
 from app.usecases.interfaces.services.vaa_manager import IVaaManager
-from app.usecases.schemas.relays import Status, UpdateRepoAdapter
+from app.usecases.schemas.relays import CacheStatus, Status, UpdateRepoAdapter
 from app.usecases.schemas.transactions import CreateRepoAdapter, TransactionsJoinRelays
 from app.usecases.services.vaa_manager import VaaManager
 
@@ -150,7 +150,7 @@ async def update_relays_repo_adapter() -> UpdateRepoAdapter:
         sequence=constant.TEST_SEQUENCE,
         error=None,
         status=Status.PENDING,
-        from_cache=True,
+        cache_status=CacheStatus.PREVIOUSLY_CACHED,
     )
 
 
