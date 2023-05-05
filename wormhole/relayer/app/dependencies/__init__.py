@@ -8,7 +8,7 @@ from .logger import logger
 from .event_loop import get_event_loop
 from .client_session import get_client_session
 from .repos import get_relays_repo
-from .http_clients import get_evm_client
+from .http_clients import get_evm_client, get_bridge_client
 from .ws_clients import get_websocket_client
 from .services import get_vaa_delivery
 from .redis import get_redis_client

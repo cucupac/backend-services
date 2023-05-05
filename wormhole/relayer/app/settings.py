@@ -42,6 +42,9 @@ class Settings(BaseSettings):
     relayer_address: str
     evm_wormhole_bridge: str
 
+    # BRIDGE
+    bridge_client_base_url: str
+
     class Config:
         env_file = DOTENV_FILE
 
