@@ -21,8 +21,9 @@ class GrpcStatus(str, Enum):
     FAILED = "failed"
 
 
-class GrpcErrors(str, Enum):
+class RelayErrors(str, Enum):
     MISSED_VAA = "[gRPC Stream]: Missed VAA."
+    STALE_PENDING = "[General]: Message was pending for longer than a minute."
 
 
 class UpdateRepoAdapter(BaseModel):

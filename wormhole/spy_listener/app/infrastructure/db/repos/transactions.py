@@ -6,7 +6,7 @@ from sqlalchemy import and_, select
 from app.infrastructure.db.models.relays import RELAYS
 from app.infrastructure.db.models.transactions import TRANSACTIONS
 from app.usecases.interfaces.repos.transactions import ITransactionsRepo
-from app.usecases.schemas.relays import CacheStatus, GrpcStatus, Status, GrpcErrors
+from app.usecases.schemas.relays import CacheStatus, GrpcStatus, Status, RelayErrors
 from app.usecases.schemas.transactions import (
     CreateRepoAdapter,
     RetriveManyRepoAdapter,
@@ -45,7 +45,7 @@ class TransactionsRepo(ITransactionsRepo):
                     insert_statement = RELAYS.insert().values(
                         transaction_id=transaction_id,
                         status=Status.FAILED,
-                        error=GrpcErrors.MISSED_VAA,
+                        error=RelayErrors.MISSED_VAA,
                         message=None,
                         transaction_hash=None,
                         grpc_status=GrpcStatus.FAILED,

@@ -31,3 +31,7 @@ class IRelaysRepo(ABC):
         source_chain_id: int,
     ) -> Optional[TransactionsJoinRelays]:
         """Get the latest transaction for the given emitter_address and source_chain_id."""
+
+    @abstractmethod
+    async def retrieve_pending(self) -> List[TransactionsJoinRelays]:
+        """Retrieves transactions that have been pending for longer than 1 minute."""

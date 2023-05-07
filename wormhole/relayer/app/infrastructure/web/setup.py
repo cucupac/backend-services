@@ -9,8 +9,9 @@ from app.infrastructure.web.endpoints.metrics import health
 from app.infrastructure.web.endpoints.public import transactions
 from app.settings import settings
 from app.usecases.tasks.events.startup import (
+    start_gather_missed_task,
+    start_gather_pending_task,
     start_retry_failed_task,
-    start_retry_missed_task,
 )
 
 
@@ -49,7 +50,8 @@ async def startup_event() -> None:
     await get_redis_client()
     # Tasks
     await start_retry_failed_task()
-    await start_retry_missed_task()
+    await start_gather_missed_task()
+    await start_gather_pending_task()
 
 
 @app.on_event("shutdown")

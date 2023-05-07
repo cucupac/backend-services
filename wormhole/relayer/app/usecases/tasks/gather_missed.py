@@ -6,16 +6,15 @@ from logging import Logger
 from app.dependencies import CHAIN_ID_LOOKUP
 from app.settings import settings
 from app.usecases.interfaces.clients.bridge import IBridgeClient
-from app.usecases.interfaces.clients.evm import IEvmClient
 from app.usecases.interfaces.repos.relays import IRelaysRepo
 from app.usecases.interfaces.services.message_processor import IVaaProcessor
-from app.usecases.interfaces.tasks.retry_missed import IRetryMissedTask
+from app.usecases.interfaces.tasks.gather_missed import IGatherMissedVaasTask
 from app.usecases.schemas.bridge import BridgeClientException, NotFoundException
-from app.usecases.schemas.relays import CacheStatus, GrpcStatus, Status, GrpcErrors
+from app.usecases.schemas.relays import CacheStatus, GrpcStatus, RelayErrors, Status
 from app.usecases.schemas.transactions import CreateRepoAdapter
 
 
-class RetryMissedTask(IRetryMissedTask):
+class GatherMissedVaasTask(IGatherMissedVaasTask):
     def __init__(
         self,
         message_processor: IVaaProcessor,
@@ -38,11 +37,11 @@ class RetryMissedTask(IRetryMissedTask):
             except Exception as e:  # pylint: disable = broad-except
                 self.logger.exception(e)
 
-            await asyncio.sleep(settings.retry_missed_frequency)
+            await asyncio.sleep(settings.gather_missed_frequency)
 
     async def task(self):
         """Retries untracked transactions."""
-        self.logger.info("[RetryMissedTask]: Task started.")
+        self.logger.info("[GatherMissedVaasTask]: Task started.")
 
         # Get missed transactions
         for wh_chain_id in CHAIN_ID_LOOKUP.keys():
@@ -68,12 +67,12 @@ class RetryMissedTask(IRetryMissedTask):
                     ) as e:
                         if isinstance(e, NotFoundException):
                             self.logger.info(
-                                "[RetryMissedTask]: Reached point of no new messages for chain id: %s.",
+                                "[GatherMissedVaasTask]: Reached point of no new messages for chain id: %s.",
                                 wh_chain_id,
                             )
                         else:
                             self.logger.error(
-                                "[RetryMissedTask]: Unexpected error: %s", e
+                                "[GatherMissedVaasTask]: Unexpected error: %s", e
                             )
                         break
                     else:
@@ -91,7 +90,7 @@ class RetryMissedTask(IRetryMissedTask):
                                 dest_chain_id=parsed_vaa.payload.dest_chain_id,
                                 amount=parsed_vaa.payload.amount,
                                 sequence=parsed_vaa.sequence,
-                                relay_error=GrpcErrors.MISSED_VAA,
+                                relay_error=RelayErrors.MISSED_VAA,
                                 relay_status=Status.FAILED,
                                 relay_message=message_hex,
                                 relay_cache_status=CacheStatus.NEVER_CACHED,
@@ -101,4 +100,4 @@ class RetryMissedTask(IRetryMissedTask):
 
                     new_sequence += 1
 
-        self.logger.info("[RetryMissedTask]: Finished; sleeping now...")
+        self.logger.info("[GatherMissedVaasTask]: Finished; sleeping now...")

@@ -20,7 +20,7 @@ class GrpcStatus(str, Enum):
     FAILED = "failed"
 
 
-class GrpcErrors(str, Enum):
+class RelayErrors(str, Enum):
     MISSED_VAA = "[gRPC Stream]: Missed VAA."
 
 

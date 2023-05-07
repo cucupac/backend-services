@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 from typing import List, Optional
 
 from databases import Database
@@ -169,3 +170,30 @@ class RelaysRepo(IRelaysRepo):
         result = await self.db.fetch_one(query)
 
         return TransactionsJoinRelays(**result) if result else None
+
+    async def retrieve_pending(self) -> List[TransactionsJoinRelays]:
+        """Retrieves transactions that have been pending for longer than 1 minute."""
+
+        query_conditions = [
+            RELAYS.c.status == Status.PENDING,
+            RELAYS.c.created_at < datetime.utcnow() - timedelta(minutes=1),
+        ]
+
+        j = TRANSACTIONS.join(RELAYS, TRANSACTIONS.c.id == RELAYS.c.transaction_id)
+
+        columns_to_select = [
+            TRANSACTIONS,
+            RELAYS.c.id.label("relay_id"),
+            RELAYS.c.status.label("relay_status"),
+            RELAYS.c.error.label("relay_error"),
+            RELAYS.c.message.label("relay_message"),
+            RELAYS.c.transaction_hash.label("relay_transaction_hash"),
+            RELAYS.c.cache_status.label("relay_cache_status"),
+            RELAYS.c.grpc_status.label("relay_grpc_status"),
+        ]
+
+        query = select(columns_to_select).select_from(j).where(and_(*query_conditions))
+
+        results = await self.db.fetch_all(query)
+
+        return [TransactionsJoinRelays(**result) for result in results]

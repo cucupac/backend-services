@@ -47,7 +47,8 @@ class Settings(BaseSettings):
 
     # Tasks
     retry_failed_frequency: int = 10
-    retry_missed_frequency: int = 20
+    gather_missed_frequency: int = 20
+    gather_pending_frequency: int = 20
 
     class Config:
         env_file = DOTENV_FILE
