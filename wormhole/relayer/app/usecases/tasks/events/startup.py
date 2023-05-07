@@ -7,6 +7,7 @@ from app.dependencies import (
     logger,
 )
 from app.usecases.tasks.retry_failed import RetryFailedTask
+from app.usecases.tasks.retry_missed import RetryMissedTask
 
 
 async def start_retry_failed_task():
@@ -16,7 +17,7 @@ async def start_retry_failed_task():
     bridge_client = await get_bridge_client()
     relays_repo = await get_relays_repo()
 
-    get_update_fees_task = RetryFailedTask(
+    retry_failed_task = RetryFailedTask(
         message_processor=message_processor,
         evm_client=evm_client,
         bridge_client=bridge_client,
@@ -24,4 +25,20 @@ async def start_retry_failed_task():
         logger=logger,
     )
 
-    loop.create_task(get_update_fees_task.start_task())
+    loop.create_task(retry_failed_task.start_task())
+
+
+async def start_retry_missed_task():
+    loop = await get_event_loop()
+    message_processor = await get_message_processor()
+    bridge_client = await get_bridge_client()
+    relays_repo = await get_relays_repo()
+
+    retry_missed_task = RetryMissedTask(
+        message_processor=message_processor,
+        bridge_client=bridge_client,
+        relays_repo=relays_repo,
+        logger=logger,
+    )
+
+    loop.create_task(retry_missed_task.start_task())

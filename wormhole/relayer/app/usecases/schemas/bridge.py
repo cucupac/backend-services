@@ -18,4 +18,8 @@ class APIErrorBody(BaseModel):
 
 
 class BridgeMessage(BaseModel):
-    message_bytes: str
+    b64_message: str  # base64 encoded bytes
+
+
+class NotFoundException(BridgeClientException):
+    """Raised when a 404 is returned from the bridge client."""

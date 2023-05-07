@@ -20,6 +20,10 @@ class GrpcStatus(str, Enum):
     FAILED = "failed"
 
 
+class GrpcErrors(str, Enum):
+    MISSED_VAA = "[gRPC Stream]: Missed VAA."
+
+
 class UpdateRepoAdapter(BaseModel):
     emitter_address: str = Field(
         ...,

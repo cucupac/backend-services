@@ -77,7 +77,7 @@ class VaaManager(IVaaManager):
                     relay_error=error,
                     relay_status=status,
                     relay_message=vaa_hex,
-                    cache_status=cache_status,
+                    relay_cache_status=cache_status,
                 ),
             )
 

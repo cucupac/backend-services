@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
 
-class IRetryFailedTask(ABC):
+class IRetryMissedTask(ABC):
     @abstractmethod
     async def start_task(self) -> None:
         """Starts task."""

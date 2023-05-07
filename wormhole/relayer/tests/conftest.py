@@ -16,7 +16,7 @@ from app.usecases.interfaces.clients.evm import IEvmClient
 from app.usecases.interfaces.clients.websocket import IWebsocketClient
 from app.usecases.interfaces.repos.relays import IRelaysRepo
 from app.usecases.interfaces.services.vaa_delivery import IVaaDelivery
-from app.usecases.schemas.relays import Status, UpdateRepoAdapter, CacheStatus
+from app.usecases.schemas.relays import CacheStatus, Status, UpdateRepoAdapter
 from app.usecases.services.vaa_delivery import VaaDelivery
 
 # Mocks

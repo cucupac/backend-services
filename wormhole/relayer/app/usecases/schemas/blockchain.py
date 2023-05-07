@@ -19,6 +19,10 @@ class Chains(int, Enum):
     CELO = 42220
 
 
+class BlockchainErrors(str, Enum):
+    MESSAGE_PROCESSED = "Message already processed."
+
+
 class TransactionHash(HexBytes):
     """Blockchain transaction hash."""
 

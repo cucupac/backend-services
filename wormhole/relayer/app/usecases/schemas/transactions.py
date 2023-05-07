@@ -3,7 +3,7 @@ from typing import Optional
 
 from pydantic import BaseModel, Field
 
-from app.usecases.schemas.relays import Status
+from app.usecases.schemas.relays import CacheStatus, GrpcStatus, Status
 
 
 class TransactionBase(BaseModel):
@@ -84,4 +84,44 @@ class TransactionsJoinRelays(TransactionInDB):
         None,
         description="The message that the consuming-relayer needs.",
         example="0CeC041cDB3AAB968C1a273bfC330aa410b5E2DF0CeC041cDB3AAB968C1a273bfC330aa410b5E2DF",
+    )
+    relay_cache_status: CacheStatus = Field(
+        ...,
+        description="Informaiton on the relationship between the relay and the in-memory cache.",
+        example=CacheStatus.NEVER_CACHED,
+    )
+    relay_grpc_status: GrpcStatus = Field(
+        ...,
+        description="Whether or not the gRPC stream failed.",
+        example=GrpcStatus.SUCCESS,
+    )
+
+
+class CreateRepoAdapter(TransactionBase):
+    """Same object, renaming for consistency."""
+
+    relay_error: Optional[str] = Field(
+        None,
+        description="An error message, describing what went wrong.",
+        example="Example error message here.",
+    )
+    relay_status: Status = Field(
+        ...,
+        description="The enum-constrained status of the relay task.",
+        example=Status.PENDING,
+    )
+    relay_message: str = Field(
+        ...,
+        description="The message that the consuming-relayer needs.",
+        example="0CeC041cDB3AAB968C1a273bfC330aa410b5E2DF0CeC041cDB3AAB968C1a273bfC330aa410b5E2DF",
+    )
+    relay_cache_status: CacheStatus = Field(
+        ...,
+        description="Informaiton on the relationship between the relay and the in-memory cache.",
+        example=CacheStatus.NEVER_CACHED,
+    )
+    relay_grpc_status: GrpcStatus = Field(
+        ...,
+        description="Whether or not the gRPC stream failed.",
+        example=GrpcStatus.SUCCESS,
     )

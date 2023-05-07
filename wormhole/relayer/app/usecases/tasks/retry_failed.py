@@ -9,7 +9,7 @@ from app.usecases.interfaces.clients.evm import IEvmClient
 from app.usecases.interfaces.repos.relays import IRelaysRepo
 from app.usecases.interfaces.services.message_processor import IVaaProcessor
 from app.usecases.interfaces.tasks.retry_failed import IRetryFailedTask
-from app.usecases.schemas.blockchain import BlockchainClientError
+from app.usecases.schemas.blockchain import BlockchainClientError, BlockchainErrors
 from app.usecases.schemas.relays import (
     Status,
     UpdateJoinedRepoAdapter,
@@ -55,12 +55,13 @@ class RetryFailedTask(IRetryFailedTask):
                 """The VAA is unknown to our system."""
 
                 # 1. Get VAA from Wormhole
-                b64_encoded_message = await self.bridge_client.fetch_bridge_message(
+                message = await self.bridge_client.fetch_bridge_message(
                     emitter_address=transaction.emitter_address,
+                    emitter_chain_id=transaction.source_chain_id,
                     sequence=transaction.sequence,
                 )
 
-                message_bytes = base64.b64decode(b64_encoded_message)
+                message_bytes = base64.b64decode(message.b64_message)
                 parsed_vaa = self.vaa_processor.parse_vaa(vaa=message_bytes)
                 message_hex = codecs.encode(message_bytes, "hex_codec").decode()
 
@@ -101,9 +102,14 @@ class RetryFailedTask(IRetryFailedTask):
                         dest_chain_id=transaction.dest_chain_id,
                     )
                 except BlockchainClientError as e:
-                    error = e.detail
-                    status = Status.FAILED
-                    transaction_hash = None
+                    if BlockchainErrors.MESSAGE_PROCESSED in e.detail:
+                        error = None
+                        status = Status.SUCCESS
+                        transaction_hash = None
+                    else:
+                        error = e.detail
+                        status = Status.FAILED
+                        transaction_hash = None
                 else:
                     error = None
                     status = Status.SUCCESS

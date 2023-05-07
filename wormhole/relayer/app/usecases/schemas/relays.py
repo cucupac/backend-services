@@ -16,6 +16,15 @@ class CacheStatus(str, Enum):
     PREVIOUSLY_CACHED = "previously_cached"
 
 
+class GrpcStatus(str, Enum):
+    SUCCESS = "success"
+    FAILED = "failed"
+
+
+class GrpcErrors(str, Enum):
+    MISSED_VAA = "[gRPC Stream]: Missed VAA."
+
+
 class UpdateRepoAdapter(BaseModel):
     emitter_address: str = Field(
         ...,

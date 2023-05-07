@@ -133,7 +133,7 @@ class CreateRepoAdapter(TransactionBase):
         description="The message that the consuming-relayer needs.",
         example="0CeC041cDB3AAB968C1a273bfC330aa410b5E2DF0CeC041cDB3AAB968C1a273bfC330aa410b5E2DF",
     )
-    cache_status: CacheStatus = Field(
+    relay_cache_status: CacheStatus = Field(
         ...,
         description="Informaiton on the relationship between the relay and the in-memory cache.",
         example=CacheStatus.NEVER_CACHED,

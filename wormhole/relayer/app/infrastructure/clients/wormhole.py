@@ -8,6 +8,7 @@ from app.usecases.schemas.bridge import (
     BridgeClientError,
     BridgeClientException,
     BridgeMessage,
+    NotFoundException,
 )
 
 
@@ -41,6 +42,8 @@ class WormholeClient(IBridgeClient):
                 ) from e
 
             if response.status != 200:
+                if response.status == 404:
+                    raise NotFoundException()
                 try:
                     error = APIErrorBody(**response_json)
                 except Exception as e:
@@ -55,7 +58,7 @@ class WormholeClient(IBridgeClient):
             return response_json
 
     async def fetch_bridge_message(
-        self, emitter_address: str, sequence: int
+        self, emitter_address: str, emitter_chain_id: int, sequence: int
     ) -> BridgeMessage:
         """Fetches stored bridge messages from bridge provider."""
 
@@ -63,7 +66,7 @@ class WormholeClient(IBridgeClient):
 
         response_json = await self.api_call(
             method="GET",
-            endpoint=f"/v1/signed_vaa/5/000000000000000000000000{truncated_emitter_address}/{sequence}",
+            endpoint=f"/v1/signed_vaa/{emitter_chain_id}/000000000000000000000000{truncated_emitter_address}/{sequence}",
         )
 
-        return BridgeMessage(message_bytes=response_json["vaaBytes"])
+        return BridgeMessage(b64_message=response_json["vaaBytes"])
