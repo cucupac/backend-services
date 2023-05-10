@@ -88,6 +88,7 @@ class RelaysRepo(IRelaysRepo):
                 status=update_data.status,
                 transaction_hash=update_data.transaction_hash,
                 error=update_data.error,
+                message=update_data.message,
             )
             .where(where_clause)
         )

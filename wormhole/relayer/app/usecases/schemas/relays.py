@@ -78,3 +78,8 @@ class UpdateJoinedRepoAdapter(UpdateRepoAdapter):
         description="The amount of USX transferred.",
         example=1e18,
     )
+    message: Optional[str] = Field(
+        None,
+        description="The message that the consuming-relayer needs.",
+        example="0CeC041cDB3AAB968C1a273bfC330aa410b5E2DF0CeC041cDB3AAB968C1a273bfC330aa410b5E2DF",
+    )

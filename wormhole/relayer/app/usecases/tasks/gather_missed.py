@@ -40,7 +40,7 @@ class GatherMissedVaasTask(IGatherMissedVaasTask):
             await asyncio.sleep(settings.gather_missed_frequency)
 
     async def task(self):
-        """Retries untracked transactions."""
+        """Gathers untracked transactions."""
         self.logger.info("[GatherMissedVaasTask]: Task started.")
 
         # Get missed transactions
@@ -52,52 +52,56 @@ class GatherMissedVaasTask(IGatherMissedVaasTask):
 
             if transaction is not None:
                 new_sequence = transaction.sequence + 1
+            else:
+                new_sequence = 0
 
-                while True:
-                    # 1. Fetch message
-                    try:
-                        message = await self.bridge_client.fetch_bridge_message(
-                            emitter_address=transaction.emitter_address,
-                            emitter_chain_id=transaction.source_chain_id,
-                            sequence=new_sequence,
+            while True:
+                # 1. Fetch message
+                try:
+                    message = await self.bridge_client.fetch_bridge_message(
+                        emitter_address=settings.evm_wormhole_bridge,
+                        emitter_chain_id=wh_chain_id,
+                        sequence=new_sequence,
+                    )
+                except (
+                    BridgeClientException,
+                    NotFoundException,
+                ) as e:
+                    if isinstance(e, NotFoundException):
+                        self.logger.info(
+                            "[GatherMissedVaasTask]: Reached point of no new messages for chain id: %s.",
+                            wh_chain_id,
                         )
-                    except (
-                        BridgeClientException,
-                        NotFoundException,
-                    ) as e:
-                        if isinstance(e, NotFoundException):
-                            self.logger.info(
-                                "[GatherMissedVaasTask]: Reached point of no new messages for chain id: %s.",
-                                wh_chain_id,
-                            )
-                        else:
-                            self.logger.error(
-                                "[GatherMissedVaasTask]: Unexpected error: %s", e
-                            )
-                        break
                     else:
-                        message_bytes = base64.b64decode(message.b64_message)
-                        parsed_vaa = self.message_processor.parse_vaa(vaa=message_bytes)
-                        message_hex = codecs.encode(message_bytes, "hex_codec").decode()
-
-                        # 2. Store record as failed (another task will pick it up)
-                        await self.relays_repo.create(
-                            transaction=CreateRepoAdapter(
-                                emitter_address=parsed_vaa.emitter_address,
-                                from_address=parsed_vaa.payload.from_address,
-                                to_address=f"0x{parsed_vaa.payload.to_address:040x}",
-                                source_chain_id=parsed_vaa.emitter_chain,
-                                dest_chain_id=parsed_vaa.payload.dest_chain_id,
-                                amount=parsed_vaa.payload.amount,
-                                sequence=parsed_vaa.sequence,
-                                relay_error=RelayErrors.MISSED_VAA,
-                                relay_status=Status.FAILED,
-                                relay_message=message_hex,
-                                relay_cache_status=CacheStatus.NEVER_CACHED,
-                                relay_grpc_status=GrpcStatus.FAILED,
-                            )
+                        self.logger.error(
+                            "[GatherMissedVaasTask]: Unexpected error: %s", e
                         )
+                    break
+                else:
+                    message_bytes = base64.b64decode(message.b64_message)
+                    parsed_vaa = self.message_processor.parse_vaa(vaa=message_bytes)
+                    message_hex = (
+                        codecs.encode(message_bytes, "hex_codec").decode().upper()
+                    )
 
-                    new_sequence += 1
+                    # 2. Store record as failed (another task will pick it up)
+                    await self.relays_repo.create(
+                        transaction=CreateRepoAdapter(
+                            emitter_address=parsed_vaa.emitter_address,
+                            from_address=parsed_vaa.payload.from_address,
+                            to_address=f"0x{parsed_vaa.payload.to_address:040x}",
+                            source_chain_id=parsed_vaa.emitter_chain,
+                            dest_chain_id=parsed_vaa.payload.dest_chain_id,
+                            amount=parsed_vaa.payload.amount,
+                            sequence=parsed_vaa.sequence,
+                            relay_error=RelayErrors.MISSED_VAA,
+                            relay_status=Status.FAILED,
+                            relay_message=message_hex,
+                            relay_cache_status=CacheStatus.NEVER_CACHED,
+                            relay_grpc_status=GrpcStatus.FAILED,
+                        )
+                    )
+
+                new_sequence += 1
 
         self.logger.info("[GatherMissedVaasTask]: Finished; sleeping now...")

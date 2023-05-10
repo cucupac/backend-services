@@ -63,12 +63,13 @@ class RetryFailedTask(IRetryFailedTask):
 
                 message_bytes = base64.b64decode(message.b64_message)
                 parsed_vaa = self.vaa_processor.parse_vaa(vaa=message_bytes)
-                message_hex = codecs.encode(message_bytes, "hex_codec").decode()
+                message_hex = codecs.encode(message_bytes, "hex_codec").decode().upper()
 
                 # 2. Deliver message
                 try:
                     transaction_hash_bytes = await self.evm_client.deliver(
-                        vaa=message_hex, dest_chain_id=parsed_vaa.payload.dest_chain_id
+                        payload=message_hex,
+                        dest_chain_id=parsed_vaa.payload.dest_chain_id,
                     )
                 except BlockchainClientError as e:
                     error = e.detail
@@ -89,9 +90,10 @@ class RetryFailedTask(IRetryFailedTask):
                         error=error,
                         status=status,
                         from_address=parsed_vaa.payload.from_address,
-                        to_address=parsed_vaa.payload.to_address,
+                        to_address=f"0x{parsed_vaa.payload.to_address:040x}",
                         dest_chain_id=parsed_vaa.payload.dest_chain_id,
-                        amount=-parsed_vaa.payload.amount,
+                        amount=parsed_vaa.payload.amount,
+                        message=message_hex,
                     )
                 )
             else:

@@ -32,7 +32,7 @@ class VaaManager(IVaaManager):
 
         parsed_vaa = self.parse_vaa(vaa=vaa)
 
-        vaa_hex = codecs.encode(bytes(vaa), "hex_codec").decode()
+        vaa_hex = codecs.encode(bytes(vaa), "hex_codec").decode().upper()
 
         vaa_unique_set = frozenset(
             {

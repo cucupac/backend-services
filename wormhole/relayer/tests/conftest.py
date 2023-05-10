@@ -12,16 +12,29 @@ from app.dependencies import get_relays_repo, logger
 from app.infrastructure.clients.websocket import WebsocketClient
 from app.infrastructure.db.repos.relays import RelaysRepo
 from app.infrastructure.web.setup import setup_app
+from app.usecases.interfaces.clients.bridge import IBridgeClient
 from app.usecases.interfaces.clients.evm import IEvmClient
 from app.usecases.interfaces.clients.websocket import IWebsocketClient
 from app.usecases.interfaces.repos.relays import IRelaysRepo
+from app.usecases.interfaces.services.message_processor import IVaaProcessor
 from app.usecases.interfaces.services.vaa_delivery import IVaaDelivery
-from app.usecases.schemas.relays import CacheStatus, Status, UpdateRepoAdapter
+from app.usecases.interfaces.tasks.gather_missed import IGatherMissedVaasTask
+from app.usecases.interfaces.tasks.retry_failed import IRetryFailedTask
+from app.usecases.schemas.relays import (
+    CacheStatus,
+    RelayErrors,
+    Status,
+    UpdateRepoAdapter,
+)
+from app.usecases.services.message_processor import MessageProcessor
 from app.usecases.services.vaa_delivery import VaaDelivery
+from app.usecases.tasks.gather_missed import GatherMissedVaasTask
+from app.usecases.tasks.retry_failed import RetryFailedTask
 
 # Mocks
 from tests.mocks.clients.evm import EvmResult, MockEvmClient
 from tests.mocks.clients.websocket import MockWebsocketClient
+from tests.mocks.clients.wormhole import MockWormholeClient
 
 
 # Database Connection
@@ -69,6 +82,12 @@ async def test_websocket_client() -> IWebsocketClient:
 @pytest_asyncio.fixture
 async def websocket_client() -> IWebsocketClient:
     return WebsocketClient(logger=logger)
+
+
+# Clients
+@pytest_asyncio.fixture
+async def test_wormhole_client() -> IBridgeClient:
+    return MockWormholeClient()
 
 
 # Services
@@ -128,12 +147,48 @@ async def vaa_delivery_websocket_fail(
     )
 
 
+@pytest_asyncio.fixture
+async def message_processor() -> IVaaProcessor:
+    return MessageProcessor()
+
+
+# Tasks
+@pytest_asyncio.fixture
+async def retry_failed_task(
+    message_processor: IVaaProcessor,
+    test_wormhole_client: IBridgeClient,
+    test_evm_client_success: IEvmClient,
+    relays_repo: IRelaysRepo,
+) -> IRetryFailedTask:
+    return RetryFailedTask(
+        message_processor=message_processor,
+        evm_client=test_evm_client_success,
+        bridge_client=test_wormhole_client,
+        relays_repo=relays_repo,
+        logger=logger,
+    )
+
+
+@pytest_asyncio.fixture
+async def gather_missed_task(
+    message_processor: IVaaProcessor,
+    test_wormhole_client: IBridgeClient,
+    relays_repo: IRelaysRepo,
+) -> IGatherMissedVaasTask:
+    return GatherMissedVaasTask(
+        message_processor=message_processor,
+        bridge_client=test_wormhole_client,
+        relays_repo=relays_repo,
+        logger=logger,
+    )
+
+
 # Database-inserted Objects
 @pytest_asyncio.fixture
 async def inserted_transaction(test_db: Database) -> None:
     async with test_db.transaction():
         transaction_id = await test_db.execute(
-            """INSERT INTO transactions (emitter_address, from_address, to_address, source_chain_id, dest_chain_id, amount, sequence, cache_status) VALUES (:emitter_address, :from_address, :to_address, :source_chain_id, :dest_chain_id, :amount, :sequence, :cache_status) RETURNING id""",
+            """INSERT INTO transactions (emitter_address, from_address, to_address, source_chain_id, dest_chain_id, amount, sequence) VALUES (:emitter_address, :from_address, :to_address, :source_chain_id, :dest_chain_id, :amount, :sequence) RETURNING id""",
             {
                 "emitter_address": constant.TEST_EMITTER_ADDRESS,
                 "from_address": constant.TEST_USER_ADDRESS,
@@ -142,18 +197,47 @@ async def inserted_transaction(test_db: Database) -> None:
                 "dest_chain_id": constant.TEST_DESTINATION_CHAIN_ID,
                 "amount": constant.TEST_AMOUNT,
                 "sequence": constant.TEST_SEQUENCE,
-                "cache_status": CacheStatus.NEVER_CACHED,
-                "grpc_status": "success",
             },
         )
         await test_db.execute(
-            """INSERT INTO relays (transaction_id, message, status, transaction_hash, error) VALUES (:transaction_id, :message, :status, :transaction_hash, :error)""",
+            """INSERT INTO relays (transaction_id, message, status, transaction_hash, error, cache_status, grpc_status) VALUES (:transaction_id, :message, :status, :transaction_hash, :error, :cache_status, :grpc_status)""",
             {
                 "transaction_id": transaction_id,
                 "status": Status.PENDING,
                 "error": None,
                 "message": constant.TEST_VAA,
                 "transaction_hash": None,
+                "cache_status": CacheStatus.NEVER_CACHED,
+                "grpc_status": "success",
+            },
+        )
+
+
+@pytest_asyncio.fixture
+async def inserted_failed_transaction(test_db: Database) -> None:
+    async with test_db.transaction():
+        transaction_id = await test_db.execute(
+            """INSERT INTO transactions (emitter_address, from_address, to_address, source_chain_id, dest_chain_id, amount, sequence) VALUES (:emitter_address, :from_address, :to_address, :source_chain_id, :dest_chain_id, :amount, :sequence) RETURNING id""",
+            {
+                "emitter_address": constant.TEST_EMITTER_ADDRESS,
+                "from_address": None,
+                "to_address": None,
+                "source_chain_id": constant.TEST_SOURCE_CHAIN_ID,
+                "dest_chain_id": None,
+                "amount": None,
+                "sequence": constant.TEST_SEQUENCE,
+            },
+        )
+        await test_db.execute(
+            """INSERT INTO relays (transaction_id, message, status, transaction_hash, error, cache_status, grpc_status) VALUES (:transaction_id, :message, :status, :transaction_hash, :error, :cache_status, :grpc_status)""",
+            {
+                "transaction_id": transaction_id,
+                "status": Status.FAILED,
+                "error": RelayErrors.MISSED_VAA,
+                "message": None,
+                "transaction_hash": None,
+                "cache_status": CacheStatus.NEVER_CACHED,
+                "grpc_status": "failed",
             },
         )
 
