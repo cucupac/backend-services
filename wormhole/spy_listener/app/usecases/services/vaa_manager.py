@@ -30,6 +30,8 @@ class VaaManager(IVaaManager):
     async def process(self, vaa: bytes) -> None:
         """Process vaa bytes."""
 
+        print("\n\nvaa:", vaa, "\n\n")
+
         parsed_vaa = self.parse_vaa(vaa=vaa)
 
         vaa_hex = codecs.encode(bytes(vaa), "hex_codec").decode().upper()
@@ -123,6 +125,8 @@ class VaaManager(IVaaManager):
 
     def parse_payload(self, payload: bytes) -> ParsedPayload:
         """Extracts utilizable data from payload bytes."""
+
+        print("\n\npayload:", payload, "\n\n")
 
         types = ["bytes", "uint256", "uint256", "uint256"]
         from_address_bytes, dest_chain_id, to_address_uint256, amount = decode_abi(

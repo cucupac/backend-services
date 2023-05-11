@@ -242,6 +242,38 @@ async def inserted_failed_transaction(test_db: Database) -> None:
         )
 
 
+@pytest_asyncio.fixture
+async def inserted_recent_transactions(test_db: Database) -> None:
+    for source_chain_id in constant.TEST_MISSED_VAAS_CHAIN_IDS:
+        async with test_db.transaction():
+            transaction_id = await test_db.execute(
+                """INSERT INTO transactions (emitter_address, from_address, to_address, source_chain_id, dest_chain_id, amount, sequence) VALUES (:emitter_address, :from_address, :to_address, :source_chain_id, :dest_chain_id, :amount, :sequence) RETURNING id""",
+                {
+                    "emitter_address": constant.TEST_EMITTER_ADDRESS,
+                    "from_address": None,
+                    "to_address": None,
+                    "source_chain_id": source_chain_id,
+                    "dest_chain_id": None,
+                    "amount": None,
+                    "sequence": min(constant.TEST_MISSED_VAAS_CELO_SEQUENCES) - 1
+                    if source_chain_id == constant.CELO_CHAIN_ID
+                    else min(constant.TEST_MISSED_VAAS_POLYGON_SEQUENCES) - 1,
+                },
+            )
+        await test_db.execute(
+            """INSERT INTO relays (transaction_id, message, status, transaction_hash, error, cache_status, grpc_status) VALUES (:transaction_id, :message, :status, :transaction_hash, :error, :cache_status, :grpc_status)""",
+            {
+                "transaction_id": transaction_id,
+                "status": Status.FAILED,
+                "error": RelayErrors.MISSED_VAA,
+                "message": None,
+                "transaction_hash": None,
+                "cache_status": CacheStatus.NEVER_CACHED,
+                "grpc_status": "failed",
+            },
+        )
+
+
 # Repo Adapters
 @pytest_asyncio.fixture
 async def update_relays_repo_adapter() -> UpdateRepoAdapter:
