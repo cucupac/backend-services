@@ -10,5 +10,5 @@ class MockWormholeClient(IBridgeClient):
         try:
             vaa_bytes = constant.MISSING_VAAS[emitter_chain_id][sequence]["vaa_bytes"]
             return BridgeMessage(b64_message=vaa_bytes)
-        except:
-            raise BridgeClientException()
+        except Exception as e:
+            raise BridgeClientException() from e

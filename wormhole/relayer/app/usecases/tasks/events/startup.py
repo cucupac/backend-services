@@ -7,8 +7,8 @@ from app.dependencies import (
     logger,
 )
 from app.usecases.tasks.gather_missed import GatherMissedVaasTask
+from app.usecases.tasks.gather_pending import GatherPendingVaasTask
 from app.usecases.tasks.retry_failed import RetryFailedTask
-from app.usecases.tasks.retry_pending import GatherPendingVaasTask
 
 
 async def start_retry_failed_task() -> None:

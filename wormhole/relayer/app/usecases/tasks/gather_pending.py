@@ -1,3 +1,4 @@
+# pylint: disable=duplicate-code
 import asyncio
 from logging import Logger
 

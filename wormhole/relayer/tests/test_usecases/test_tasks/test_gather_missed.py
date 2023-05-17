@@ -10,7 +10,7 @@ from app.usecases.schemas.relays import RelayErrors, Status
 @pytest.mark.asyncio
 async def test_task(
     gather_missed_task: IGatherMissedVaasTask,
-    inserted_recent_transactions: None,
+    inserted_recent_transactions: None,  # pylint: disable = unused-argument
     test_db: Database,
 ) -> None:
     """Test that a missed-vaa, failed transaction is caught and properly relayed."""
@@ -69,7 +69,7 @@ async def test_task(
         assert int(test_relay["from_address"], 16) == int(
             constant.TEST_USER_ADDRESS, 16
         )
-        assert test_relay["transaction_hash"] == None
+        assert test_relay["transaction_hash"] is None
 
     for test_sequence in constant.TEST_MISSED_VAAS_POLYGON_SEQUENCES:
         test_relay = await test_db.fetch_one(
@@ -93,4 +93,4 @@ async def test_task(
         assert int(test_relay["from_address"], 16) == int(
             constant.TEST_USER_ADDRESS, 16
         )
-        assert test_relay["transaction_hash"] == None
+        assert test_relay["transaction_hash"] is None

@@ -1,3 +1,4 @@
+# pylint: disable=duplicate-code
 from datetime import datetime
 from typing import Optional
 

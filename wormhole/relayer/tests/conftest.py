@@ -1,5 +1,7 @@
 # pylint: disable=redefined-outer-name
 import os
+import random
+from datetime import datetime, timedelta
 
 import pytest_asyncio
 import respx
@@ -29,6 +31,7 @@ from app.usecases.schemas.relays import (
 from app.usecases.services.message_processor import MessageProcessor
 from app.usecases.services.vaa_delivery import VaaDelivery
 from app.usecases.tasks.gather_missed import GatherMissedVaasTask
+from app.usecases.tasks.gather_pending import GatherPendingVaasTask
 from app.usecases.tasks.retry_failed import RetryFailedTask
 
 # Mocks
@@ -183,6 +186,16 @@ async def gather_missed_task(
     )
 
 
+@pytest_asyncio.fixture
+async def gather_pending_task(
+    relays_repo: IRelaysRepo,
+) -> IGatherMissedVaasTask:
+    return GatherPendingVaasTask(
+        relays_repo=relays_repo,
+        logger=logger,
+    )
+
+
 # Database-inserted Objects
 @pytest_asyncio.fixture
 async def inserted_transaction(test_db: Database) -> None:
@@ -214,7 +227,7 @@ async def inserted_transaction(test_db: Database) -> None:
 
 
 @pytest_asyncio.fixture
-async def inserted_failed_transaction(test_db: Database) -> None:
+async def failed_transaction(test_db: Database) -> None:
     async with test_db.transaction():
         transaction_id = await test_db.execute(
             """INSERT INTO transactions (emitter_address, from_address, to_address, source_chain_id, dest_chain_id, amount, sequence) VALUES (:emitter_address, :from_address, :to_address, :source_chain_id, :dest_chain_id, :amount, :sequence) RETURNING id""",
@@ -240,6 +253,38 @@ async def inserted_failed_transaction(test_db: Database) -> None:
                 "grpc_status": "failed",
             },
         )
+
+
+@pytest_asyncio.fixture
+async def pending_transactions(test_db: Database) -> None:
+    for index in range(constant.DEFAULT_ITERATIONS):
+        async with test_db.transaction():
+            transaction_id = await test_db.execute(
+                """INSERT INTO transactions (emitter_address, from_address, to_address, source_chain_id, dest_chain_id, amount, sequence) VALUES (:emitter_address, :from_address, :to_address, :source_chain_id, :dest_chain_id, :amount, :sequence) RETURNING id""",
+                {
+                    "emitter_address": constant.TEST_EMITTER_ADDRESS,
+                    "from_address": constant.TEST_USER_ADDRESS,
+                    "to_address": constant.TEST_USER_ADDRESS,
+                    "source_chain_id": constant.TEST_SOURCE_CHAIN_ID,
+                    "dest_chain_id": constant.TEST_DESTINATION_CHAIN_ID,
+                    "amount": constant.TEST_AMOUNT,
+                    "sequence": constant.TEST_SEQUENCE + index,
+                },
+            )
+            await test_db.execute(
+                """INSERT INTO relays (transaction_id, message, status, transaction_hash, error, cache_status, grpc_status, created_at) VALUES (:transaction_id, :message, :status, :transaction_hash, :error, :cache_status, :grpc_status, :created_at)""",
+                {
+                    "transaction_id": transaction_id,
+                    "status": Status.PENDING,
+                    "error": None,
+                    "message": constant.TEST_VAA,
+                    "transaction_hash": None,
+                    "cache_status": CacheStatus.NEVER_CACHED,
+                    "grpc_status": "success",
+                    "created_at": datetime.utcnow()
+                    - timedelta(minutes=random.randint(2, 10)),
+                },
+            )
 
 
 @pytest_asyncio.fixture

@@ -1,3 +1,4 @@
+# pylint: disable=duplicate-code
 import asyncio
 import base64
 import codecs
@@ -44,7 +45,7 @@ class GatherMissedVaasTask(IGatherMissedVaasTask):
         self.logger.info("[GatherMissedVaasTask]: Task started.")
 
         # Get missed transactions
-        for wh_chain_id in CHAIN_ID_LOOKUP.keys():
+        for wh_chain_id in CHAIN_ID_LOOKUP:
             transaction = await self.relays_repo.get_latest_sequence(
                 emitter_address=settings.evm_wormhole_bridge,
                 source_chain_id=wh_chain_id,

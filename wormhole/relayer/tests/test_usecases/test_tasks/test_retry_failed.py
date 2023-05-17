@@ -10,7 +10,7 @@ from app.usecases.schemas.relays import RelayErrors, Status
 async def test_task(
     retry_failed_task: IRetryFailedTask,
     test_db: Database,
-    inserted_failed_transaction: None,
+    failed_transaction: None,  # pylint: disable = unused-argument
 ) -> None:
     """Test that a missed-vaa, failed transaction is caught and properly relayed."""
 
@@ -27,10 +27,10 @@ async def test_task(
 
     assert test_relay["status"] == Status.FAILED
     assert test_relay["error"] == RelayErrors.MISSED_VAA
-    assert test_relay["message"] == None
-    assert test_relay["amount"] == None
-    assert test_relay["to_address"] == None
-    assert test_relay["from_address"] == None
+    assert test_relay["message"] is None
+    assert test_relay["amount"] is None
+    assert test_relay["to_address"] is None
+    assert test_relay["from_address"] is None
 
     await retry_failed_task.task()
 
@@ -46,7 +46,7 @@ async def test_task(
     )
 
     assert test_relay["status"] == Status.SUCCESS
-    assert test_relay["error"] == None
+    assert test_relay["error"] is None
     assert test_relay["message"] == constant.TEST_VAA
     assert test_relay["amount"] == constant.TEST_AMOUNT
     assert int(test_relay["to_address"], 16) == int(constant.TEST_USER_ADDRESS, 16)

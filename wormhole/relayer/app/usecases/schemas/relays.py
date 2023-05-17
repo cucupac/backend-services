@@ -1,3 +1,4 @@
+# pylint: disable=duplicate-code
 from enum import Enum
 from typing import Optional
 

@@ -1,3 +1,4 @@
+# pylint: disable=duplicate-code
 import asyncio
 import base64
 import codecs
@@ -18,7 +19,7 @@ from app.usecases.schemas.relays import (
 
 
 class RetryFailedTask(IRetryFailedTask):
-    def __init__(
+    def __init__(  # pylint: disable = too-many-arguments
         self,
         message_processor: IVaaProcessor,
         evm_client: IEvmClient,
@@ -52,7 +53,7 @@ class RetryFailedTask(IRetryFailedTask):
 
         for transaction in transactions:
             if not transaction.relay_message:
-                """The VAA is unknown to our system."""
+                # The VAA is unknown to our system.
 
                 # 1. Get VAA from Wormhole
                 message = await self.bridge_client.fetch_bridge_message(
@@ -97,7 +98,7 @@ class RetryFailedTask(IRetryFailedTask):
                     )
                 )
             else:
-                """The VAA is known to our system; it just needs to be retried."""
+                # The VAA is known to our system; it just needs to be retried.
                 try:
                     transaction_hash_bytes = await self.evm_client.deliver(
                         vaa=transaction.relay_message,
