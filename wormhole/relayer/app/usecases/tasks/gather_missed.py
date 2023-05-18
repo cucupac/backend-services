@@ -70,8 +70,9 @@ class GatherMissedVaasTask(IGatherMissedVaasTask):
                 ) as e:
                     if isinstance(e, NotFoundException):
                         self.logger.info(
-                            "[GatherMissedVaasTask]: Reached point of no new messages for chain id: %s.",
+                            "[GatherMissedVaasTask]: Reached point of no new messages; chain id: %s, sequence: %s",
                             wh_chain_id,
+                            new_sequence,
                         )
                     else:
                         self.logger.error(
@@ -101,6 +102,12 @@ class GatherMissedVaasTask(IGatherMissedVaasTask):
                             relay_cache_status=CacheStatus.NEVER_CACHED,
                             relay_grpc_status=GrpcStatus.FAILED,
                         )
+                    )
+
+                    self.logger.info(
+                        "[GatherMissedVaasTask]: Retrieved missed VAA; chain id: %s, sequence: %s",
+                        parsed_vaa.emitter_chain,
+                        parsed_vaa.sequence,
                     )
 
                 new_sequence += 1

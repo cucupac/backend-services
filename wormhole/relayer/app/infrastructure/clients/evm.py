@@ -29,7 +29,7 @@ class EvmClient(IEvmClient):
         )
 
         contract = web3_client.eth.contract(
-            address=settings.evm_wormhole_bridge,
+            address=web3_client.toChecksumAddress(settings.evm_wormhole_bridge),
             abi=self.abi,
         )
 
@@ -57,9 +57,10 @@ class EvmClient(IEvmClient):
         post_london_upgrade: bool,
     ) -> SignedTransaction:
         """Craft a raw transaction to be sent to the blockchain."""
+        relayer = web3_client.toChecksumAddress(settings.relayer_address)
         transaction_builder = {
-            "from": settings.relayer_address,
-            "nonce": web3_client.eth.get_transaction_count(settings.relayer_address),
+            "from": relayer,
+            "nonce": web3_client.eth.get_transaction_count(relayer),
         }
 
         gas_price_estimate = web3_client.eth.gas_price

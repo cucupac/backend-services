@@ -6,7 +6,7 @@ from sqlalchemy import and_, select
 from app.infrastructure.db.models.relays import RELAYS
 from app.infrastructure.db.models.transactions import TRANSACTIONS
 from app.usecases.interfaces.repos.transactions import ITransactionsRepo
-from app.usecases.schemas.relays import CacheStatus, GrpcStatus, Status, RelayErrors
+from app.usecases.schemas.relays import CacheStatus, GrpcStatus, RelayErrors, Status
 from app.usecases.schemas.transactions import (
     CreateRepoAdapter,
     RetriveManyRepoAdapter,
@@ -20,7 +20,6 @@ class TransactionsRepo(ITransactionsRepo):
 
     async def create(self, transaction: CreateRepoAdapter) -> TransactionsJoinRelays:
         """Inserts and returns new transaction object."""
-
         most_recent_record = await self.get_latest_sequence(
             emitter_address=transaction.emitter_address,
             source_chain_id=transaction.source_chain_id,
@@ -88,7 +87,6 @@ class TransactionsRepo(ITransactionsRepo):
         transaction_id: int,
     ) -> Optional[TransactionsJoinRelays]:
         """Retrieve transaction object with relay information."""
-
         j = TRANSACTIONS.join(RELAYS, TRANSACTIONS.c.id == RELAYS.c.transaction_id)
 
         columns_to_select = [

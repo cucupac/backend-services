@@ -101,7 +101,7 @@ class RetryFailedTask(IRetryFailedTask):
                 # The VAA is known to our system; it just needs to be retried.
                 try:
                     transaction_hash_bytes = await self.evm_client.deliver(
-                        vaa=transaction.relay_message,
+                        payload=transaction.relay_message,
                         dest_chain_id=transaction.dest_chain_id,
                     )
                 except BlockchainClientError as e:
@@ -117,6 +117,11 @@ class RetryFailedTask(IRetryFailedTask):
                     error = None
                     status = Status.SUCCESS
                     transaction_hash = transaction_hash_bytes.hex()
+                    self.logger.info(
+                        "[RetryFailedTask]: Delivery transaction successful; chain id: %s, sequence: %s",
+                        transaction.source_chain_id,
+                        transaction.sequence,
+                    )
 
                 await self.relays_repo.update(
                     relay=UpdateRepoAdapter(

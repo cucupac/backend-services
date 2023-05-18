@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field
 class Status(str, Enum):
     PENDING = "pending"
     FAILED = "failed"
+    SUCCESS = "success"
 
 
 class CacheStatus(str, Enum):

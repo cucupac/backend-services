@@ -119,6 +119,6 @@ class RedisClient(IUniqueSetClient):
     async def close_connection(self) -> None:
         """Closes external connection."""
         if self.redis:
-            self.redis.close()
+            await self.redis.close()
             self.redis = None
             self.logger.info("[RedisClient]: Connection closed.")

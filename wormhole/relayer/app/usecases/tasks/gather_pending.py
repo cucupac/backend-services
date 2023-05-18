@@ -46,5 +46,10 @@ class GatherPendingVaasTask(IGatherPendingVaasTask):
                     status=Status.FAILED,
                 )
             )
+            self.logger.info(
+                "[GatherPendingVaasTask]: Rescued stale pending; chain id: %s, sequence: %s",
+                transaction.source_chain_id,
+                transaction.sequence,
+            )
 
         self.logger.info("[GatherPendingVaasTask]: Finished; sleeping now...")
