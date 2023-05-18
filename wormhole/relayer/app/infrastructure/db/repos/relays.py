@@ -24,9 +24,9 @@ class RelaysRepo(IRelaysRepo):
         """Creates new transaction and relay object."""
 
         insert_statement = TRANSACTIONS.insert().values(
-            emitter_address=transaction.emitter_address,
-            from_address=transaction.from_address,
-            to_address=transaction.to_address,
+            emitter_address=transaction.emitter_address.lower(),
+            from_address=transaction.from_address.lower(),
+            to_address=transaction.to_address.lower(),
             source_chain_id=transaction.source_chain_id,
             dest_chain_id=transaction.dest_chain_id,
             amount=transaction.amount,
@@ -60,7 +60,7 @@ class RelaysRepo(IRelaysRepo):
             )
             .where(
                 and_(
-                    TRANSACTIONS.c.emitter_address == relay.emitter_address,
+                    TRANSACTIONS.c.emitter_address == relay.emitter_address.lower(),
                     TRANSACTIONS.c.source_chain_id == relay.source_chain_id,
                     TRANSACTIONS.c.sequence == relay.sequence,
                     RELAYS.c.transaction_id == TRANSACTIONS.c.id,
@@ -76,7 +76,7 @@ class RelaysRepo(IRelaysRepo):
         """Update relay and transaction object."""
 
         where_clause = and_(
-            TRANSACTIONS.c.emitter_address == update_data.emitter_address,
+            TRANSACTIONS.c.emitter_address == update_data.emitter_address.lower(),
             TRANSACTIONS.c.source_chain_id == update_data.source_chain_id,
             TRANSACTIONS.c.sequence == update_data.sequence,
             RELAYS.c.transaction_id == TRANSACTIONS.c.id,
@@ -96,8 +96,8 @@ class RelaysRepo(IRelaysRepo):
         transactions_update_statement = (
             TRANSACTIONS.update()
             .values(
-                from_address=update_data.from_address,
-                to_address=update_data.to_address,
+                from_address=update_data.from_address.lower(),
+                to_address=update_data.to_address.lower(),
                 dest_chain_id=update_data.dest_chain_id,
                 amount=update_data.amount,
             )
@@ -160,7 +160,7 @@ class RelaysRepo(IRelaysRepo):
             .select_from(j)
             .where(
                 and_(
-                    TRANSACTIONS.c.emitter_address == emitter_address,
+                    TRANSACTIONS.c.emitter_address == emitter_address.lower(),
                     TRANSACTIONS.c.source_chain_id == source_chain_id,
                 )
             )

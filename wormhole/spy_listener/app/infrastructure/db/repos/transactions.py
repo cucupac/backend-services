@@ -30,7 +30,7 @@ class TransactionsRepo(ITransactionsRepo):
                 sequence_to_insert = most_recent_record.sequence + 1
                 while sequence_to_insert < transaction.sequence:
                     insert_statement = TRANSACTIONS.insert().values(
-                        emitter_address=transaction.emitter_address,
+                        emitter_address=transaction.emitter_address.lower(),
                         from_address=None,
                         to_address=None,
                         source_chain_id=transaction.source_chain_id,
@@ -56,9 +56,9 @@ class TransactionsRepo(ITransactionsRepo):
                     sequence_to_insert += 1
 
         insert_statement = TRANSACTIONS.insert().values(
-            emitter_address=transaction.emitter_address,
-            from_address=transaction.from_address,
-            to_address=transaction.to_address,
+            emitter_address=transaction.emitter_address.lower(),
+            from_address=transaction.from_address.lower(),
+            to_address=transaction.to_address.lower(),
             source_chain_id=transaction.source_chain_id,
             dest_chain_id=transaction.dest_chain_id,
             amount=transaction.amount,
@@ -123,12 +123,12 @@ class TransactionsRepo(ITransactionsRepo):
 
         if query_params.from_address:
             query_conditions.append(
-                TRANSACTIONS.c.from_address == query_params.from_address
+                TRANSACTIONS.c.from_address == query_params.from_address.lower()
             )
 
         if query_params.to_address:
             query_conditions.append(
-                TRANSACTIONS.c.to_address == query_params.to_address
+                TRANSACTIONS.c.to_address == query_params.to_address.lower()
             )
 
         if not query_conditions:
@@ -178,7 +178,7 @@ class TransactionsRepo(ITransactionsRepo):
             .select_from(j)
             .where(
                 and_(
-                    TRANSACTIONS.c.emitter_address == emitter_address,
+                    TRANSACTIONS.c.emitter_address == emitter_address.lower(),
                     TRANSACTIONS.c.source_chain_id == source_chain_id,
                 )
             )

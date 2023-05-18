@@ -21,7 +21,7 @@ class RelaysRepo(IRelaysRepo):
             )
             .where(
                 and_(
-                    TRANSACTIONS.c.emitter_address == relay.emitter_address,
+                    TRANSACTIONS.c.emitter_address == relay.emitter_address.lower(),
                     TRANSACTIONS.c.source_chain_id == relay.source_chain_id,
                     TRANSACTIONS.c.sequence == relay.sequence,
                     RELAYS.c.transaction_id == TRANSACTIONS.c.id,
