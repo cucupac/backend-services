@@ -46,9 +46,9 @@ class Settings(BaseSettings):
     bridge_client_base_url: str
 
     # Tasks
-    retry_failed_frequency: int = 10
-    gather_missed_frequency: int = 20
-    gather_pending_frequency: int = 20
+    retry_failed_frequency: int = 60
+    gather_missed_frequency: int = 60
+    gather_pending_frequency: int = 60 * 10
 
     class Config:
         env_file = DOTENV_FILE

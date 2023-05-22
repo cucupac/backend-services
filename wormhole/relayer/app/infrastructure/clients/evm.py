@@ -22,7 +22,7 @@ class EvmClient(IEvmClient):
         self.chain_data = chain_data
         self.logger = logger
 
-    async def deliver(self, payload: bytes, dest_chain_id: int) -> TransactionHash:
+    async def deliver(self, payload: str, dest_chain_id: int) -> TransactionHash:
         """Sends transaction to the destination blockchain."""
         web3_client = Web3(
             Web3.HTTPProvider(self.chain_data[CHAIN_ID_LOOKUP[dest_chain_id]]["rpc"])
@@ -51,7 +51,7 @@ class EvmClient(IEvmClient):
 
     async def __craft_transaction(
         self,
-        payload: bytes,
+        payload: str,
         contract: Contract,
         web3_client: Web3,
         post_london_upgrade: bool,

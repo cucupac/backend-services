@@ -114,6 +114,11 @@ class RedisClient(IUniqueSetClient):
                 raise UniqueSetError(detail=str(e)) from e
         else:
             self.message_cache.append(message)
+            self.logger.error(
+                "[RedisClient]: Message cached; emitter chain: %s, sequence: %s",
+                message.emitter_chain,
+                message.sequence,
+            )
             raise UniqueSetError(detail="Redis is not connected.")
 
     async def close_connection(self) -> None:

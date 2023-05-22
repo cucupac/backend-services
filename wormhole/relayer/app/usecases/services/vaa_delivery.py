@@ -5,7 +5,7 @@ from app.usecases.interfaces.clients.evm import IEvmClient
 from app.usecases.interfaces.clients.websocket import IWebsocketClient
 from app.usecases.interfaces.repos.relays import IRelaysRepo
 from app.usecases.interfaces.services.vaa_delivery import IVaaDelivery
-from app.usecases.schemas.blockchain import BlockchainClientError
+from app.usecases.schemas.blockchain import BlockchainClientError, BlockchainErrors
 from app.usecases.schemas.relays import Status, UpdateRepoAdapter
 from app.usecases.schemas.unique_set import UniqueSetMessage
 
@@ -31,13 +31,18 @@ class VaaDelivery(IVaaDelivery):
         # Send Vaa to destination chain
         try:
             transaction_hash_bytes = await self.evm_client.deliver(
-                payload=bytes.fromhex(message.vaa_hex),
+                payload=message.vaa_hex,
                 dest_chain_id=message.dest_chain_id,
             )
         except BlockchainClientError as e:
-            error = e.detail
-            status = Status.FAILED
-            transaction_hash = None
+            if BlockchainErrors.MESSAGE_PROCESSED in e.detail:
+                error = None
+                status = Status.SUCCESS
+                transaction_hash = None
+            else:
+                error = e.detail
+                status = Status.FAILED
+                transaction_hash = None
         else:
             error = None
             status = Status.SUCCESS

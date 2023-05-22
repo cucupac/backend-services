@@ -51,20 +51,21 @@ class RelaysRepo(IRelaysRepo):
     async def update(self, relay: UpdateRepoAdapter) -> None:
         """Updates relay object."""
 
-        update_statement = (
-            RELAYS.update()
-            .values(
-                status=relay.status,
-                transaction_hash=relay.transaction_hash,
-                error=relay.error,
-            )
-            .where(
-                and_(
-                    TRANSACTIONS.c.emitter_address == relay.emitter_address.lower(),
-                    TRANSACTIONS.c.source_chain_id == relay.source_chain_id,
-                    TRANSACTIONS.c.sequence == relay.sequence,
-                    RELAYS.c.transaction_id == TRANSACTIONS.c.id,
-                )
+        query = RELAYS.update()
+
+        update_dict = relay.dict()
+
+        if relay.transaction_hash is None:
+            del update_dict["transaction_hash"]
+
+        query = query.values(update_dict)
+
+        update_statement = query.where(
+            and_(
+                TRANSACTIONS.c.emitter_address == relay.emitter_address.lower(),
+                TRANSACTIONS.c.source_chain_id == relay.source_chain_id,
+                TRANSACTIONS.c.sequence == relay.sequence,
+                RELAYS.c.transaction_id == TRANSACTIONS.c.id,
             )
         )
 
