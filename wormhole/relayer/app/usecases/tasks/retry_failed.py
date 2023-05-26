@@ -73,9 +73,19 @@ class RetryFailedTask(IRetryFailedTask):
                         dest_chain_id=parsed_vaa.payload.dest_chain_id,
                     )
                 except BlockchainClientError as e:
-                    error = e.detail
-                    status = Status.FAILED
-                    transaction_hash = None
+                    self.logger.info(
+                        "[RetryFailedTask]: VAA delivery failed; chain id %s, sequence %s",
+                        transaction.source_chain_id,
+                        transaction.sequence,
+                    )
+                    if BlockchainErrors.MESSAGE_PROCESSED in e.detail:
+                        error = None
+                        status = Status.SUCCESS
+                        transaction_hash = None
+                    else:
+                        error = e.detail
+                        status = Status.FAILED
+                        transaction_hash = None
                 else:
                     error = None
                     status = Status.SUCCESS
@@ -105,6 +115,11 @@ class RetryFailedTask(IRetryFailedTask):
                         dest_chain_id=transaction.dest_chain_id,
                     )
                 except BlockchainClientError as e:
+                    self.logger.info(
+                        "[RetryFailedTask]: VAA delivery failed; chain id %s, sequence %s",
+                        transaction.source_chain_id,
+                        transaction.sequence,
+                    )
                     if BlockchainErrors.MESSAGE_PROCESSED in e.detail:
                         error = None
                         status = Status.SUCCESS
@@ -118,9 +133,10 @@ class RetryFailedTask(IRetryFailedTask):
                     status = Status.SUCCESS
                     transaction_hash = transaction_hash_bytes.hex()
                     self.logger.info(
-                        "[RetryFailedTask]: Delivery transaction successful; chain id: %s, sequence: %s",
+                        "[RetryFailedTask]: Delivery transaction successful; chain id: %s, sequence: %s, transaction hash: %s",
                         transaction.source_chain_id,
                         transaction.sequence,
+                        transaction_hash,
                     )
 
                 await self.relays_repo.update(

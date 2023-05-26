@@ -36,6 +36,7 @@ httpcore==0.16.3
 httptools==0.5.0
 httpx==0.23.3
 idna==3.4
+importlib-metadata==6.0.0
 importlib-resources==5.10.2
 iniconfig==2.0.0
 ipfshttpclient==0.8.0a2

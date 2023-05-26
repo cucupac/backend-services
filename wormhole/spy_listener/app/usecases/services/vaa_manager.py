@@ -43,8 +43,9 @@ class VaaManager(IVaaManager):
         )
 
         if not self.recent_vaas.get(vaa_unique_set):
+            needs_db_update = True
             try:
-                await self.unique_set.publish(
+                uinque_set_record_added = await self.unique_set.publish(
                     message=UniqueSetMessage(
                         dest_chain_id=parsed_vaa.payload.dest_chain_id,
                         to_address=parsed_vaa.payload.to_address,
@@ -59,28 +60,31 @@ class VaaManager(IVaaManager):
                 error = e.detail
                 status = Status.FAILED
                 cache_status = CacheStatus.CURRENTLY_CACHED
-
             else:
-                error = None
-                status = Status.PENDING
-                cache_status = CacheStatus.NEVER_CACHED
+                if uinque_set_record_added:
+                    error = None
+                    status = Status.PENDING
+                    cache_status = CacheStatus.NEVER_CACHED
+                else:
+                    needs_db_update = False
 
-            # Store in database
-            await self.transactions_repo.create(
-                transaction=CreateRepoAdapter(
-                    emitter_address=parsed_vaa.emitter_address,
-                    from_address=parsed_vaa.payload.from_address,
-                    to_address=f"0x{parsed_vaa.payload.to_address:040x}",
-                    source_chain_id=parsed_vaa.emitter_chain,
-                    dest_chain_id=parsed_vaa.payload.dest_chain_id,
-                    amount=parsed_vaa.payload.amount,
-                    sequence=parsed_vaa.sequence,
-                    relay_error=error,
-                    relay_status=status,
-                    relay_message=vaa_hex,
-                    relay_cache_status=cache_status,
-                ),
-            )
+            if needs_db_update:
+                # Store in database
+                await self.transactions_repo.create(
+                    transaction=CreateRepoAdapter(
+                        emitter_address=parsed_vaa.emitter_address,
+                        from_address=parsed_vaa.payload.from_address,
+                        to_address=f"0x{parsed_vaa.payload.to_address:040x}",
+                        source_chain_id=parsed_vaa.emitter_chain,
+                        dest_chain_id=parsed_vaa.payload.dest_chain_id,
+                        amount=parsed_vaa.payload.amount,
+                        sequence=parsed_vaa.sequence,
+                        relay_error=error,
+                        relay_status=status,
+                        relay_message=vaa_hex,
+                        relay_cache_status=cache_status,
+                    ),
+                )
 
             if len(self.recent_vaas) >= 100:
                 # Remove the oldest (from beginning)

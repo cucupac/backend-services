@@ -18,5 +18,8 @@ migration:
 		alembic revision --autogenerate --rev-id "$(rev_id)" -m "$(migration_message)"; \
 	fi
 
+migration-sql:
+	alembic upgrade head --sql
+
 migrate:
 	alembic upgrade head

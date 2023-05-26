@@ -53,12 +53,20 @@ class RelaysRepo(IRelaysRepo):
 
         query = RELAYS.update()
 
-        update_dict = relay.dict()
+        update_dict_raw = relay.dict()
+        update_values_dict = {}
 
-        if relay.transaction_hash is None:
-            del update_dict["transaction_hash"]
+        composite_index = ("emitter_address", "source_chain_id", "sequence")
 
-        query = query.values(update_dict)
+        for key, value in update_dict_raw.items():
+            if key not in composite_index:
+                if key == "transaction_hash":
+                    if value is not None:
+                        update_values_dict[key] = value
+                else:
+                    update_values_dict[key] = value
+
+        query = query.values(update_values_dict)
 
         update_statement = query.where(
             and_(
@@ -83,15 +91,17 @@ class RelaysRepo(IRelaysRepo):
             RELAYS.c.transaction_id == TRANSACTIONS.c.id,
         )
 
+        relay_update_dict = {
+            "status": update_data.status,
+            "error": update_data.error,
+            "message": update_data.message,
+        }
+
+        if update_data.transaction_hash:
+            relay_update_dict["transaction_hash"] = update_data.transaction_hash
+
         relays_update_statement = (
-            RELAYS.update()
-            .values(
-                status=update_data.status,
-                transaction_hash=update_data.transaction_hash,
-                error=update_data.error,
-                message=update_data.message,
-            )
-            .where(where_clause)
+            RELAYS.update().values(relay_update_dict).where(where_clause)
         )
 
         transactions_update_statement = (

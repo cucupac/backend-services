@@ -48,9 +48,10 @@ class VaaDelivery(IVaaDelivery):
             status = Status.SUCCESS
             transaction_hash = transaction_hash_bytes.hex()
             self.logger.info(
-                "[VaaDelivery]: Delivery transaction successful; chain id: %s, sequence: %s",
+                "[VaaDelivery]: Delivery transaction successful; chain id: %s, sequence: %s, transaction hash: %s",
                 message.emitter_chain,
                 message.sequence,
+                transaction_hash,
             )
 
         # Notify client via web socket
