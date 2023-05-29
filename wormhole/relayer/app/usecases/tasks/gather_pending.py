@@ -31,7 +31,7 @@ class GatherPendingVaasTask(IGatherPendingVaasTask):
 
     async def task(self) -> None:
         """Retries untracked transactions."""
-        self.logger.info("[GatherPendingVaasTask]: Task started.")
+        self.logger.info("[GatherPendingVaasTask]: Started.")
 
         transactions = await self.relays_repo.retrieve_pending()
 

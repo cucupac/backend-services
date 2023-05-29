@@ -42,7 +42,7 @@ class GatherMissedVaasTask(IGatherMissedVaasTask):
 
     async def task(self) -> None:
         """Gathers untracked transactions."""
-        self.logger.info("[GatherMissedVaasTask]: Task started.")
+        self.logger.info("[GatherMissedVaasTask]: Started.")
 
         # Get missed transactions
         for wh_chain_id in CHAIN_ID_LOOKUP:
