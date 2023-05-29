@@ -60,9 +60,8 @@ class RelaysRepo(IRelaysRepo):
 
         for key, value in update_dict_raw.items():
             if key not in composite_index:
-                if key == "transaction_hash":
-                    if value is not None:
-                        update_values_dict[key] = value
+                if key != "error" and value is not None:
+                    update_values_dict[key] = value
                 else:
                     update_values_dict[key] = value
 
@@ -118,6 +117,33 @@ class RelaysRepo(IRelaysRepo):
         async with self.db.transaction():
             await self.db.execute(relays_update_statement)
             await self.db.execute(transactions_update_statement)
+
+    async def retrieve_undelivered(self) -> List[TransactionsJoinRelays]:
+        """Retrieve all submitted transactions that have not been confirmed as delivered."""
+
+        query_conditions = [
+            RELAYS.c.status == Status.PENDING,
+            RELAYS.c.transaction_hash.isnot(None),
+        ]
+
+        j = TRANSACTIONS.join(RELAYS, TRANSACTIONS.c.id == RELAYS.c.transaction_id)
+
+        columns_to_select = [
+            TRANSACTIONS,
+            RELAYS.c.id.label("relay_id"),
+            RELAYS.c.status.label("relay_status"),
+            RELAYS.c.error.label("relay_error"),
+            RELAYS.c.message.label("relay_message"),
+            RELAYS.c.transaction_hash.label("relay_transaction_hash"),
+            RELAYS.c.cache_status.label("relay_cache_status"),
+            RELAYS.c.grpc_status.label("relay_grpc_status"),
+        ]
+
+        query = select(columns_to_select).select_from(j).where(and_(*query_conditions))
+
+        results = await self.db.fetch_all(query)
+
+        return [TransactionsJoinRelays(**result) for result in results]
 
     async def retrieve_failed(self) -> List[TransactionsJoinRelays]:
         """Retrieve all failed transactions that are not currently cached elsewhere."""

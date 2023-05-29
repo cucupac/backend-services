@@ -36,7 +36,7 @@ async def test_websocket(
 
         expected_data = {
             "transaction_hash": constant.TEST_TRANSACTION_HASH,
-            "status": Status.SUCCESS,
+            "status": Status.PENDING,
             "error": None,
         }
 
@@ -46,8 +46,8 @@ async def test_websocket(
 
 
 @pytest.mark.asyncio
-async def test_websocket_fail(
-    test_app: FastAPI, vaa_delivery_websocket_fail: IVaaDelivery
+async def test_websocket_error(
+    test_app: FastAPI, vaa_delivery_websocket_error: IVaaDelivery
 ):
     test_client = TestClient(test_app)
 
@@ -67,7 +67,7 @@ async def test_websocket_fail(
         ).encode()
 
         # Process message
-        await vaa_delivery_websocket_fail.process(set_message=mock_set_message)
+        await vaa_delivery_websocket_error.process(set_message=mock_set_message)
 
         expected_data = {
             "transaction_hash": None,

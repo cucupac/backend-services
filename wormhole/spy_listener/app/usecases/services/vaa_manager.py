@@ -43,7 +43,7 @@ class VaaManager(IVaaManager):
         )
 
         if not self.recent_vaas.get(vaa_unique_set):
-            needs_db_update = True
+            needs_db_store = True
             try:
                 uinque_set_record_added = await self.unique_set.publish(
                     message=UniqueSetMessage(
@@ -66,9 +66,9 @@ class VaaManager(IVaaManager):
                     status = Status.PENDING
                     cache_status = CacheStatus.NEVER_CACHED
                 else:
-                    needs_db_update = False
+                    needs_db_store = False
 
-            if needs_db_update:
+            if needs_db_store:
                 # Store in database
                 await self.transactions_repo.create(
                     transaction=CreateRepoAdapter(

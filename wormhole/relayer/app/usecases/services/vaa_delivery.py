@@ -45,10 +45,11 @@ class VaaDelivery(IVaaDelivery):
                 transaction_hash = None
         else:
             error = None
-            status = Status.SUCCESS
+            # A success is constituted by transaction receipt status of 1
+            status = Status.PENDING
             transaction_hash = transaction_hash_bytes.hex()
             self.logger.info(
-                "[VaaDelivery]: Delivery transaction successful; chain id: %s, sequence: %s, transaction hash: %s",
+                "[VaaDelivery]: Transaction submission successful; chain id: %s, sequence: %s, transaction hash: %s",
                 message.emitter_chain,
                 message.sequence,
                 transaction_hash,

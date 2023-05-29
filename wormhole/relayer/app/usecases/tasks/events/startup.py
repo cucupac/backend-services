@@ -9,6 +9,7 @@ from app.dependencies import (
 from app.usecases.tasks.gather_missed import GatherMissedVaasTask
 from app.usecases.tasks.gather_pending import GatherPendingVaasTask
 from app.usecases.tasks.retry_failed import RetryFailedTask
+from app.usecases.tasks.verify_delivery import VerifyDeliveryTask
 
 
 async def start_retry_failed_task() -> None:
@@ -55,3 +56,17 @@ async def start_gather_pending_task() -> None:
     )
 
     loop.create_task(gather_pending_task.start_task())
+
+
+async def start_verify_delivery_task() -> None:
+    loop = await get_event_loop()
+    evm_client = await get_evm_client()
+    relays_repo = await get_relays_repo()
+
+    verify_delivery_task = VerifyDeliveryTask(
+        evm_client=evm_client,
+        relays_repo=relays_repo,
+        logger=logger,
+    )
+
+    loop.create_task(verify_delivery_task.start_task())

@@ -29,7 +29,7 @@ class GatherPendingVaasTask(IGatherPendingVaasTask):
 
             await asyncio.sleep(settings.gather_pending_frequency)
 
-    async def task(self):
+    async def task(self) -> None:
         """Retries untracked transactions."""
         self.logger.info("[GatherPendingVaasTask]: Task started.")
 

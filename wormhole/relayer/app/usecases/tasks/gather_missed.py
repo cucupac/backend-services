@@ -40,7 +40,7 @@ class GatherMissedVaasTask(IGatherMissedVaasTask):
 
             await asyncio.sleep(settings.gather_missed_frequency)
 
-    async def task(self):
+    async def task(self) -> None:
         """Gathers untracked transactions."""
         self.logger.info("[GatherMissedVaasTask]: Task started.")
 

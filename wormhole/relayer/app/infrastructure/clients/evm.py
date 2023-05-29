@@ -4,6 +4,7 @@ from typing import Any, List, Mapping
 from eth_account.datastructures import SignedTransaction
 from web3 import Web3
 from web3.contract import Contract
+from web3.types import TxReceipt
 
 from app.dependencies import CHAIN_ID_LOOKUP
 from app.settings import settings
@@ -47,6 +48,18 @@ class EvmClient(IEvmClient):
             )
         except Exception as e:
             self.logger.error("[EvmClient]: VAA delivery failed. Error: %s", e)
+            raise BlockchainClientError(detail=str(e)) from e
+
+    async def fetch_receipt(self, transaction_hash, dest_chain_id) -> TxReceipt:
+        """Fetches the transaction receipt for a given transaction hash."""
+        web3_client = Web3(
+            Web3.HTTPProvider(self.chain_data[CHAIN_ID_LOOKUP[dest_chain_id]]["rpc"])
+        )
+
+        try:
+            return web3_client.eth.wait_for_transaction_receipt(transaction_hash)
+        except Exception as e:
+            self.logger.error("[EvmClient]: Tx receipt retrieval failed. Error: %s", e)
             raise BlockchainClientError(detail=str(e)) from e
 
     async def __craft_transaction(

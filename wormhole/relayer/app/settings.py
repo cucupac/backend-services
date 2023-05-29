@@ -49,6 +49,7 @@ class Settings(BaseSettings):
     retry_failed_frequency: int = 60
     gather_missed_frequency: int = 60
     gather_pending_frequency: int = 60 * 10
+    verify_delivery_frequency: int = 60
 
     class Config:
         env_file = DOTENV_FILE

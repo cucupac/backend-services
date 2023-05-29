@@ -45,7 +45,7 @@ async def test_task(
         },
     )
 
-    assert test_relay["status"] == Status.SUCCESS
+    assert test_relay["status"] == Status.PENDING
     assert test_relay["error"] is None
     assert test_relay["message"] == constant.TEST_VAA
     assert test_relay["amount"] == constant.TEST_AMOUNT

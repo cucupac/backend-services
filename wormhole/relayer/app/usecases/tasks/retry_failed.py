@@ -45,7 +45,7 @@ class RetryFailedTask(IRetryFailedTask):
 
             await asyncio.sleep(settings.retry_failed_frequency)
 
-    async def task(self):
+    async def task(self) -> None:
         """Retries non-cached, failed relays."""
         self.logger.info("[RetryFailedTask]: Task started.")
 
@@ -88,7 +88,8 @@ class RetryFailedTask(IRetryFailedTask):
                         transaction_hash = None
                 else:
                     error = None
-                    status = Status.SUCCESS
+                    # A success is constituted by transaction receipt status of 1
+                    status = Status.PENDING
                     transaction_hash = transaction_hash_bytes.hex()
 
                 # 3. Update database
@@ -130,10 +131,11 @@ class RetryFailedTask(IRetryFailedTask):
                         transaction_hash = None
                 else:
                     error = None
-                    status = Status.SUCCESS
+                    # A success is constituted by transaction receipt status of 1
+                    status = Status.PENDING
                     transaction_hash = transaction_hash_bytes.hex()
                     self.logger.info(
-                        "[RetryFailedTask]: Delivery transaction successful; chain id: %s, sequence: %s, transaction hash: %s",
+                        "[RetryFailedTask]: Transaction submission successful; chain id: %s, sequence: %s, transaction hash: %s",
                         transaction.source_chain_id,
                         transaction.sequence,
                         transaction_hash,

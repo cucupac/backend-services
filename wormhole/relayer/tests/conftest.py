@@ -22,6 +22,7 @@ from app.usecases.interfaces.services.message_processor import IVaaProcessor
 from app.usecases.interfaces.services.vaa_delivery import IVaaDelivery
 from app.usecases.interfaces.tasks.gather_missed import IGatherMissedVaasTask
 from app.usecases.interfaces.tasks.retry_failed import IRetryFailedTask
+from app.usecases.interfaces.tasks.verify_delivery import IVerifyDeliveryTask
 from app.usecases.schemas.relays import (
     CacheStatus,
     RelayErrors,
@@ -33,6 +34,7 @@ from app.usecases.services.vaa_delivery import VaaDelivery
 from app.usecases.tasks.gather_missed import GatherMissedVaasTask
 from app.usecases.tasks.gather_pending import GatherPendingVaasTask
 from app.usecases.tasks.retry_failed import RetryFailedTask
+from app.usecases.tasks.verify_delivery import VerifyDeliveryTask
 
 # Mocks
 from tests.mocks.clients.evm import EvmResult, MockEvmClient
@@ -73,6 +75,11 @@ async def test_evm_client_success() -> IEvmClient:
 
 
 @pytest_asyncio.fixture
+async def test_evm_client_error() -> IEvmClient:
+    return MockEvmClient(result=EvmResult.ERROR)
+
+
+@pytest_asyncio.fixture
 async def test_evm_client_fail() -> IEvmClient:
     return MockEvmClient(result=EvmResult.FAILURE)
 
@@ -109,14 +116,14 @@ async def vaa_delivery(
 
 
 @pytest_asyncio.fixture
-async def vaa_delivery_fail(
-    test_evm_client_fail: IEvmClient,
+async def vaa_delivery_error(
+    test_evm_client_error: IEvmClient,
     relays_repo: IRelaysRepo,
     test_websocket_client: IWebsocketClient,
 ) -> IVaaDelivery:
     return VaaDelivery(
         relays_repo=relays_repo,
-        evm_client=test_evm_client_fail,
+        evm_client=test_evm_client_error,
         websocket_client=test_websocket_client,
         logger=logger,
     )
@@ -137,14 +144,14 @@ async def vaa_delivery_websocket(
 
 
 @pytest_asyncio.fixture
-async def vaa_delivery_websocket_fail(
-    test_evm_client_fail: IEvmClient,
+async def vaa_delivery_websocket_error(
+    test_evm_client_error: IEvmClient,
     relays_repo: IRelaysRepo,
     websocket_client: IWebsocketClient,
 ) -> IVaaDelivery:
     return VaaDelivery(
         relays_repo=relays_repo,
-        evm_client=test_evm_client_fail,
+        evm_client=test_evm_client_error,
         websocket_client=websocket_client,
         logger=logger,
     )
@@ -156,6 +163,42 @@ async def message_processor() -> IVaaProcessor:
 
 
 # Tasks
+@pytest_asyncio.fixture
+async def verify_delivery_task_success(
+    test_evm_client_success: IEvmClient,
+    relays_repo: IRelaysRepo,
+) -> IVerifyDeliveryTask:
+    return VerifyDeliveryTask(
+        evm_client=test_evm_client_success,
+        relays_repo=relays_repo,
+        logger=logger,
+    )
+
+
+@pytest_asyncio.fixture
+async def verify_delivery_task_fail(
+    test_evm_client_fail: IEvmClient,
+    relays_repo: IRelaysRepo,
+) -> IVerifyDeliveryTask:
+    return VerifyDeliveryTask(
+        evm_client=test_evm_client_fail,
+        relays_repo=relays_repo,
+        logger=logger,
+    )
+
+
+@pytest_asyncio.fixture
+async def verify_delivery_task_error(
+    test_evm_client_error: IEvmClient,
+    relays_repo: IRelaysRepo,
+) -> IVerifyDeliveryTask:
+    return VerifyDeliveryTask(
+        evm_client=test_evm_client_error,
+        relays_repo=relays_repo,
+        logger=logger,
+    )
+
+
 @pytest_asyncio.fixture
 async def retry_failed_task(
     message_processor: IVaaProcessor,
@@ -283,6 +326,36 @@ async def pending_transactions(test_db: Database) -> None:
                     "grpc_status": "success",
                     "created_at": datetime.utcnow()
                     - timedelta(minutes=random.randint(2, 10)),
+                },
+            )
+
+
+@pytest_asyncio.fixture
+async def pending_transactions_with_tx_hash(test_db: Database) -> None:
+    for index in range(constant.DEFAULT_ITERATIONS):
+        async with test_db.transaction():
+            transaction_id = await test_db.execute(
+                """INSERT INTO transactions (emitter_address, from_address, to_address, source_chain_id, dest_chain_id, amount, sequence) VALUES (:emitter_address, :from_address, :to_address, :source_chain_id, :dest_chain_id, :amount, :sequence) RETURNING id""",
+                {
+                    "emitter_address": constant.TEST_EMITTER_ADDRESS,
+                    "from_address": constant.TEST_USER_ADDRESS,
+                    "to_address": constant.TEST_USER_ADDRESS,
+                    "source_chain_id": constant.TEST_SOURCE_CHAIN_ID,
+                    "dest_chain_id": constant.TEST_DESTINATION_CHAIN_ID,
+                    "amount": constant.TEST_AMOUNT,
+                    "sequence": constant.TEST_SEQUENCE + index,
+                },
+            )
+            await test_db.execute(
+                """INSERT INTO relays (transaction_id, message, status, transaction_hash, error, cache_status, grpc_status) VALUES (:transaction_id, :message, :status, :transaction_hash, :error, :cache_status, :grpc_status)""",
+                {
+                    "transaction_id": transaction_id,
+                    "status": Status.PENDING,
+                    "error": None,
+                    "message": constant.TEST_VAA,
+                    "transaction_hash": constant.TEST_TRANSACTION_HASH,
+                    "cache_status": CacheStatus.NEVER_CACHED,
+                    "grpc_status": "success",
                 },
             )
 
