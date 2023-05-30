@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Optional
 
-from web3.types import TxReceipt, Nonce
+from web3.types import Nonce, TxReceipt
 
 from app.usecases.schemas.blockchain import TransactionHash
 

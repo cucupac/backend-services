@@ -3,7 +3,7 @@ from typing import Any, List, Mapping, Optional
 
 from eth_account.datastructures import SignedTransaction
 from web3 import Web3
-from web3.types import TxReceipt, Nonce
+from web3.types import Nonce, TxReceipt
 
 from app.dependencies import CHAIN_DATA
 from app.settings import settings

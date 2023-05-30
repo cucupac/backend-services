@@ -2,6 +2,7 @@
 import os
 import random
 from datetime import datetime, timedelta
+from typing import Mapping
 
 import pytest_asyncio
 import respx
@@ -10,7 +11,7 @@ from fastapi import FastAPI
 from httpx import AsyncClient
 
 import tests.constants as constant
-from app.dependencies import get_relays_repo, logger
+from app.dependencies import CHAIN_DATA, get_relays_repo, logger
 from app.infrastructure.clients.websocket import WebsocketClient
 from app.infrastructure.db.repos.relays import RelaysRepo
 from app.infrastructure.web.setup import setup_app
@@ -70,18 +71,27 @@ async def relays_repo(test_db: Database) -> IRelaysRepo:
 
 
 @pytest_asyncio.fixture
-async def test_evm_client_success() -> IEvmClient:
-    return MockEvmClient(result=EvmResult.SUCCESS)
+async def supported_evm_clients_success() -> Mapping[int, IEvmClient]:
+    supported_evm_clients = {}
+    for chain_id in CHAIN_DATA:
+        supported_evm_clients[chain_id] = MockEvmClient(result=EvmResult.SUCCESS)
+    return supported_evm_clients
 
 
 @pytest_asyncio.fixture
-async def test_evm_client_error() -> IEvmClient:
-    return MockEvmClient(result=EvmResult.ERROR)
+async def supported_evm_clients_error() -> Mapping[int, IEvmClient]:
+    supported_evm_clients = {}
+    for chain_id in CHAIN_DATA:
+        supported_evm_clients[chain_id] = MockEvmClient(result=EvmResult.ERROR)
+    return supported_evm_clients
 
 
 @pytest_asyncio.fixture
-async def test_evm_client_fail() -> IEvmClient:
-    return MockEvmClient(result=EvmResult.FAILURE)
+async def supported_evm_clients_fail() -> Mapping[int, IEvmClient]:
+    supported_evm_clients = {}
+    for chain_id in CHAIN_DATA:
+        supported_evm_clients[chain_id] = MockEvmClient(result=EvmResult.FAILURE)
+    return supported_evm_clients
 
 
 @pytest_asyncio.fixture
@@ -103,13 +113,13 @@ async def test_wormhole_client() -> IBridgeClient:
 # Services
 @pytest_asyncio.fixture
 async def vaa_delivery(
-    test_evm_client_success: IEvmClient,
+    supported_evm_clients_success: IEvmClient,
     relays_repo: IRelaysRepo,
     test_websocket_client: IWebsocketClient,
 ) -> IVaaDelivery:
     return VaaDelivery(
         relays_repo=relays_repo,
-        evm_client=test_evm_client_success,
+        supported_evm_clients=supported_evm_clients_success,
         websocket_client=test_websocket_client,
         logger=logger,
     )
@@ -117,13 +127,13 @@ async def vaa_delivery(
 
 @pytest_asyncio.fixture
 async def vaa_delivery_error(
-    test_evm_client_error: IEvmClient,
+    supported_evm_clients_error: IEvmClient,
     relays_repo: IRelaysRepo,
     test_websocket_client: IWebsocketClient,
 ) -> IVaaDelivery:
     return VaaDelivery(
         relays_repo=relays_repo,
-        evm_client=test_evm_client_error,
+        supported_evm_clients=supported_evm_clients_error,
         websocket_client=test_websocket_client,
         logger=logger,
     )
@@ -131,13 +141,13 @@ async def vaa_delivery_error(
 
 @pytest_asyncio.fixture
 async def vaa_delivery_websocket(
-    test_evm_client_success: IEvmClient,
+    supported_evm_clients_success: IEvmClient,
     relays_repo: IRelaysRepo,
     websocket_client: IWebsocketClient,
 ) -> IVaaDelivery:
     return VaaDelivery(
         relays_repo=relays_repo,
-        evm_client=test_evm_client_success,
+        supported_evm_clients=supported_evm_clients_success,
         websocket_client=websocket_client,
         logger=logger,
     )
@@ -145,13 +155,13 @@ async def vaa_delivery_websocket(
 
 @pytest_asyncio.fixture
 async def vaa_delivery_websocket_error(
-    test_evm_client_error: IEvmClient,
+    supported_evm_clients_error: IEvmClient,
     relays_repo: IRelaysRepo,
     websocket_client: IWebsocketClient,
 ) -> IVaaDelivery:
     return VaaDelivery(
         relays_repo=relays_repo,
-        evm_client=test_evm_client_error,
+        supported_evm_clients=supported_evm_clients_error,
         websocket_client=websocket_client,
         logger=logger,
     )
@@ -165,11 +175,11 @@ async def message_processor() -> IVaaProcessor:
 # Tasks
 @pytest_asyncio.fixture
 async def verify_delivery_task_success(
-    test_evm_client_success: IEvmClient,
+    supported_evm_clients_success: Mapping[int, IEvmClient],
     relays_repo: IRelaysRepo,
 ) -> IVerifyDeliveryTask:
     return VerifyDeliveryTask(
-        evm_client=test_evm_client_success,
+        supported_evm_clients=supported_evm_clients_success,
         relays_repo=relays_repo,
         logger=logger,
     )
@@ -177,11 +187,11 @@ async def verify_delivery_task_success(
 
 @pytest_asyncio.fixture
 async def verify_delivery_task_fail(
-    test_evm_client_fail: IEvmClient,
+    supported_evm_clients_fail: Mapping[int, IEvmClient],
     relays_repo: IRelaysRepo,
 ) -> IVerifyDeliveryTask:
     return VerifyDeliveryTask(
-        evm_client=test_evm_client_fail,
+        supported_evm_clients=supported_evm_clients_fail,
         relays_repo=relays_repo,
         logger=logger,
     )
@@ -189,11 +199,11 @@ async def verify_delivery_task_fail(
 
 @pytest_asyncio.fixture
 async def verify_delivery_task_error(
-    test_evm_client_error: IEvmClient,
+    supported_evm_clients_error: Mapping[int, IEvmClient],
     relays_repo: IRelaysRepo,
 ) -> IVerifyDeliveryTask:
     return VerifyDeliveryTask(
-        evm_client=test_evm_client_error,
+        supported_evm_clients=supported_evm_clients_error,
         relays_repo=relays_repo,
         logger=logger,
     )
@@ -203,12 +213,12 @@ async def verify_delivery_task_error(
 async def retry_failed_task(
     message_processor: IVaaProcessor,
     test_wormhole_client: IBridgeClient,
-    test_evm_client_success: IEvmClient,
+    supported_evm_clients_success: IEvmClient,
     relays_repo: IRelaysRepo,
 ) -> IRetryFailedTask:
     return RetryFailedTask(
         message_processor=message_processor,
-        evm_client=test_evm_client_success,
+        supported_evm_clients=supported_evm_clients_success,
         bridge_client=test_wormhole_client,
         relays_repo=relays_repo,
         logger=logger,

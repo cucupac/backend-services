@@ -1,8 +1,8 @@
 from app.dependencies import (
+    CHAIN_DATA,
     get_evm_client,
     get_relays_repo,
     get_websocket_client,
-    CHAIN_DATA,
     logger,
 )
 from app.usecases.interfaces.services.message_processor import IVaaProcessor

@@ -83,6 +83,8 @@ class RelaysRepo(IRelaysRepo):
     ) -> None:
         """Update relay and transaction object."""
 
+        # NOTE: error is the only thing that can ever be updated to none.
+
         where_clause = and_(
             TRANSACTIONS.c.emitter_address == update_data.emitter_address.lower(),
             TRANSACTIONS.c.source_chain_id == update_data.source_chain_id,

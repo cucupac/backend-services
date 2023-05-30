@@ -95,3 +95,8 @@ class ParsedVaa(BaseModel):
         description="The hash of the VAA.",
         example=b"L(:\xb7\x1d\xa4\xdb\x99\xb7\xfa\xee\xe2\xb9MUQ.\x97\xbd\xa2\xa6<\xee\xce\xe1\x88\xd3N\xd2\x0c\x7f\xf0",
     )
+
+
+class ExternalVaa(BaseModel):
+    parsed_vaa: ParsedVaa
+    message_hex: str

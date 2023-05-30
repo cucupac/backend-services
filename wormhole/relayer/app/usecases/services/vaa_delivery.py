@@ -1,6 +1,6 @@
 import json
-from typing import Mapping
 from logging import Logger
+from typing import Mapping
 
 from app.dependencies import CHAIN_ID_LOOKUP
 from app.usecases.interfaces.clients.evm import IEvmClient
