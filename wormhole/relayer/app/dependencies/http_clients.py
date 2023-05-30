@@ -6,12 +6,13 @@ from app.usecases.interfaces.clients.bridge import IBridgeClient
 from app.usecases.interfaces.clients.evm import IEvmClient
 
 
-async def get_evm_client() -> IEvmClient:
+async def get_evm_client(chain_id: int) -> IEvmClient:
     """Instantiate and return EVM client."""
 
     return EvmClient(
         abi=WORMHOLE_BRIDGE_ABI,
-        chain_data=CHAIN_DATA,
+        chain_id=chain_id,
+        rpc_url=CHAIN_DATA[chain_id]["rpc"],
         logger=logger,
     )
 

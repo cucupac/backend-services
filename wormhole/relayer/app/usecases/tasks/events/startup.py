@@ -1,4 +1,5 @@
 from app.dependencies import (
+    CHAIN_DATA,
     get_bridge_client,
     get_event_loop,
     get_evm_client,
@@ -15,13 +16,17 @@ from app.usecases.tasks.verify_delivery import VerifyDeliveryTask
 async def start_retry_failed_task() -> None:
     loop = await get_event_loop()
     message_processor = await get_message_processor()
-    evm_client = await get_evm_client()
     bridge_client = await get_bridge_client()
     relays_repo = await get_relays_repo()
 
+    supported_evm_clients = {}
+    for chain_id in CHAIN_DATA:
+        evm_client = await get_evm_client(chain_id=chain_id)
+        supported_evm_clients[chain_id] = evm_client
+
     retry_failed_task = RetryFailedTask(
         message_processor=message_processor,
-        evm_client=evm_client,
+        supported_evm_clients=supported_evm_clients,
         bridge_client=bridge_client,
         relays_repo=relays_repo,
         logger=logger,
@@ -60,11 +65,15 @@ async def start_gather_pending_task() -> None:
 
 async def start_verify_delivery_task() -> None:
     loop = await get_event_loop()
-    evm_client = await get_evm_client()
     relays_repo = await get_relays_repo()
 
+    supported_evm_clients = {}
+    for chain_id in CHAIN_DATA:
+        evm_client = await get_evm_client(chain_id=chain_id)
+        supported_evm_clients[chain_id] = evm_client
+
     verify_delivery_task = VerifyDeliveryTask(
-        evm_client=evm_client,
+        supported_evm_clients=supported_evm_clients,
         relays_repo=relays_repo,
         logger=logger,
     )

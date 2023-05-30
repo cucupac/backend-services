@@ -35,3 +35,7 @@ class IRelaysRepo(ABC):
     @abstractmethod
     async def retrieve_pending(self) -> List[TransactionsJoinRelays]:
         """Retrieves transactions that have been pending for longer than 1 minute."""
+
+    @abstractmethod
+    async def retrieve_undelivered(self) -> List[TransactionsJoinRelays]:
+        """Retrieve all submitted transactions that have not been confirmed as delivered."""

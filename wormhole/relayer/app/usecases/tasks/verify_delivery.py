@@ -1,8 +1,9 @@
 import asyncio
 from logging import Logger
-from typing import List
+from typing import List, Mapping
 
 from app.settings import settings
+from app.dependencies import CHAIN_ID_LOOKUP
 from app.usecases.interfaces.clients.evm import IEvmClient
 from app.usecases.interfaces.repos.relays import IRelaysRepo
 from app.usecases.interfaces.tasks.verify_delivery import IVerifyDeliveryTask
@@ -13,13 +14,17 @@ from app.usecases.schemas.blockchain import (
     TransactionReceiptResponse,
 )
 from app.usecases.schemas.relays import Status, UpdateRepoAdapter
+from app.usecases.schemas.transactions import TransactionsJoinRelays
 
 
 class VerifyDeliveryTask(IVerifyDeliveryTask):
     def __init__(
-        self, evm_client: IEvmClient, relays_repo: IRelaysRepo, logger: Logger
+        self,
+        supported_evm_clients: Mapping[int, IEvmClient],
+        relays_repo: IRelaysRepo,
+        logger: Logger,
     ):
-        self.evm_client = evm_client
+        self.supported_evm_clients = supported_evm_clients
         self.relays_repo = relays_repo
         self.logger = logger
 
@@ -83,12 +88,13 @@ class VerifyDeliveryTask(IVerifyDeliveryTask):
         )
 
     async def __get_transaction_receipt(
-        self, transaction
+        self, transaction: TransactionsJoinRelays
     ) -> TransactionReceiptResponse:
+        chain_id = CHAIN_ID_LOOKUP[transaction.dest_chain_id]
+        dest_evm_client = self.supported_evm_clients[chain_id]
         try:
-            transaction_receipt = await self.evm_client.fetch_receipt(
-                transaction_hash=transaction.relay_transaction_hash,
-                dest_chain_id=transaction.dest_chain_id,
+            transaction_receipt = await dest_evm_client(
+                transaction_hash=transaction.relay_transaction_hash
             )
             return TransactionReceiptResponse(
                 receipt=TransactionReceipt(status=transaction_receipt.status),

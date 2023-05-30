@@ -5,9 +5,10 @@ import codecs
 import time
 from collections import defaultdict
 from logging import Logger
-from typing import List, Optional
+from typing import List, Optional, Mapping
 
 from app.settings import settings
+from app.dependencies import CHAIN_ID_LOOKUP
 from app.usecases.interfaces.clients.bridge import IBridgeClient
 from app.usecases.interfaces.clients.evm import IEvmClient
 from app.usecases.interfaces.repos.relays import IRelaysRepo
@@ -29,13 +30,13 @@ class RetryFailedTask(IRetryFailedTask):
     def __init__(  # pylint: disable = too-many-arguments
         self,
         message_processor: IVaaProcessor,
-        evm_client: IEvmClient,
+        supported_evm_clients: Mapping[int, IEvmClient],
         bridge_client: IBridgeClient,
         relays_repo: IRelaysRepo,
         logger: Logger,
     ):
         self.vaa_processor = message_processor
-        self.evm_client = evm_client
+        self.supported_evm_clients = supported_evm_clients
         self.bridge_client = bridge_client
         self.relays_repo = relays_repo
         self.logger = logger
@@ -67,9 +68,9 @@ class RetryFailedTask(IRetryFailedTask):
         # Impose asynchronicity, delinated by destination chains, for efficiency gains
         relay_tasks = []
         for dest_chain_id, transactions in dest_chain_id_groups.items():
-            current_nonce = await self.evm_client.get_current_nonce(
-                dest_chain_id=dest_chain_id
-            )
+            chain_id = CHAIN_ID_LOOKUP[dest_chain_id]
+            dest_evm_client = self.supported_evm_clients[chain_id]
+            current_nonce = await dest_evm_client.get_current_nonce()
             relay_tasks.append(
                 asyncio.create_task(
                     self.__execute_relays(
@@ -167,10 +168,12 @@ class RetryFailedTask(IRetryFailedTask):
         nonce: int,
     ) -> SubmittedRelay:
         # The VAA is known to our system; it just needs to be retried.
+        chain_id = CHAIN_ID_LOOKUP[dest_chain_id]
+        dest_evm_client = self.supported_evm_clients[chain_id]
+
         try:
-            transaction_hash_bytes = await self.evm_client.deliver(
+            transaction_hash_bytes = await dest_evm_client.deliver(
                 payload=payload,
-                dest_chain_id=dest_chain_id,
                 nonce=nonce,
             )
         except BlockchainClientError as e:
