@@ -84,3 +84,19 @@ class UpdateJoinedRepoAdapter(UpdateRepoAdapter):
         description="The message that the consuming-relayer needs.",
         example="0CeC041cDB3AAB968C1a273bfC330aa410b5E2DF0CeC041cDB3AAB968C1a273bfC330aa410b5E2DF",
     )
+
+
+class SubmittedRelay(BaseModel):
+    status: Status = Field(
+        ..., description="The status of the relay.", example=Status.SUCCESS
+    )
+    transaction_hash: Optional[str] = Field(
+        None,
+        description="The hash of the submitted transaction.",
+        example="0xb5c8bd9430b6cc87a0e2fe110ece6bf527fa4f170a4bc8cd032f768fc5219838",
+    )
+    error: Optional[str] = Field(
+        None,
+        description="Error pertaining to relay.",
+        example="An error happend, and here's why.",
+    )

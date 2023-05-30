@@ -1,11 +1,11 @@
 # pylint: disable=duplicate-code
-from typing import List
 import asyncio
 import base64
 import codecs
 import time
 from collections import defaultdict
 from logging import Logger
+from typing import List, Optional
 
 from app.settings import settings
 from app.usecases.interfaces.clients.bridge import IBridgeClient
@@ -13,14 +13,16 @@ from app.usecases.interfaces.clients.evm import IEvmClient
 from app.usecases.interfaces.repos.relays import IRelaysRepo
 from app.usecases.interfaces.services.message_processor import IVaaProcessor
 from app.usecases.interfaces.tasks.retry_failed import IRetryFailedTask
-from app.usecases.schemas.bridge import BridgeClientException
 from app.usecases.schemas.blockchain import BlockchainClientError, BlockchainErrors
-from app.usecases.schemas.transactions import TransactionsJoinRelays
+from app.usecases.schemas.bridge import BridgeClientException
 from app.usecases.schemas.relays import (
     Status,
+    SubmittedRelay,
     UpdateJoinedRepoAdapter,
     UpdateRepoAdapter,
 )
+from app.usecases.schemas.transactions import TransactionsJoinRelays
+from app.usecases.schemas.vaa import ParsedVaa
 
 
 class RetryFailedTask(IRetryFailedTask):
@@ -63,10 +65,19 @@ class RetryFailedTask(IRetryFailedTask):
             dest_chain_id_groups[transaction.dest_chain_id].append(transaction)
 
         # Impose asynchronicity, delinated by destination chains, for efficiency gains
-        relay_tasks = [
-            asyncio.create_task(self.__execute_relays(transactions))
-            for transactions in dest_chain_id_groups.values()
-        ]
+        relay_tasks = []
+        for dest_chain_id, transactions in dest_chain_id_groups.items():
+            current_nonce = await self.evm_client.get_current_nonce(
+                dest_chain_id=dest_chain_id
+            )
+            relay_tasks.append(
+                asyncio.create_task(
+                    self.__execute_relays(
+                        transactions=transactions, current_nonce=current_nonce
+                    )
+                )
+            )
+
         await asyncio.gather(*relay_tasks)
 
         self.logger.info(
@@ -76,7 +87,7 @@ class RetryFailedTask(IRetryFailedTask):
         )
 
     async def __execute_relays(
-        self, transactions: List[TransactionsJoinRelays]
+        self, transactions: List[TransactionsJoinRelays], current_nonce: int
     ) -> None:
         """This function executes same-destination-chain relays synchronously."""
 
@@ -104,90 +115,32 @@ class RetryFailedTask(IRetryFailedTask):
                         codecs.encode(message_bytes, "hex_codec").decode().upper()
                     )
 
-                    try:
-                        transaction_hash_bytes = await self.evm_client.deliver(
-                            payload=message_hex,
-                            dest_chain_id=parsed_vaa.payload.dest_chain_id,
-                        )
-                    except BlockchainClientError as e:
-                        self.logger.info(
-                            "[RetryFailedTask]: VAA delivery failed; chain id %s, sequence %s",
-                            transaction.source_chain_id,
-                            transaction.sequence,
-                        )
-                        if BlockchainErrors.MESSAGE_PROCESSED in e.detail:
-                            error = None
-                            status = Status.SUCCESS
-                            transaction_hash = None
-                        else:
-                            error = e.detail
-                            status = Status.FAILED
-                            transaction_hash = None
-                    else:
-                        error = None
-                        # A success is constituted by transaction receipt status of 1
-                        status = Status.PENDING
-                        transaction_hash = transaction_hash_bytes.hex()
-
-                    # 3. Update database
-                    await self.relays_repo.update_relay_and_transaction(
-                        update_data=UpdateJoinedRepoAdapter(
-                            emitter_address=transaction.emitter_address,
-                            source_chain_id=transaction.source_chain_id,
-                            sequence=transaction.sequence,
-                            transaction_hash=transaction_hash,
-                            error=error,
-                            status=status,
-                            from_address=parsed_vaa.payload.from_address,
-                            to_address=f"0x{parsed_vaa.payload.to_address:040x}",
-                            dest_chain_id=parsed_vaa.payload.dest_chain_id,
-                            amount=parsed_vaa.payload.amount,
-                            message=message_hex,
-                        )
-                    )
-            else:
-                # The VAA is known to our system; it just needs to be retried.
-                try:
-                    transaction_hash_bytes = await self.evm_client.deliver(
-                        payload=transaction.relay_message,
-                        dest_chain_id=transaction.dest_chain_id,
-                    )
-                except BlockchainClientError as e:
-                    self.logger.info(
-                        "[RetryFailedTask]: VAA delivery failed; chain id %s, sequence %s",
-                        transaction.source_chain_id,
-                        transaction.sequence,
-                    )
-                    if BlockchainErrors.MESSAGE_PROCESSED in e.detail:
-                        error = None
-                        status = Status.SUCCESS
-                        transaction_hash = None
-                    else:
-                        error = e.detail
-                        status = Status.FAILED
-                        transaction_hash = None
-                else:
-                    error = None
-                    # A success is constituted by transaction receipt status of 1
-                    status = Status.PENDING
-                    transaction_hash = transaction_hash_bytes.hex()
-                    self.logger.info(
-                        "[RetryFailedTask]: Transaction submission successful; chain id: %s, sequence: %s, transaction hash: %s",
-                        transaction.source_chain_id,
-                        transaction.sequence,
-                        transaction_hash,
-                    )
-
-                await self.relays_repo.update(
-                    relay=UpdateRepoAdapter(
-                        emitter_address=transaction.emitter_address,
+                    submitted_relay = await self.__submit_relay(
+                        payload=message_hex,
                         source_chain_id=transaction.source_chain_id,
                         sequence=transaction.sequence,
-                        transaction_hash=transaction_hash,
-                        error=error,
-                        status=status,
+                        dest_chain_id=parsed_vaa.payload.dest_chain_id,
+                        nonce=current_nonce,
                     )
+                    await self.__update_database(
+                        transaction=transaction,
+                        submitted_relay=submitted_relay,
+                        parsed_vaa=parsed_vaa,
+                        message_hex=message_hex,
+                    )
+            else:
+                submitted_relay = await self.__submit_relay(
+                    payload=transaction.relay_message,
+                    source_chain_id=transaction.source_chain_id,
+                    sequence=transaction.sequence,
+                    dest_chain_id=transaction.dest_chain_id,
+                    nonce=current_nonce,
                 )
+                await self.__update_database(
+                    transaction=transaction, submitted_relay=submitted_relay
+                )
+
+            current_nonce += 1
 
     async def __get_bridge_message(
         self, emitter_address: str, emitter_chain_id: int, sequence: int
@@ -204,3 +157,83 @@ class RetryFailedTask(IRetryFailedTask):
                 "[RetryFailedTask]: Unexpected error in get_bridge_message(): %s", e
             )
             return None
+
+    async def __submit_relay(
+        self,
+        payload: str,
+        source_chain_id: int,
+        sequence: int,
+        dest_chain_id: int,
+        nonce: int,
+    ) -> SubmittedRelay:
+        # The VAA is known to our system; it just needs to be retried.
+        try:
+            transaction_hash_bytes = await self.evm_client.deliver(
+                payload=payload,
+                dest_chain_id=dest_chain_id,
+                nonce=nonce,
+            )
+        except BlockchainClientError as e:
+            self.logger.info(
+                "[RetryFailedTask]: VAA delivery failed; chain id %s, sequence %s",
+                source_chain_id,
+                sequence,
+            )
+            if BlockchainErrors.MESSAGE_PROCESSED in e.detail:
+                error = None
+                status = Status.SUCCESS
+                transaction_hash = None
+            else:
+                error = e.detail
+                status = Status.FAILED
+                transaction_hash = None
+        else:
+            error = None
+            # A success is constituted by transaction receipt status of 1
+            status = Status.PENDING
+            transaction_hash = transaction_hash_bytes.hex()
+            self.logger.info(
+                "[RetryFailedTask]: Transaction submission successful; chain id: %s, sequence: %s, transaction hash: %s",
+                source_chain_id,
+                sequence,
+                transaction_hash,
+            )
+
+        return SubmittedRelay(
+            error=error, status=status, transaction_hash=transaction_hash
+        )
+
+    async def __update_database(
+        self,
+        transaction: TransactionsJoinRelays,
+        submitted_relay: SubmittedRelay,
+        parsed_vaa: Optional[ParsedVaa] = None,
+        message_hex: Optional[str] = None,
+    ) -> None:
+        if parsed_vaa:
+            await self.relays_repo.update_relay_and_transaction(
+                update_data=UpdateJoinedRepoAdapter(
+                    emitter_address=transaction.emitter_address,
+                    source_chain_id=transaction.source_chain_id,
+                    sequence=transaction.sequence,
+                    transaction_hash=submitted_relay.transaction_hash,
+                    error=submitted_relay.error,
+                    status=submitted_relay.status,
+                    from_address=parsed_vaa.payload.from_address,
+                    to_address=f"0x{parsed_vaa.payload.to_address:040x}",
+                    dest_chain_id=parsed_vaa.payload.dest_chain_id,
+                    amount=parsed_vaa.payload.amount,
+                    message=message_hex,
+                )
+            )
+        else:
+            await self.relays_repo.update(
+                relay=UpdateRepoAdapter(
+                    emitter_address=transaction.emitter_address,
+                    source_chain_id=transaction.source_chain_id,
+                    sequence=transaction.sequence,
+                    transaction_hash=submitted_relay.transaction_hash,
+                    error=submitted_relay.error,
+                    status=submitted_relay.status,
+                )
+            )

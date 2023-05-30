@@ -41,6 +41,7 @@ class Settings(BaseSettings):
     relayer_private_key: str
     relayer_address: str
     evm_wormhole_bridge: str
+    priority_fee_percentile: int
 
     # BRIDGE
     bridge_client_base_url: str

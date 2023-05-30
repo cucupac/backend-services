@@ -37,3 +37,6 @@ class MockEvmClient(IEvmClient):
         elif self.result == EvmResult.FAILURE:
             return TransactionReceipt(status=0)
         raise BlockchainClientError(detail=BlockchainErrors.TX_HASH_NOT_IN_CHAIN)
+
+    async def get_current_nonce(self, dest_chain_id: int) -> int:
+        """Retrieves the current nonce of the relayer on a provided destination chain."""

@@ -1,7 +1,7 @@
 import hashlib
 import struct
 
-from eth_abi import decode_abi
+from eth_abi import decode
 
 from app.usecases.interfaces.services.message_processor import IVaaProcessor
 from app.usecases.schemas.vaa import ParsedPayload, ParsedVaa
@@ -48,7 +48,7 @@ class MessageProcessor(IVaaProcessor):
         """Extracts utilizable data from payload bytes."""
 
         types = ["bytes", "uint256", "uint256", "uint256"]
-        from_address_bytes, dest_chain_id, to_address_uint256, amount = decode_abi(
+        from_address_bytes, dest_chain_id, to_address_uint256, amount = decode(
             types, payload
         )
 
