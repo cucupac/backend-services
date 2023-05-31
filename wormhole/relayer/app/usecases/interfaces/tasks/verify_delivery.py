@@ -8,4 +8,4 @@ class IVerifyDeliveryTask(ABC):
 
     @abstractmethod
     async def task(self):
-        """Retries non-cached, failed relays."""
+        """Verifies the delivery status of previously submitted transactions."""

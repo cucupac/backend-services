@@ -16,6 +16,7 @@ from migrations.models.metadata import METADATA
 from migrations.models.relays import RELAYS
 from migrations.models.transactions import TRANSACTIONS
 from migrations.models.fee_updates import FEE_UPDATES
+from migrations.models.tasks import TASKS, TASK_LOCKS
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

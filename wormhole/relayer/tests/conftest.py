@@ -1,8 +1,8 @@
-# pylint: disable=redefined-outer-name
+# pylint: disable=redefined-outer-name,unused-argument
 import os
 import random
 from datetime import datetime, timedelta
-from typing import Mapping
+from typing import List, Mapping
 
 import pytest_asyncio
 import respx
@@ -14,14 +14,17 @@ import tests.constants as constant
 from app.dependencies import CHAIN_DATA, get_relays_repo, logger
 from app.infrastructure.clients.websocket import WebsocketClient
 from app.infrastructure.db.repos.relays import RelaysRepo
+from app.infrastructure.db.repos.tasks import TasksRepo
 from app.infrastructure.web.setup import setup_app
 from app.usecases.interfaces.clients.bridge import IBridgeClient
 from app.usecases.interfaces.clients.evm import IEvmClient
 from app.usecases.interfaces.clients.websocket import IWebsocketClient
 from app.usecases.interfaces.repos.relays import IRelaysRepo
+from app.usecases.interfaces.repos.tasks import ITasksRepo
 from app.usecases.interfaces.services.message_processor import IVaaProcessor
 from app.usecases.interfaces.services.vaa_delivery import IVaaDelivery
 from app.usecases.interfaces.tasks.gather_missed import IGatherMissedVaasTask
+from app.usecases.interfaces.tasks.manage_locks import IManageLocksTask
 from app.usecases.interfaces.tasks.retry_failed import IRetryFailedTask
 from app.usecases.interfaces.tasks.verify_delivery import IVerifyDeliveryTask
 from app.usecases.schemas.relays import (
@@ -30,10 +33,12 @@ from app.usecases.schemas.relays import (
     Status,
     UpdateRepoAdapter,
 )
+from app.usecases.schemas.tasks import TaskInDb, TaskName
 from app.usecases.services.message_processor import MessageProcessor
 from app.usecases.services.vaa_delivery import VaaDelivery
 from app.usecases.tasks.gather_missed import GatherMissedVaasTask
 from app.usecases.tasks.gather_pending import GatherPendingVaasTask
+from app.usecases.tasks.manage_locks import ManageLocksTask
 from app.usecases.tasks.retry_failed import RetryFailedTask
 from app.usecases.tasks.verify_delivery import VerifyDeliveryTask
 
@@ -62,12 +67,19 @@ async def test_db(test_db_url) -> Database:
     yield test_db
     await test_db.execute("TRUNCATE transactions CASCADE")
     await test_db.execute("TRUNCATE relays CASCADE")
+    await test_db.execute("TRUNCATE tasks CASCADE")
+    await test_db.execute("TRUNCATE task_locks CASCADE")
     await test_db.disconnect()
 
 
 @pytest_asyncio.fixture
 async def relays_repo(test_db: Database) -> IRelaysRepo:
     return RelaysRepo(db=test_db)
+
+
+@pytest_asyncio.fixture
+async def tasks_repo(test_db: Database, inserted_tasks: None) -> ITasksRepo:
+    return TasksRepo(db=test_db)
 
 
 @pytest_asyncio.fixture
@@ -177,10 +189,12 @@ async def message_processor() -> IVaaProcessor:
 async def verify_delivery_task_success(
     supported_evm_clients_success: Mapping[int, IEvmClient],
     relays_repo: IRelaysRepo,
+    tasks_repo: ITasksRepo,
 ) -> IVerifyDeliveryTask:
     return VerifyDeliveryTask(
         supported_evm_clients=supported_evm_clients_success,
         relays_repo=relays_repo,
+        tasks_repo=tasks_repo,
         logger=logger,
     )
 
@@ -189,10 +203,12 @@ async def verify_delivery_task_success(
 async def verify_delivery_task_fail(
     supported_evm_clients_fail: Mapping[int, IEvmClient],
     relays_repo: IRelaysRepo,
+    tasks_repo: ITasksRepo,
 ) -> IVerifyDeliveryTask:
     return VerifyDeliveryTask(
         supported_evm_clients=supported_evm_clients_fail,
         relays_repo=relays_repo,
+        tasks_repo=tasks_repo,
         logger=logger,
     )
 
@@ -201,10 +217,12 @@ async def verify_delivery_task_fail(
 async def verify_delivery_task_error(
     supported_evm_clients_error: Mapping[int, IEvmClient],
     relays_repo: IRelaysRepo,
+    tasks_repo: ITasksRepo,
 ) -> IVerifyDeliveryTask:
     return VerifyDeliveryTask(
         supported_evm_clients=supported_evm_clients_error,
         relays_repo=relays_repo,
+        tasks_repo=tasks_repo,
         logger=logger,
     )
 
@@ -215,12 +233,14 @@ async def retry_failed_task(
     test_wormhole_client: IBridgeClient,
     supported_evm_clients_success: IEvmClient,
     relays_repo: IRelaysRepo,
+    tasks_repo: ITasksRepo,
 ) -> IRetryFailedTask:
     return RetryFailedTask(
         message_processor=message_processor,
         supported_evm_clients=supported_evm_clients_success,
         bridge_client=test_wormhole_client,
         relays_repo=relays_repo,
+        tasks_repo=tasks_repo,
         logger=logger,
     )
 
@@ -230,11 +250,13 @@ async def gather_missed_task(
     message_processor: IVaaProcessor,
     test_wormhole_client: IBridgeClient,
     relays_repo: IRelaysRepo,
+    tasks_repo: ITasksRepo,
 ) -> IGatherMissedVaasTask:
     return GatherMissedVaasTask(
         message_processor=message_processor,
         bridge_client=test_wormhole_client,
         relays_repo=relays_repo,
+        tasks_repo=tasks_repo,
         logger=logger,
     )
 
@@ -242,9 +264,21 @@ async def gather_missed_task(
 @pytest_asyncio.fixture
 async def gather_pending_task(
     relays_repo: IRelaysRepo,
+    tasks_repo: ITasksRepo,
 ) -> IGatherMissedVaasTask:
     return GatherPendingVaasTask(
         relays_repo=relays_repo,
+        tasks_repo=tasks_repo,
+        logger=logger,
+    )
+
+
+@pytest_asyncio.fixture
+async def manage_locks_task(
+    tasks_repo: ITasksRepo,
+) -> IManageLocksTask:
+    return ManageLocksTask(
+        tasks_repo=tasks_repo,
         logger=logger,
     )
 
@@ -400,6 +434,29 @@ async def inserted_recent_transactions(test_db: Database) -> None:
                 "grpc_status": "failed",
             },
         )
+
+
+@pytest_asyncio.fixture
+async def inserted_tasks(test_db: Database) -> None:
+    for name in TaskName:
+        query = """INSERT INTO tasks (name) VALUES (:name) RETURNING id"""
+        values = {"name": name.value}
+        await test_db.execute(query, values)
+
+
+@pytest_asyncio.fixture
+async def stale_locks(test_db: Database, tasks_repo: ITasksRepo, inserted_tasks: None):
+    tasks: List[TaskInDb] = await tasks_repo.retrieve_all()
+
+    for task in tasks:
+        async with test_db.transaction():
+            # Insert an associated lock with a stale timestamp
+            stale_timestamp = datetime.utcnow() - timedelta(
+                minutes=random.randint(6, 10)
+            )
+            query = """INSERT INTO task_locks (task_id, created_at) VALUES (:task_id, :created_at)"""
+            values = {"task_id": task.id, "created_at": stale_timestamp}
+            await test_db.execute(query, values)
 
 
 # Repo Adapters

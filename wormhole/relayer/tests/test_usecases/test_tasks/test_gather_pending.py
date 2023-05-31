@@ -12,7 +12,7 @@ async def test_task(
     test_db: Database,
     pending_transactions: None,  # pylint: disable = unused-argument
 ) -> None:
-    """Test that a missed-vaa, failed transaction is caught and properly relayed."""
+    """Test stale relays' statuses are updated to failed."""
 
     await gather_pending_task.task()
 

@@ -6,6 +6,7 @@ from app.dependencies import CHAIN_ID_LOOKUP
 from app.settings import settings
 from app.usecases.interfaces.clients.evm import IEvmClient
 from app.usecases.interfaces.repos.relays import IRelaysRepo
+from app.usecases.interfaces.repos.tasks import ITasksRepo
 from app.usecases.interfaces.tasks.verify_delivery import IVerifyDeliveryTask
 from app.usecases.schemas.blockchain import (
     BlockchainClientError,
@@ -14,6 +15,7 @@ from app.usecases.schemas.blockchain import (
     TransactionReceiptResponse,
 )
 from app.usecases.schemas.relays import Status, UpdateRepoAdapter
+from app.usecases.schemas.tasks import TaskName
 from app.usecases.schemas.transactions import TransactionsJoinRelays
 
 
@@ -22,14 +24,16 @@ class VerifyDeliveryTask(IVerifyDeliveryTask):
         self,
         supported_evm_clients: Mapping[int, IEvmClient],
         relays_repo: IRelaysRepo,
+        tasks_repo: ITasksRepo,
         logger: Logger,
     ):
         self.supported_evm_clients = supported_evm_clients
         self.relays_repo = relays_repo
+        self.tasks_repo = tasks_repo
         self.logger = logger
+        self.name = TaskName.VERIFY_DELIVERY
 
     async def start_task(self) -> None:
-        """Starts automated task to periodically verify that submitted transactions were, in fact, delivered."""
         while True:
             try:
                 await self.task()
@@ -41,8 +45,15 @@ class VerifyDeliveryTask(IVerifyDeliveryTask):
             await asyncio.sleep(settings.verify_delivery_frequency)
 
     async def task(self) -> None:
-        """Verify the delivery status of submitted transactions."""
+        """Verifies the delivery status of previously submitted transactions."""
         self.logger.info("[VerifyDeliveryTask]: Started.")
+
+        # Check distributed lock for task availability.
+        task = await self.tasks_repo.retrieve(task_name=self.name)
+        available_task = await self.tasks_repo.create_lock(task_id=task.id)
+        if not available_task:
+            self.logger.info("[VerifyDeliveryTask]: Encountered lock; stopping work.")
+            return
 
         undelivered_transactions = await self.relays_repo.retrieve_undelivered()
 
@@ -81,6 +92,8 @@ class VerifyDeliveryTask(IVerifyDeliveryTask):
                     error=error,
                 )
             )
+
+        await self.tasks_repo.delete_lock(task_id=task.id)
 
         self.logger.info(
             "[VerifyDeliveryTask]: Finished; processed %s transactions.",

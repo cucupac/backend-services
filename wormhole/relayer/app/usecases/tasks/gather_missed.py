@@ -8,28 +8,32 @@ from app.dependencies import CHAIN_ID_LOOKUP
 from app.settings import settings
 from app.usecases.interfaces.clients.bridge import IBridgeClient
 from app.usecases.interfaces.repos.relays import IRelaysRepo
+from app.usecases.interfaces.repos.tasks import ITasksRepo
 from app.usecases.interfaces.services.message_processor import IVaaProcessor
 from app.usecases.interfaces.tasks.gather_missed import IGatherMissedVaasTask
 from app.usecases.schemas.bridge import BridgeClientException, NotFoundException
 from app.usecases.schemas.relays import CacheStatus, GrpcStatus, RelayErrors, Status
+from app.usecases.schemas.tasks import TaskName
 from app.usecases.schemas.transactions import CreateRepoAdapter
 
 
 class GatherMissedVaasTask(IGatherMissedVaasTask):
-    def __init__(
+    def __init__(  # pylint: disable = too-many-arguments
         self,
         message_processor: IVaaProcessor,
         bridge_client: IBridgeClient,
+        tasks_repo: ITasksRepo,
         relays_repo: IRelaysRepo,
         logger: Logger,
     ):
         self.message_processor = message_processor
         self.bridge_client = bridge_client
         self.relays_repo = relays_repo
+        self.tasks_repo = tasks_repo
         self.logger = logger
+        self.name = TaskName.GATHER_MISSED
 
     async def start_task(self) -> None:
-        """Starts automated task to periodically check for previously unsuccessful queued messages."""
         while True:
             try:
                 await self.task()
@@ -42,7 +46,15 @@ class GatherMissedVaasTask(IGatherMissedVaasTask):
 
     async def task(self) -> None:
         """Gathers untracked transactions."""
+
         self.logger.info("[GatherMissedVaasTask]: Started.")
+
+        # Check distributed lock for task availability.
+        task = await self.tasks_repo.retrieve(task_name=self.name)
+        available_task = await self.tasks_repo.create_lock(task_id=task.id)
+        if not available_task:
+            self.logger.info("[GatherMissedVaasTask]: Encountered lock; stopping work.")
+            return
 
         # Get missed transactions
         for wh_chain_id in CHAIN_ID_LOOKUP:
@@ -111,5 +123,7 @@ class GatherMissedVaasTask(IGatherMissedVaasTask):
                     )
 
                 new_sequence += 1
+
+        await self.tasks_repo.delete_lock(task_id=task.id)
 
         self.logger.info("[GatherMissedVaasTask]: Finished; sleeping now...")

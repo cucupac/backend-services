@@ -51,6 +51,7 @@ class Settings(BaseSettings):
     gather_missed_frequency: int = 60
     gather_pending_frequency: int = 60 * 10
     verify_delivery_frequency: int = 60
+    manage_locks_frequency: int = 60 * 5
 
     class Config:
         env_file = DOTENV_FILE

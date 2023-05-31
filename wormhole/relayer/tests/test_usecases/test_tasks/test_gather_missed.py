@@ -13,7 +13,7 @@ async def test_task(
     inserted_recent_transactions: None,  # pylint: disable = unused-argument
     test_db: Database,
 ) -> None:
-    """Test that a missed-vaa, failed transaction is caught and properly relayed."""
+    """Test that missed VAAs are added to our database."""
 
     # Assert that test missed VAAs are not in the database
     for test_sequence in constant.TEST_MISSED_VAAS_CELO_SEQUENCES:

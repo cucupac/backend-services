@@ -12,6 +12,7 @@ from app.settings import settings
 from app.usecases.interfaces.clients.bridge import IBridgeClient
 from app.usecases.interfaces.clients.evm import IEvmClient
 from app.usecases.interfaces.repos.relays import IRelaysRepo
+from app.usecases.interfaces.repos.tasks import ITasksRepo
 from app.usecases.interfaces.services.message_processor import IVaaProcessor
 from app.usecases.interfaces.tasks.retry_failed import IRetryFailedTask
 from app.usecases.schemas.blockchain import BlockchainClientError, BlockchainErrors
@@ -22,6 +23,7 @@ from app.usecases.schemas.relays import (
     UpdateJoinedRepoAdapter,
     UpdateRepoAdapter,
 )
+from app.usecases.schemas.tasks import TaskName
 from app.usecases.schemas.transactions import TransactionsJoinRelays
 from app.usecases.schemas.vaa import ExternalVaa
 
@@ -33,16 +35,18 @@ class RetryFailedTask(IRetryFailedTask):
         supported_evm_clients: Mapping[int, IEvmClient],
         bridge_client: IBridgeClient,
         relays_repo: IRelaysRepo,
+        tasks_repo: ITasksRepo,
         logger: Logger,
     ):
         self.vaa_processor = message_processor
         self.supported_evm_clients = supported_evm_clients
         self.bridge_client = bridge_client
         self.relays_repo = relays_repo
+        self.tasks_repo = tasks_repo
         self.logger = logger
+        self.name = TaskName.RETRY_FAILED
 
     async def start_task(self) -> None:
-        """Starts automated task to periodically check for previously unsuccessful queued messages."""
         while True:
             try:
                 await self.task()
@@ -56,6 +60,14 @@ class RetryFailedTask(IRetryFailedTask):
     async def task(self) -> None:
         """Retries non-cached, failed relays."""
         self.logger.info("[RetryFailedTask]: Started.")
+
+        # Check distributed lock for task availability.
+        task = await self.tasks_repo.retrieve(task_name=self.name)
+        available_task = await self.tasks_repo.create_lock(task_id=task.id)
+        if not available_task:
+            self.logger.info("[RetryFailedTask]: Encountered lock; stopping work.")
+            return
+
         task_start_time = time.time()
 
         failed_relays = await self.relays_repo.retrieve_failed()
@@ -101,6 +113,8 @@ class RetryFailedTask(IRetryFailedTask):
                 )
 
         await asyncio.gather(*relay_tasks)
+
+        await self.tasks_repo.delete_lock(task_id=task.id)
 
         self.logger.info(
             "[RetryFailedTask]: Finished; processed %s transactions in %s seconds.",

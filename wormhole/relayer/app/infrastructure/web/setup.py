@@ -11,6 +11,7 @@ from app.settings import settings
 from app.usecases.tasks.events.startup import (
     start_gather_missed_task,
     start_gather_pending_task,
+    start_manage_locks_task,
     start_retry_failed_task,
     start_verify_delivery_task,
 )
@@ -54,6 +55,7 @@ async def startup_event() -> None:
     await start_gather_missed_task()
     await start_gather_pending_task()
     await start_verify_delivery_task()
+    await start_manage_locks_task()
 
 
 @app.on_event("shutdown")
