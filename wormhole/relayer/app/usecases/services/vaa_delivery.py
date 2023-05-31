@@ -35,7 +35,7 @@ class VaaDelivery(IVaaDelivery):
         dest_evm_client = self.supported_evm_clients[chain_id]
         try:
             transaction_hash_bytes = await dest_evm_client.deliver(
-                payload=message.vaa_hex
+                payload=bytes.fromhex(message.vaa_hex)
             )
         except BlockchainClientError as e:
             if BlockchainErrors.MESSAGE_PROCESSED in e.detail:

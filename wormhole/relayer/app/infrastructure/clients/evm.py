@@ -30,7 +30,7 @@ class EvmClient(IEvmClient):
         self.logger = logger
 
     async def deliver(
-        self, payload: str, nonce: Optional[int] = None
+        self, payload: bytes, nonce: Optional[int] = None
     ) -> TransactionHash:
         """Sends transaction to the destination blockchain."""
 
@@ -63,7 +63,7 @@ class EvmClient(IEvmClient):
 
     async def __craft_transaction(
         self,
-        payload: str,
+        payload: bytes,
         nonce: int,
     ) -> SignedTransaction:
         """Craft a raw transaction to be sent to the blockchain."""

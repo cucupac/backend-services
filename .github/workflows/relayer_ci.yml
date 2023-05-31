@@ -35,6 +35,8 @@ env:
   CELO_RPC: ${{ secrets.CELO_RPC }}
   # Bridge
   BRIDGE_CLIENT_BASE_URL: ${{ secrets.BRIDGE_CLIENT_BASE_URL }}
+  # Other
+  PRIORITY_FEE_PERCENTILE: 75
 
 jobs:
   run-ci:

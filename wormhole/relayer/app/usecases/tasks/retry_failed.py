@@ -119,7 +119,7 @@ class RetryFailedTask(IRetryFailedTask):
             if isinstance(relay, ExternalVaa):
                 # NOTE: The VAA is unknown to our system.
                 submitted_relay = await self.__submit_relay(
-                    payload=relay.message_hex,
+                    payload=bytes.fromhex(relay.message_hex),
                     source_chain_id=relay.parsed_vaa.emitter_chain,
                     sequence=relay.parsed_vaa.sequence,
                     dest_chain_id=relay.parsed_vaa.payload.dest_chain_id,
@@ -131,7 +131,7 @@ class RetryFailedTask(IRetryFailedTask):
             else:
                 # NOTE: The VAA is already known to our system.
                 submitted_relay = await self.__submit_relay(
-                    payload=relay.relay_message,
+                    payload=bytes.fromhex(relay.relay_message),
                     source_chain_id=relay.source_chain_id,
                     sequence=relay.sequence,
                     dest_chain_id=relay.dest_chain_id,
@@ -163,7 +163,7 @@ class RetryFailedTask(IRetryFailedTask):
 
     async def __submit_relay(
         self,
-        payload: str,
+        payload: bytes,
         source_chain_id: int,
         sequence: int,
         dest_chain_id: int,
