@@ -2,8 +2,10 @@ import pytest
 from databases import Database
 
 from app.usecases.interfaces.tasks.verify_delivery import IVerifyDeliveryTask
+from app.usecases.interfaces.repos.tasks import ITasksRepo
 from app.usecases.schemas.blockchain import BlockchainErrors
 from app.usecases.schemas.relays import Status
+from app.usecases.schemas.tasks import TaskName
 
 
 @pytest.mark.asyncio
@@ -11,6 +13,7 @@ async def test_task_success(
     verify_delivery_task_success: IVerifyDeliveryTask,
     test_db: Database,
     pending_transactions_with_tx_hash: None,  # pylint: disable = unused-argument
+    tasks_repo: ITasksRepo,
 ) -> None:
     """Test that the verify_delivery task correctly updates relays with a 'pending' status and a transaction hash."""
 
@@ -34,7 +37,8 @@ async def test_task_success(
         )
 
     # Act
-    await verify_delivery_task_success.task()
+    task = await tasks_repo.retrieve(task_name=TaskName.VERIFY_DELIVERY)
+    await verify_delivery_task_success.task(task_id=task.id)
 
     for composite_id in composite_ids:
         test_tx = await test_db.fetch_one(
@@ -56,6 +60,7 @@ async def test_task_success(
 async def test_task_fail(
     verify_delivery_task_fail: IVerifyDeliveryTask,
     test_db: Database,
+    tasks_repo: ITasksRepo,
     pending_transactions_with_tx_hash: None,  # pylint: disable = unused-argument
 ) -> None:
     """Test that the verify_delivery task correctly updates relays with a 'pending' status and a transaction hash."""
@@ -80,7 +85,8 @@ async def test_task_fail(
         )
 
     # Act
-    await verify_delivery_task_fail.task()
+    task = await tasks_repo.retrieve(task_name=TaskName.VERIFY_DELIVERY)
+    await verify_delivery_task_fail.task(task_id=task.id)
 
     for composite_id in composite_ids:
         test_tx = await test_db.fetch_one(
@@ -103,6 +109,7 @@ async def test_task_error(
     verify_delivery_task_error: IVerifyDeliveryTask,
     test_db: Database,
     pending_transactions_with_tx_hash: None,  # pylint: disable = unused-argument
+    tasks_repo: ITasksRepo,
 ) -> None:
     """Test that the verify_delivery task correctly updates relays with a 'pending' status and a transaction hash."""
 
@@ -126,7 +133,8 @@ async def test_task_error(
         )
 
     # Act
-    await verify_delivery_task_error.task()
+    task = await tasks_repo.retrieve(task_name=TaskName.VERIFY_DELIVERY)
+    await verify_delivery_task_error.task(task_id=task.id)
 
     for composite_id in composite_ids:
         test_tx = await test_db.fetch_one(

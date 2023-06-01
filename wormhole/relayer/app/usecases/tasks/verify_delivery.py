@@ -37,7 +37,15 @@ class VerifyDeliveryTask(IVerifyDeliveryTask):
     async def start_task(self) -> None:
         while True:
             try:
-                await self.task()
+                # Check distributed lock for task availability.
+                task = await self.tasks_repo.retrieve(task_name=self.name)
+                available_task = await self.tasks_repo.create_lock(task_id=task.id)
+                if available_task:
+                    await self.task(task_id=task.id)
+                else:
+                    self.logger.info(
+                        "[VerifyDeliveryTask]: Encountered lock; not performing task."
+                    )
             except asyncio.CancelledError:  # pylint: disable = try-except-raise
                 raise
             except Exception as e:  # pylint: disable = broad-except
@@ -45,17 +53,10 @@ class VerifyDeliveryTask(IVerifyDeliveryTask):
 
             await asyncio.sleep(settings.verify_delivery_frequency)
 
-    async def task(self) -> None:
+    async def task(self, task_id: int) -> None:
         """Verifies the delivery status of previously submitted transactions."""
+
         self.logger.info("[VerifyDeliveryTask]: Started.")
-
-        # Check distributed lock for task availability.
-        task = await self.tasks_repo.retrieve(task_name=self.name)
-        available_task = await self.tasks_repo.create_lock(task_id=task.id)
-        if not available_task:
-            self.logger.info("[VerifyDeliveryTask]: Encountered lock; stopping work.")
-            return
-
         task_start_time = time.time()
 
         undelivered_transactions = await self.relays_repo.retrieve_undelivered()
@@ -73,7 +74,7 @@ class VerifyDeliveryTask(IVerifyDeliveryTask):
             if receipt_info.error:
                 if BlockchainErrors.TX_HASH_NOT_IN_CHAIN in receipt_info.error:
                     status = Status.FAILED
-                    error = BlockchainErrors.TX_HASH_NOT_IN_CHAIN
+                    error = receipt_info.error
                 else:
                     status = Status.PENDING
                     error = None
@@ -96,12 +97,12 @@ class VerifyDeliveryTask(IVerifyDeliveryTask):
                 )
             )
 
-        await self.tasks_repo.delete_lock(task_id=task.id)
+        await self.tasks_repo.delete_lock(task_id=task_id)
 
         self.logger.info(
             "[VerifyDeliveryTask]: Finished; processed %s transactions in %s seconds.",
             len(undelivered_transactions),
-            time.time() - task_start_time,
+            round(time.time() - task_start_time, 4),
         )
 
     async def __get_transaction_receipt(

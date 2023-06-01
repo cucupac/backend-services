@@ -2,6 +2,7 @@
 import asyncio
 import base64
 import codecs
+import time
 from logging import Logger
 
 from app.dependencies import CHAIN_ID_LOOKUP
@@ -36,7 +37,15 @@ class GatherMissedVaasTask(IGatherMissedVaasTask):
     async def start_task(self) -> None:
         while True:
             try:
-                await self.task()
+                # Check distributed lock for task availability.
+                task = await self.tasks_repo.retrieve(task_name=self.name)
+                available_task = await self.tasks_repo.create_lock(task_id=task.id)
+                if available_task:
+                    await self.task(task_id=task.id)
+                else:
+                    self.logger.info(
+                        "[GatherMissedVaasTask]: Encountered lock; not performing task."
+                    )
             except asyncio.CancelledError:  # pylint: disable = try-except-raise
                 raise
             except Exception as e:  # pylint: disable = broad-except
@@ -44,19 +53,15 @@ class GatherMissedVaasTask(IGatherMissedVaasTask):
 
             await asyncio.sleep(settings.gather_missed_frequency)
 
-    async def task(self) -> None:
+    async def task(self, task_id: int) -> None:
         """Gathers untracked transactions."""
 
         self.logger.info("[GatherMissedVaasTask]: Started.")
 
-        # Check distributed lock for task availability.
-        task = await self.tasks_repo.retrieve(task_name=self.name)
-        available_task = await self.tasks_repo.create_lock(task_id=task.id)
-        if not available_task:
-            self.logger.info("[GatherMissedVaasTask]: Encountered lock; stopping work.")
-            return
+        task_start_time = time.time()
 
         # Get missed transactions
+        missed_vaa_count = 0
         for wh_chain_id in CHAIN_ID_LOOKUP:
             transaction = await self.relays_repo.get_latest_sequence(
                 emitter_address=settings.evm_wormhole_bridge,
@@ -122,8 +127,14 @@ class GatherMissedVaasTask(IGatherMissedVaasTask):
                         parsed_vaa.sequence,
                     )
 
+                    missed_vaa_count += 1
+
                 new_sequence += 1
 
-        await self.tasks_repo.delete_lock(task_id=task.id)
+        await self.tasks_repo.delete_lock(task_id=task_id)
 
-        self.logger.info("[GatherMissedVaasTask]: Finished; sleeping now...")
+        self.logger.info(
+            "[GatherMissedVaasTask]: Finished; retrieved %s missed VAAs in %s seconds.",
+            missed_vaa_count,
+            round(time.time() - task_start_time, 4),
+        )

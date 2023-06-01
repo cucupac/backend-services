@@ -4,7 +4,9 @@ from databases import Database
 import tests.constants as constant
 from app.settings import settings
 from app.usecases.interfaces.tasks.gather_missed import IGatherMissedVaasTask
+from app.usecases.interfaces.repos.tasks import ITasksRepo
 from app.usecases.schemas.relays import RelayErrors, Status
+from app.usecases.schemas.tasks import TaskName
 
 
 @pytest.mark.asyncio
@@ -12,6 +14,7 @@ async def test_task(
     gather_missed_task: IGatherMissedVaasTask,
     inserted_recent_transactions: None,  # pylint: disable = unused-argument
     test_db: Database,
+    tasks_repo: ITasksRepo,
 ) -> None:
     """Test that missed VAAs are added to our database."""
 
@@ -44,7 +47,8 @@ async def test_task(
 
     # Act
     settings.evm_wormhole_bridge = constant.TEST_EMITTER_ADDRESS
-    await gather_missed_task.task()
+    task = await tasks_repo.retrieve(task_name=TaskName.GATHER_MISSED)
+    await gather_missed_task.task(task_id=task.id)
 
     # Assert that previously missing VAAs are now tracked
     for test_sequence in constant.TEST_MISSED_VAAS_CELO_SEQUENCES:
