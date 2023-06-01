@@ -74,7 +74,7 @@ class VerifyDeliveryTask(IVerifyDeliveryTask):
             if receipt_info.error:
                 if BlockchainErrors.TX_HASH_NOT_IN_CHAIN in receipt_info.error:
                     status = Status.FAILED
-                    error = BlockchainErrors.TX_HASH_NOT_IN_CHAIN
+                    error = receipt_info.error
                 else:
                     status = Status.PENDING
                     error = None
