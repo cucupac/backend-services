@@ -7,5 +7,5 @@ class IGatherPendingVaasTask(ABC):
         """Starts task."""
 
     @abstractmethod
-    async def task(self) -> None:
+    async def task(self, task_id: int) -> None:
         """Marks stale transactions as failed."""

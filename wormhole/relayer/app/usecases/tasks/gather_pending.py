@@ -1,5 +1,6 @@
 # pylint: disable=duplicate-code
 import asyncio
+import time
 from logging import Logger
 
 from app.settings import settings
@@ -25,7 +26,15 @@ class GatherPendingVaasTask(IGatherPendingVaasTask):
     async def start_task(self) -> None:
         while True:
             try:
-                await self.task()
+                # Check distributed lock for task availability.
+                task = await self.tasks_repo.retrieve(task_name=self.name)
+                available_task = await self.tasks_repo.create_lock(task_id=task.id)
+                if available_task:
+                    await self.task(task_id=task.id)
+                else:
+                    self.logger.info(
+                        "[GatherPendingVaasTask]: Encountered lock; not performing task."
+                    )
             except asyncio.CancelledError:  # pylint: disable = try-except-raise
                 raise
             except Exception as e:  # pylint: disable = broad-except
@@ -33,19 +42,11 @@ class GatherPendingVaasTask(IGatherPendingVaasTask):
 
             await asyncio.sleep(settings.gather_pending_frequency)
 
-    async def task(self) -> None:
+    async def task(self, task_id: int) -> None:
         """Marks stale transactions as failed."""
 
         self.logger.info("[GatherPendingVaasTask]: Started.")
-
-        # Check distributed lock for task availability.
-        task = await self.tasks_repo.retrieve(task_name=self.name)
-        available_task = await self.tasks_repo.create_lock(task_id=task.id)
-        if not available_task:
-            self.logger.info(
-                "[GatherPendingVaasTask]: Encountered lock; stopping work."
-            )
-            return
+        task_start_time = time.time()
 
         transactions = await self.relays_repo.retrieve_pending()
 
@@ -66,6 +67,10 @@ class GatherPendingVaasTask(IGatherPendingVaasTask):
                 transaction.sequence,
             )
 
-        await self.tasks_repo.delete_lock(task_id=task.id)
+        await self.tasks_repo.delete_lock(task_id=task_id)
 
-        self.logger.info("[GatherPendingVaasTask]: Finished; sleeping now...")
+        self.logger.info(
+            "[GatherPendingVaasTask]: Finished; processed %s pending transactions in %s seconds.",
+            len(transactions),
+            round(time.time() - task_start_time, 4),
+        )

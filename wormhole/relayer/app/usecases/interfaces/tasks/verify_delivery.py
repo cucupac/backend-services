@@ -7,5 +7,5 @@ class IVerifyDeliveryTask(ABC):
         """Starts task."""
 
     @abstractmethod
-    async def task(self):
+    async def task(self, task_id: int) -> None:
         """Verifies the delivery status of previously submitted transactions."""

@@ -7,5 +7,5 @@ class IGatherMissedVaasTask(ABC):
         """Starts task."""
 
     @abstractmethod
-    async def task(self):
+    async def task(self, task_id: int) -> None:
         """Gathers untracked transactions."""

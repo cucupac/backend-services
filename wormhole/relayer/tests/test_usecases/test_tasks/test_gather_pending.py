@@ -3,7 +3,9 @@ from databases import Database
 
 import tests.constants as constant
 from app.usecases.interfaces.tasks.gather_pending import IGatherPendingVaasTask
+from app.usecases.interfaces.repos.tasks import ITasksRepo
 from app.usecases.schemas.relays import RelayErrors, Status
+from app.usecases.schemas.tasks import TaskName
 
 
 @pytest.mark.asyncio
@@ -11,10 +13,12 @@ async def test_task(
     gather_pending_task: IGatherPendingVaasTask,
     test_db: Database,
     pending_transactions: None,  # pylint: disable = unused-argument
+    tasks_repo: ITasksRepo,
 ) -> None:
     """Test stale relays' statuses are updated to failed."""
 
-    await gather_pending_task.task()
+    task = await tasks_repo.retrieve(task_name=TaskName.GATHER_PENDING)
+    await gather_pending_task.task(task_id=task.id)
 
     for index in range(constant.DEFAULT_ITERATIONS):
         test_relay = await test_db.fetch_one(
