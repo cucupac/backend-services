@@ -2,7 +2,7 @@ from logging import Logger
 from typing import Any, List, Mapping, Optional
 
 from eth_account.datastructures import SignedTransaction
-from web3 import Web3
+from web3 import AsyncHTTPProvider, AsyncWeb3
 from web3.types import Nonce, TxReceipt
 
 from app.dependencies import CHAIN_DATA
@@ -22,7 +22,7 @@ class EvmClient(IEvmClient):
         self.abi = abi
         self.chain_id = chain_id
         self.rpc_url = rpc_url
-        self.web3_client = Web3(Web3.HTTPProvider(self.rpc_url))
+        self.web3_client = AsyncWeb3(AsyncHTTPProvider(self.rpc_url))
         self.contract = self.web3_client.eth.contract(
             address=self.web3_client.to_checksum_address(settings.evm_wormhole_bridge),
             abi=abi,
@@ -39,7 +39,7 @@ class EvmClient(IEvmClient):
                 payload=payload,
                 nonce=nonce if nonce else await self.get_current_nonce(),
             )
-            return self.web3_client.eth.send_raw_transaction(
+            return await self.web3_client.eth.send_raw_transaction(
                 transaction=signed_transaction.rawTransaction
             )
         except Exception as e:
@@ -49,7 +49,9 @@ class EvmClient(IEvmClient):
     async def fetch_receipt(self, transaction_hash: str) -> TxReceipt:
         """Fetches the transaction receipt for a given transaction hash."""
         try:
-            return self.web3_client.eth.wait_for_transaction_receipt(transaction_hash)
+            return await self.web3_client.eth.wait_for_transaction_receipt(
+                transaction_hash=transaction_hash, timeout=120, poll_latency=0.1
+            )
         except Exception as e:
             self.logger.error("[EvmClient]: Tx receipt retrieval failed. Error: %s", e)
             raise BlockchainClientError(detail=str(e)) from e
@@ -57,7 +59,7 @@ class EvmClient(IEvmClient):
     async def get_current_nonce(self) -> Nonce:
         """Retrieves the current nonce of the relayer on a provided destination chain."""
 
-        return self.web3_client.eth.get_transaction_count(
+        return await self.web3_client.eth.get_transaction_count(
             self.web3_client.to_checksum_address(settings.relayer_address)
         )
 
@@ -78,11 +80,9 @@ class EvmClient(IEvmClient):
             "nonce": nonce,
         }
 
-        gas_price_estimate = self.web3_client.eth.gas_price
-
         if post_london_upgrade:
             if has_fee_history:
-                fee_history = self.web3_client.eth.fee_history(
+                fee_history = await self.web3_client.eth.fee_history(
                     block_count=1,
                     newest_block="latest",
                     reward_percentiles=[settings.priority_fee_percentile],
@@ -91,17 +91,17 @@ class EvmClient(IEvmClient):
                 base_fee_per_gas = fee_history.baseFeePerGas[-1]
                 max_priority_fee = fee_history.reward[0][0]
             else:
-                base_fee_per_gas = gas_price_estimate
-                max_priority_fee = self.web3_client.eth.max_priority_fee
+                base_fee_per_gas = await self.web3_client.eth.gas_price
+                max_priority_fee = await self.web3_client.eth.max_priority_fee
 
             transaction_dict["maxFeePerGas"] = base_fee_per_gas + max_priority_fee
             transaction_dict["maxPriorityFeePerGas"] = max_priority_fee
         else:
-            transaction_dict["gasPrice"] = gas_price_estimate
+            transaction_dict["gasPrice"] = await self.web3_client.eth.gas_price
 
-        transaction = self.contract.functions.processMessage(payload).build_transaction(
-            transaction_dict
-        )
+        transaction = await self.contract.functions.processMessage(
+            payload
+        ).build_transaction(transaction_dict)
 
         return self.web3_client.eth.account.sign_transaction(
             transaction_dict=transaction, private_key=settings.relayer_private_key

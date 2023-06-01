@@ -1,4 +1,5 @@
 import asyncio
+import time
 from logging import Logger
 from typing import List, Mapping
 
@@ -55,6 +56,8 @@ class VerifyDeliveryTask(IVerifyDeliveryTask):
             self.logger.info("[VerifyDeliveryTask]: Encountered lock; stopping work.")
             return
 
+        task_start_time = time.time()
+
         undelivered_transactions = await self.relays_repo.retrieve_undelivered()
 
         get_receipt_tasks = [
@@ -96,8 +99,9 @@ class VerifyDeliveryTask(IVerifyDeliveryTask):
         await self.tasks_repo.delete_lock(task_id=task.id)
 
         self.logger.info(
-            "[VerifyDeliveryTask]: Finished; processed %s transactions.",
+            "[VerifyDeliveryTask]: Finished; processed %s transactions in %s seconds.",
             len(undelivered_transactions),
+            time.time() - task_start_time,
         )
 
     async def __get_transaction_receipt(
