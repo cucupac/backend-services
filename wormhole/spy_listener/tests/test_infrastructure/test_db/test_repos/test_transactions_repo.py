@@ -28,6 +28,31 @@ async def test_create(
 
 
 @pytest.mark.asyncio
+async def test_create_dummy(
+    transactions_repo: ITransactionsRepo,
+    create_transaction_repo_adapter: CreateRepoAdapter,
+) -> None:
+    transaction_1 = await transactions_repo.create(
+        transaction=create_transaction_repo_adapter
+    )
+
+    create_transaction_repo_adapter.sequence += 2
+
+    _ = await transactions_repo.create(transaction=create_transaction_repo_adapter)
+
+    dummy_transaction_id = transaction_1.id + 1
+    dummy_transaction = await transactions_repo.retrieve(
+        transaction_id=dummy_transaction_id  # The dummy
+    )
+
+    assert isinstance(dummy_transaction, TransactionsJoinRelays)
+    assert dummy_transaction.from_address is None
+    assert dummy_transaction.to_address is None
+    assert dummy_transaction.dest_chain_id is None
+    assert dummy_transaction.amount is None
+
+
+@pytest.mark.asyncio
 async def test_create_upsert(
     failed_transaction: int,
     transactions_repo: ITransactionsRepo,

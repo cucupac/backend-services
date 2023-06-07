@@ -30,27 +30,35 @@ class TransactionsRepo(ITransactionsRepo):
             if most_recent_record.sequence != transaction.sequence - 1:
                 sequence_to_insert = most_recent_record.sequence + 1
                 while sequence_to_insert < transaction.sequence:
-                    insert_statement = TRANSACTIONS.insert().values(
-                        emitter_address=transaction.emitter_address.lower(),
-                        from_address=None,
-                        to_address=None,
-                        source_chain_id=transaction.source_chain_id,
-                        dest_chain_id=None,
-                        amount=None,
-                        sequence=sequence_to_insert,
+                    insert_statement = (
+                        insert(TRANSACTIONS)
+                        .values(
+                            emitter_address=transaction.emitter_address.lower(),
+                            from_address=None,
+                            to_address=None,
+                            source_chain_id=transaction.source_chain_id,
+                            dest_chain_id=None,
+                            amount=None,
+                            sequence=sequence_to_insert,
+                        )
+                        .on_conflict_do_nothing()
                     )
 
                     async with self.db.transaction():
                         transaction_id = await self.db.execute(insert_statement)
 
-                        insert_statement = RELAYS.insert().values(
-                            transaction_id=transaction_id,
-                            status=Status.FAILED,
-                            error=RelayErrors.MISSED_VAA,
-                            message=None,
-                            transaction_hash=None,
-                            grpc_status=GrpcStatus.FAILED,
-                            cache_status=CacheStatus.NEVER_CACHED,
+                        insert_statement = (
+                            insert(RELAYS)
+                            .values(
+                                transaction_id=transaction_id,
+                                status=Status.FAILED,
+                                error=RelayErrors.MISSED_VAA,
+                                message=None,
+                                transaction_hash=None,
+                                grpc_status=GrpcStatus.FAILED,
+                                cache_status=CacheStatus.NEVER_CACHED,
+                            )
+                            .on_conflict_do_nothing()
                         )
 
                         await self.db.execute(insert_statement)
