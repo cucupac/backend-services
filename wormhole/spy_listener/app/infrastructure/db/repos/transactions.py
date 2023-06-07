@@ -61,7 +61,8 @@ class TransactionsRepo(ITransactionsRepo):
                             .on_conflict_do_nothing()
                         )
 
-                        await self.db.execute(insert_statement)
+                        if transaction_id:
+                            await self.db.execute(insert_statement)
                     sequence_to_insert += 1
 
         insert_statement = insert(TRANSACTIONS).values(
