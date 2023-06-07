@@ -13,6 +13,7 @@ RELAYS = sa.Table(
         sa.BigInteger,
         sa.ForeignKey(TRANSACTIONS.c.id),
         index=True,
+        unique=True,
     ),
     sa.Column("message", sa.String, nullable=True),
     sa.Column("status", sa.String, nullable=False, default="pending"),

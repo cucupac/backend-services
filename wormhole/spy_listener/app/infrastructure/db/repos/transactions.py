@@ -4,7 +4,6 @@ from databases import Database
 from sqlalchemy import and_, select
 from sqlalchemy.dialects.postgresql import insert
 
-
 from app.infrastructure.db.models.relays import RELAYS
 from app.infrastructure.db.models.transactions import TRANSACTIONS
 from app.usecases.interfaces.repos.transactions import ITransactionsRepo

@@ -19,9 +19,9 @@ from app.usecases.interfaces.repos.transactions import ITransactionsRepo
 from app.usecases.interfaces.services.vaa_manager import IVaaManager
 from app.usecases.schemas.relays import (
     CacheStatus,
+    RelayErrors,
     Status,
     UpdateRepoAdapter,
-    RelayErrors,
 )
 from app.usecases.schemas.transactions import CreateRepoAdapter, TransactionsJoinRelays
 from app.usecases.services.vaa_manager import VaaManager
