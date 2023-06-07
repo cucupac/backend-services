@@ -54,6 +54,7 @@ async def test_task_success(
 
         assert test_tx["status"] == Status.SUCCESS
         assert test_tx["error"] is None
+        assert test_tx["transaction_hash"] is not None
 
 
 @pytest.mark.asyncio

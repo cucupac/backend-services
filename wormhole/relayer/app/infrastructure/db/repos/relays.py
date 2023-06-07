@@ -6,6 +6,7 @@ from sqlalchemy import and_, select
 
 from app.infrastructure.db.models.relays import RELAYS
 from app.infrastructure.db.models.transactions import TRANSACTIONS
+from app.settings import settings
 from app.usecases.interfaces.repos.relays import IRelaysRepo
 from app.usecases.schemas.relays import (
     CacheStatus,
@@ -60,10 +61,11 @@ class RelaysRepo(IRelaysRepo):
 
         for key, value in update_dict_raw.items():
             if key not in composite_index:
-                if key != "error" and value is not None:
+                if key == "error":
                     update_values_dict[key] = value
                 else:
-                    update_values_dict[key] = value
+                    if value is not None:
+                        update_values_dict[key] = value
 
         query = query.values(update_values_dict)
 
@@ -216,7 +218,8 @@ class RelaysRepo(IRelaysRepo):
 
         query_conditions = [
             RELAYS.c.status == Status.PENDING,
-            RELAYS.c.created_at < datetime.utcnow() - timedelta(minutes=5),
+            RELAYS.c.created_at
+            < datetime.utcnow() - timedelta(minutes=settings.max_pending_time),
         ]
 
         j = TRANSACTIONS.join(RELAYS, TRANSACTIONS.c.id == RELAYS.c.transaction_id)

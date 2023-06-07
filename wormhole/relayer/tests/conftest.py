@@ -16,6 +16,7 @@ from app.infrastructure.clients.websocket import WebsocketClient
 from app.infrastructure.db.repos.relays import RelaysRepo
 from app.infrastructure.db.repos.tasks import TasksRepo
 from app.infrastructure.web.setup import setup_app
+from app.settings import settings
 from app.usecases.interfaces.clients.bridge import IBridgeClient
 from app.usecases.interfaces.clients.evm import IEvmClient
 from app.usecases.interfaces.clients.websocket import IWebsocketClient
@@ -369,7 +370,9 @@ async def pending_transactions(test_db: Database) -> None:
                     "cache_status": CacheStatus.NEVER_CACHED,
                     "grpc_status": "success",
                     "created_at": datetime.utcnow()
-                    - timedelta(minutes=random.randint(2, 10)),
+                    - timedelta(
+                        minutes=random.randint(settings.max_pending_time + 1, 15)
+                    ),
                 },
             )
 
