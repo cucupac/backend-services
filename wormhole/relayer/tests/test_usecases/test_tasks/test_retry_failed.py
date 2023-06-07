@@ -2,8 +2,8 @@ import pytest
 from databases import Database
 
 import tests.constants as constant
-from app.usecases.interfaces.tasks.retry_failed import IRetryFailedTask
 from app.usecases.interfaces.repos.tasks import ITasksRepo
+from app.usecases.interfaces.tasks.retry_failed import IRetryFailedTask
 from app.usecases.schemas.relays import RelayErrors, Status
 from app.usecases.schemas.tasks import TaskName
 

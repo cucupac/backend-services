@@ -3,8 +3,8 @@ from databases import Database
 
 import tests.constants as constant
 from app.settings import settings
-from app.usecases.interfaces.tasks.gather_missed import IGatherMissedVaasTask
 from app.usecases.interfaces.repos.tasks import ITasksRepo
+from app.usecases.interfaces.tasks.gather_missed import IGatherMissedVaasTask
 from app.usecases.schemas.relays import RelayErrors, Status
 from app.usecases.schemas.tasks import TaskName
 

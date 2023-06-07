@@ -1,8 +1,8 @@
 import pytest
 from databases import Database
 
-from app.usecases.interfaces.tasks.verify_delivery import IVerifyDeliveryTask
 from app.usecases.interfaces.repos.tasks import ITasksRepo
+from app.usecases.interfaces.tasks.verify_delivery import IVerifyDeliveryTask
 from app.usecases.schemas.blockchain import BlockchainErrors
 from app.usecases.schemas.relays import Status
 from app.usecases.schemas.tasks import TaskName

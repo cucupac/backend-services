@@ -49,7 +49,7 @@ class Settings(BaseSettings):
     # Tasks
     retry_failed_frequency: int = 60
     gather_missed_frequency: int = 60
-    gather_pending_frequency: int = 60 * 10
+    gather_pending_frequency: int = 60 * 5
     verify_delivery_frequency: int = 60
     manage_locks_frequency: int = 60 * 5
 

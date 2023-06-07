@@ -45,7 +45,7 @@ class VaaManager(IVaaManager):
         if not self.recent_vaas.get(vaa_unique_set):
             needs_db_store = True
             try:
-                uinque_set_record_added = await self.unique_set.publish(
+                set_result = await self.unique_set.publish(
                     message=UniqueSetMessage(
                         dest_chain_id=parsed_vaa.payload.dest_chain_id,
                         to_address=parsed_vaa.payload.to_address,
@@ -61,7 +61,7 @@ class VaaManager(IVaaManager):
                 status = Status.FAILED
                 cache_status = CacheStatus.CURRENTLY_CACHED
             else:
-                if uinque_set_record_added:
+                if set_result == 1:
                     error = None
                     status = Status.PENDING
                     cache_status = CacheStatus.NEVER_CACHED

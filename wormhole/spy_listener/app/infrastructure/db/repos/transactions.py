@@ -2,6 +2,8 @@ from typing import List, Optional
 
 from databases import Database
 from sqlalchemy import and_, select
+from sqlalchemy.dialects.postgresql import insert
+
 
 from app.infrastructure.db.models.relays import RELAYS
 from app.infrastructure.db.models.transactions import TRANSACTIONS
@@ -55,20 +57,34 @@ class TransactionsRepo(ITransactionsRepo):
                         await self.db.execute(insert_statement)
                     sequence_to_insert += 1
 
-        insert_statement = TRANSACTIONS.insert().values(
+        insert_statement = insert(TRANSACTIONS).values(
             emitter_address=transaction.emitter_address.lower(),
+            source_chain_id=transaction.source_chain_id,
+            sequence=transaction.sequence,
             from_address=transaction.from_address.lower(),
             to_address=transaction.to_address.lower(),
-            source_chain_id=transaction.source_chain_id,
             dest_chain_id=transaction.dest_chain_id,
             amount=transaction.amount,
-            sequence=transaction.sequence,
+        )
+
+        upsert_statement = insert_statement.on_conflict_do_update(
+            index_elements=[
+                TRANSACTIONS.c.emitter_address,
+                TRANSACTIONS.c.source_chain_id,
+                TRANSACTIONS.c.sequence,
+            ],
+            set_={
+                "from_address": transaction.from_address.lower(),
+                "to_address": transaction.to_address.lower(),
+                "dest_chain_id": transaction.dest_chain_id,
+                "amount": transaction.amount,
+            },
         )
 
         async with self.db.transaction():
-            transaction_id = await self.db.execute(insert_statement)
+            transaction_id = await self.db.execute(upsert_statement)
 
-            insert_statement = RELAYS.insert().values(
+            insert_statement = insert(RELAYS).values(
                 transaction_id=transaction_id,
                 status=transaction.relay_status,
                 error=transaction.relay_error,
@@ -78,7 +94,18 @@ class TransactionsRepo(ITransactionsRepo):
                 grpc_status=GrpcStatus.SUCCESS,
             )
 
-            await self.db.execute(insert_statement)
+            upsert_statement = insert_statement.on_conflict_do_update(
+                index_elements=[RELAYS.c.transaction_id],
+                set_={
+                    "status": transaction.relay_status,
+                    "error": transaction.relay_error,
+                    "message": transaction.relay_message,
+                    "cache_status": transaction.relay_cache_status,
+                    "grpc_status": GrpcStatus.SUCCESS,
+                },
+            )
+
+            await self.db.execute(upsert_statement)
 
         return await self.retrieve(transaction_id=transaction_id)
 

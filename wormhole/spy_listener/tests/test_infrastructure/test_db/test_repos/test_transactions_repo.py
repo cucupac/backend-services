@@ -19,7 +19,6 @@ async def test_create(
     transactions_repo: ITransactionsRepo,
     create_transaction_repo_adapter: CreateRepoAdapter,
 ) -> None:
-
     transaction = await transactions_repo.create(
         transaction=create_transaction_repo_adapter
     )
@@ -41,11 +40,32 @@ async def test_create_unique_violation(
 
 
 @pytest.mark.asyncio
+async def test_create_upsert(
+    failed_transaction: int,
+    transactions_repo: ITransactionsRepo,
+    create_transaction_repo_adapter: CreateRepoAdapter,
+) -> None:
+    transaction = await transactions_repo.retrieve(transaction_id=failed_transaction)
+
+    assert transaction.to_address is None
+    assert transaction.from_address is None
+    assert transaction.dest_chain_id is None
+    assert transaction.amount is None
+
+    transaction = await transactions_repo.create(
+        transaction=create_transaction_repo_adapter
+    )
+
+    assert isinstance(transaction, TransactionsJoinRelays)
+    for key, value in create_transaction_repo_adapter.dict().items():
+        assert value == transaction.dict()[key]
+
+
+@pytest.mark.asyncio
 async def test_retrieve(
     inserted_transaction: TransactionsJoinRelays,
     transactions_repo: ITransactionsRepo,
 ) -> None:
-
     transaction = await transactions_repo.retrieve(
         transaction_id=inserted_transaction.id
     )
@@ -60,7 +80,6 @@ async def test_retrieve_many(
     many_inserted_transactions: List[TransactionsJoinRelays],
     transactions_repo: ITransactionsRepo,
 ) -> None:
-
     transactions = await transactions_repo.retrieve_many(
         query_params=RetriveManyRepoAdapter(relay_status=Status.PENDING)
     )
