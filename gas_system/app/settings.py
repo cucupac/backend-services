@@ -22,10 +22,12 @@ class Settings(BaseSettings):
     db_url: str
 
     # EVM
-    wh_bridge_admin_private_key: str
-    wh_bridge_admin_address: str
+    fee_setter_private_key: str
+    fee_setter_address: str
     mock_fee: int
     evm_wormhole_bridge: str
+    priority_fee_percentile: int
+    remote_fee_multiplier: float
 
     # RPC Urls
     ethereum_rpc: str

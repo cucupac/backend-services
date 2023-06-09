@@ -6,11 +6,9 @@ from app.usecases.schemas.fees import MinimumFees
 
 class IBlockchainClient(ABC):
     @abstractmethod
-    async def update_fees(
-        self, remote_data: MinimumFees, local_chain_id: str
-    ) -> TransactionHash:
+    async def update_fees(self, remote_data: MinimumFees) -> TransactionHash:
         """Sends transaction to the blockchain."""
 
     @abstractmethod
-    async def estimate_fees(self, chain_id: str) -> ComputeCosts:
+    async def estimate_fees(self) -> ComputeCosts:
         """Estimates a transaction's gas information."""

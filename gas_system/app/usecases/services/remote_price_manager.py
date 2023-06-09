@@ -6,19 +6,20 @@ from app.usecases.interfaces.clients.http.blockchain import IBlockchainClient
 from app.usecases.interfaces.clients.http.prices import IPriceClient
 from app.usecases.interfaces.repos.fee_updates import IFeeUpdateRepo
 from app.usecases.interfaces.services.remote_price_manager import IRemotePriceManager
-from app.usecases.schemas.blockchain import BlockchainClientError, ComputeCosts
+from app.usecases.schemas.blockchain import BlockchainClientError, ComputeCosts, Chains
 from app.usecases.schemas.fees import FeeUpdate, MinimumFees
+from app.settings import settings
 
 
 class RemotePriceManager(IRemotePriceManager):
     def __init__(
         self,
         price_client: IPriceClient,
-        blockchain_client: IBlockchainClient,
+        blockchain_clients: Mapping[int, IBlockchainClient],
         fee_update_repo: IFeeUpdateRepo,
     ):
         self.price_client = price_client
-        self.blockchain_client = blockchain_client
+        self.blockchain_clients = blockchain_clients
         self.fee_update_repo = fee_update_repo
 
     # pylint: disable = too-many-locals
@@ -30,7 +31,8 @@ class RemotePriceManager(IRemotePriceManager):
         # Estimate fees for each chain
         compute_costs: Mapping[int, ComputeCosts] = {}
         for local_chain_id, data in CHAIN_DATA.items():
-            costs = await self.blockchain_client.estimate_fees(chain_id=local_chain_id)
+            blockchain_client = self.blockchain_clients[local_chain_id]
+            costs = await blockchain_client.estimate_fees()
 
             costs.native_value_usd = price_data[data["native"]]
 
@@ -52,6 +54,14 @@ class RemotePriceManager(IRemotePriceManager):
                     remote_fee_in_local_native = (
                         remote_fee_usd / local_compute_costs.native_value_usd
                     )
+
+                    # Add buffer if Ethereum is not involved.
+                    if (
+                        local_chain_id != Chains.ETHEREUM
+                        and remote_chain_id != Chains.ETHEREUM
+                    ):
+                        remote_fee_in_local_native *= settings.remote_fee_multiplier
+
                     remote_fee_updates[remote_chain_id] = math.ceil(
                         remote_fee_in_local_native
                     )
@@ -59,13 +69,13 @@ class RemotePriceManager(IRemotePriceManager):
             fee_updates[local_chain_id] = remote_fee_updates
 
         for chain_id, remote_fee_updates in fee_updates.items():
+            blockchain_client = self.blockchain_clients[chain_id]
             try:
-                transaction_hash_bytes = await self.blockchain_client.update_fees(
+                transaction_hash_bytes = await blockchain_client.update_fees(
                     remote_data=MinimumFees(
                         remote_chain_ids=list(remote_fee_updates.keys()),
                         remote_fees=list(remote_fee_updates.values()),
                     ),
-                    local_chain_id=chain_id,
                 )
             except BlockchainClientError as e:
                 transaction_hash = None

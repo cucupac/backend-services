@@ -38,7 +38,7 @@ class WormholeClient(IBridgeClient):
             except Exception as e:
                 response_text = await response.text()
                 raise BridgeClientException(
-                    f"CoinbaseClient Error: Response status: {response.status}, Response Text: {response_text}"
+                    f"WormholeClient Error: Response status: {response.status}, Response Text: {response_text}"
                 ) from e
 
             if response.status != 200:
@@ -48,7 +48,7 @@ class WormholeClient(IBridgeClient):
                     error = APIErrorBody(**response_json)
                 except Exception as e:
                     raise BridgeClientException(
-                        f"CoinbaseClient Error: Response status: {response.status}, Response JSON: {response_json}"
+                        f"WormholeClient Error: Response status: {response.status}, Response JSON: {response_json}"
                     ) from e
                 raise BridgeClientError(
                     status=response.status,

@@ -7,6 +7,7 @@ from databases import Database
 from fastapi import FastAPI
 from httpx import AsyncClient
 
+from app.dependencies import CHAIN_DATA
 from app.infrastructure.db.repos.fee_updates import FeeUpdateRepo
 from app.infrastructure.web.setup import setup_app
 from app.usecases.interfaces.clients.http.blockchain import IBlockchainClient
@@ -17,7 +18,10 @@ from app.usecases.services.remote_price_manager import RemotePriceManager
 from tests.mocks.clients.http.coingecko import MockPriceClient
 
 # Mocks
-from tests.mocks.clients.http.evm import EvmResult, MockEvmClient
+from tests.mocks.clients.http.evm_wormhole_bridge import (
+    EvmResult,
+    MockWormholeBridgeEvmClient,
+)
 
 # from app.usecases.services.remote_price_manager import ExampleService
 
@@ -51,8 +55,13 @@ async def fee_updates_repo(test_db: Database) -> IFeeUpdateRepo:
 
 
 @pytest_asyncio.fixture
-async def test_evm_client_success() -> IBlockchainClient:
-    return MockEvmClient(result=EvmResult.SUCCESS)
+async def test_evm_clients_success() -> IBlockchainClient:
+    supported_evm_clients = {}
+    for chain_id in CHAIN_DATA:
+        supported_evm_clients[chain_id] = MockWormholeBridgeEvmClient(
+            result=EvmResult.SUCCESS
+        )
+    return supported_evm_clients
 
 
 @pytest_asyncio.fixture
@@ -63,13 +72,13 @@ async def test_price_client() -> IPriceClient:
 # Services
 @pytest_asyncio.fixture
 async def remote_price_manager(
-    test_evm_client_success: IBlockchainClient,
+    test_evm_clients_success: IBlockchainClient,
     fee_updates_repo: IFeeUpdateRepo,
     test_price_client: IPriceClient,
 ) -> IRemotePriceManager:
     return RemotePriceManager(
         price_client=test_price_client,
-        blockchain_client=test_evm_client_success,
+        blockchain_clients=test_evm_clients_success,
         fee_update_repo=fee_updates_repo,
     )
 

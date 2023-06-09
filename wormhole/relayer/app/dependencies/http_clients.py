@@ -18,7 +18,7 @@ async def get_evm_client(chain_id: int) -> IEvmClient:
 
 
 async def get_bridge_client() -> IBridgeClient:
-    """Instantiate and return Coinbase client."""
+    """Instantiate and return Wormhole client."""
 
     client_session = await get_client_session()
 

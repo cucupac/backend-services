@@ -20,10 +20,12 @@ env:
   DB_URL: "postgresql://user:password@localhost/example"
   # Endpoints
   PRICE_CLIENT_BASE_URL: ${{ secrets.PRICE_CLIENT_BASE_URL }}
-  # Addresses
+  # EVM
+  FEE_SETTER_ADDRESS: "0x"
+  FEE_SETTER_PRIVATE_KEY: "0x"
   EVM_WORMHOLE_BRIDGE: "0x"
-  WH_BRIDGE_ADMIN_PRIVATE_KEY: "0x"
-  WH_BRIDGE_ADMIN_ADDRESS: "0x"
+  PRIORITY_FEE_PERCENTILE: ${{ secrets.PRIORITY_FEE_PERCENTILE }}
+  REMOTE_FEE_MULTIPLIER: ${{ secrets.REMOTE_FEE_MULTIPLIER }}
   # RPCs
   ETHEREUM_RPC: ${{ secrets.ETHEREUM_RPC }}
   BSC_RPC: ${{ secrets.BSC_RPC }}
