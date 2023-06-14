@@ -9,6 +9,8 @@ from databases import Database
 import tests.constants as constant
 from app.dependencies import CHAIN_DATA
 from app.usecases.interfaces.services.remote_price_manager import IRemotePriceManager
+from app.usecases.schemas.blockchain import Chains
+from app.settings import settings
 
 
 @pytest.mark.asyncio
@@ -41,6 +43,14 @@ async def test_remote_price_manager(
                 local_cost_native = remote_cost_usd / float(
                     constant.MOCK_USD_VALUES[local_data["native"]]
                 )
+
+                # Add buffer if Ethereum is not involved.
+                if (
+                    local_chain_id != Chains.ETHEREUM
+                    and remote_chain_id != Chains.ETHEREUM
+                ):
+                    local_cost_native *= settings.remote_fee_multiplier
+
                 expected_updates[str(remote_chain_id)] = math.ceil(local_cost_native)
 
         assert json.loads(test_fee_update["updates"]) == expected_updates

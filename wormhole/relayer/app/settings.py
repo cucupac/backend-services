@@ -41,6 +41,18 @@ class Settings(BaseSettings):
     relayer_private_key: str
     relayer_address: str
     evm_wormhole_bridge: str
+    priority_fee_percentile: int
+
+    # BRIDGE
+    bridge_client_base_url: str
+
+    # Tasks
+    retry_failed_frequency: int = 60
+    gather_missed_frequency: int = 60
+    gather_pending_frequency: int = 60 * 5
+    verify_delivery_frequency: int = 60
+    manage_locks_frequency: int = 60 * 5
+    max_pending_time_minutes: int = 5
 
     class Config:
         env_file = DOTENV_FILE

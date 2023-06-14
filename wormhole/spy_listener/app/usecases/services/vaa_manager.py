@@ -9,7 +9,7 @@ from eth_abi import decode_abi
 from app.usecases.interfaces.clients.unique_set import IUniqueSetClient
 from app.usecases.interfaces.repos.transactions import ITransactionsRepo
 from app.usecases.interfaces.services.vaa_manager import IVaaManager
-from app.usecases.schemas.relays import Status
+from app.usecases.schemas.relays import CacheStatus, Status
 from app.usecases.schemas.transactions import CreateRepoAdapter
 from app.usecases.schemas.unique_set import UniqueSetException, UniqueSetMessage
 from app.usecases.schemas.vaa import ParsedPayload, ParsedVaa
@@ -32,7 +32,7 @@ class VaaManager(IVaaManager):
 
         parsed_vaa = self.parse_vaa(vaa=vaa)
 
-        vaa_hex = codecs.encode(bytes(vaa), "hex_codec").decode()
+        vaa_hex = codecs.encode(bytes(vaa), "hex_codec").decode().upper()
 
         vaa_unique_set = frozenset(
             {
@@ -43,8 +43,9 @@ class VaaManager(IVaaManager):
         )
 
         if not self.recent_vaas.get(vaa_unique_set):
+            needs_db_store = True
             try:
-                await self.unique_set.publish(
+                set_result = await self.unique_set.publish(
                     message=UniqueSetMessage(
                         dest_chain_id=parsed_vaa.payload.dest_chain_id,
                         to_address=parsed_vaa.payload.to_address,
@@ -58,25 +59,32 @@ class VaaManager(IVaaManager):
             except UniqueSetException as e:
                 error = e.detail
                 status = Status.FAILED
+                cache_status = CacheStatus.CURRENTLY_CACHED
             else:
-                error = None
-                status = Status.PENDING
+                if set_result == 1:
+                    error = None
+                    status = Status.PENDING
+                    cache_status = CacheStatus.NEVER_CACHED
+                else:
+                    needs_db_store = False
 
-            # Store in database
-            await self.transactions_repo.create(
-                transaction=CreateRepoAdapter(
-                    emitter_address=parsed_vaa.emitter_address,
-                    from_address=parsed_vaa.payload.from_address,
-                    to_address=f"0x{parsed_vaa.payload.to_address:040x}",
-                    source_chain_id=parsed_vaa.emitter_chain,
-                    dest_chain_id=parsed_vaa.payload.dest_chain_id,
-                    amount=parsed_vaa.payload.amount,
-                    sequence=parsed_vaa.sequence,
-                    relay_error=error,
-                    relay_status=status,
-                    relay_message=vaa_hex,
-                ),
-            )
+            if needs_db_store:
+                # Store in database
+                await self.transactions_repo.create(
+                    transaction=CreateRepoAdapter(
+                        emitter_address=parsed_vaa.emitter_address,
+                        from_address=parsed_vaa.payload.from_address,
+                        to_address=f"0x{parsed_vaa.payload.to_address:040x}",
+                        source_chain_id=parsed_vaa.emitter_chain,
+                        dest_chain_id=parsed_vaa.payload.dest_chain_id,
+                        amount=parsed_vaa.payload.amount,
+                        sequence=parsed_vaa.sequence,
+                        relay_error=error,
+                        relay_status=status,
+                        relay_message=vaa_hex,
+                        relay_cache_status=cache_status,
+                    ),
+                )
 
             if len(self.recent_vaas) >= 100:
                 # Remove the oldest (from beginning)

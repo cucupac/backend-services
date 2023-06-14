@@ -46,14 +46,14 @@ async def test_deliver(
         },
     )
 
-    assert test_relay["status"] == Status.SUCCESS
+    assert test_relay["status"] == Status.PENDING
     assert test_relay["error"] is None
     assert test_relay["transaction_hash"] == constant.TEST_TRANSACTION_HASH
 
 
 @pytest.mark.asyncio
-async def test_deliver_fail(
-    vaa_delivery_fail: IVaaDelivery,
+async def test_deliver_error(
+    vaa_delivery_error: IVaaDelivery,
     relays_repo: IRelaysRepo,
     test_db: Database,
     inserted_transaction: None,
@@ -72,7 +72,7 @@ async def test_deliver_fail(
     ).encode()
 
     # Process message
-    await vaa_delivery_fail.process(set_message=mock_set_message)
+    await vaa_delivery_error.process(set_message=mock_set_message)
 
     # Assertions
     test_relay = await test_db.fetch_one(

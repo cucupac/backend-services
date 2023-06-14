@@ -8,19 +8,16 @@ TRANSACTIONS = sa.Table(
     METADATA,
     sa.Column("id", sa.BigInteger, primary_key=True, autoincrement=True),
     sa.Column("emitter_address", sa.String),
-    sa.Column(
-        "from_address",
-        sa.String,
-        index=True,
-    ),
+    sa.Column("from_address", sa.String, index=True, nullable=True),
     sa.Column(
         "to_address",
         sa.String,
         index=True,
+        nullable=True,
     ),
     sa.Column("source_chain_id", sa.Integer, nullable=False),
-    sa.Column("dest_chain_id", sa.Integer, nullable=False),
-    sa.Column("amount", sa.BigInteger, nullable=False),
+    sa.Column("dest_chain_id", sa.Integer, nullable=True),
+    sa.Column("amount", sa.BigInteger, nullable=True),
     sa.Column("sequence", sa.BigInteger, nullable=True),
     sa.Column("created_at", sa.DateTime, nullable=False, server_default=sa.func.now()),
     sa.Column(

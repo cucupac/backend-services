@@ -3,7 +3,7 @@ from typing import Optional
 
 from pydantic import BaseModel, Field
 
-from app.usecases.schemas.relays import Status
+from app.usecases.schemas.relays import CacheStatus, GrpcStatus, Status
 
 
 class TransactionBase(BaseModel):
@@ -12,13 +12,13 @@ class TransactionBase(BaseModel):
         description="The bridge contract address used to faciliate the cross-chain transaction.",
         example="0xd99E99239D6F14372E994c15e60A039D88c9d16A",
     )
-    from_address: str = Field(
-        ...,
+    from_address: Optional[str] = Field(
+        None,
         description="The transaction's sender address.",
         example="0x0CeC041cDB3AAB968C1a273bfC330aa410b5E2DF",
     )
-    to_address: str = Field(
-        ...,
+    to_address: Optional[str] = Field(
+        None,
         description="The transaction's recipient address.",
         example="0x0CeC041cDB3AAB968C1a273bfC330aa410b5E2DF",
     )
@@ -27,18 +27,18 @@ class TransactionBase(BaseModel):
         description="The source chain's bridging-protocol-assigned chain ID.",
         example=5,
     )
-    dest_chain_id: int = Field(
-        ...,
+    dest_chain_id: Optional[int] = Field(
+        None,
         description="The destination chain's bridging-protocol-assigned chain ID.",
         example=2,
     )
-    amount: int = Field(
-        ...,
+    amount: Optional[int] = Field(
+        None,
         description="The amount of USX transferred.",
         example=1e18,
     )
-    sequence: Optional[int] = Field(
-        None,
+    sequence: int = Field(
+        ...,
         description="The bridging-protocol-assigned sequence of the transaction.",
         example=1,
     )
@@ -80,15 +80,20 @@ class TransactionsJoinRelays(TransactionInDB):
         description="Error pertaining to relay.",
         example="Some error.",
     )
-    relay_message: str = Field(
-        ...,
+    relay_message: Optional[str] = Field(
+        None,
         description="The message that the consuming-relayer needs.",
         example="0CeC041cDB3AAB968C1a273bfC330aa410b5E2DF0CeC041cDB3AAB968C1a273bfC330aa410b5E2DF",
     )
-    relay_from_cache: Optional[bool] = Field(
-        None,
+    relay_cache_status: CacheStatus = Field(
+        ...,
         description="Whether or not the message was ever cached.",
-        example=False,
+        example=CacheStatus.NEVER_CACHED,
+    )
+    relay_grpc_status: GrpcStatus = Field(
+        ...,
+        description="Whether or not the gRPC stream failed.",
+        example=GrpcStatus.SUCCESS,
     )
 
 
@@ -121,10 +126,15 @@ class CreateRepoAdapter(TransactionBase):
     relay_status: Status = Field(
         ...,
         description="The enum-constrained status of the relay task.",
-        example="PENDING.",
+        example=Status.PENDING,
     )
     relay_message: str = Field(
         ...,
         description="The message that the consuming-relayer needs.",
         example="0CeC041cDB3AAB968C1a273bfC330aa410b5E2DF0CeC041cDB3AAB968C1a273bfC330aa410b5E2DF",
+    )
+    relay_cache_status: CacheStatus = Field(
+        ...,
+        description="Informaiton on the relationship between the relay and the in-memory cache.",
+        example=CacheStatus.NEVER_CACHED,
     )

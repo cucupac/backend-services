@@ -7,6 +7,22 @@ from pydantic import BaseModel, Field
 class Status(str, Enum):
     PENDING = "pending"
     FAILED = "failed"
+    SUCCESS = "success"
+
+
+class CacheStatus(str, Enum):
+    NEVER_CACHED = "never_cached"
+    CURRENTLY_CACHED = "currently_cached"
+    PREVIOUSLY_CACHED = "previously_cached"
+
+
+class GrpcStatus(str, Enum):
+    SUCCESS = "success"
+    FAILED = "failed"
+
+
+class RelayErrors(str, Enum):
+    MISSED_VAA = "[gRPC Stream]: Missed VAA."
 
 
 class UpdateRepoAdapter(BaseModel):
@@ -33,8 +49,8 @@ class UpdateRepoAdapter(BaseModel):
         description="Error pertaining to relay.",
         example="An error happend, and here's why.",
     )
-    from_cache: Optional[bool] = Field(
-        None,
-        description="Whether or not the message was ever cached.",
-        example=False,
+    cache_status: CacheStatus = Field(
+        ...,
+        description="Informaiton on the relationship between the relay and the in-memory cache.",
+        example=CacheStatus.PREVIOUSLY_CACHED,
     )

@@ -48,7 +48,7 @@ async def test_publish_success(
     assert not test_transaction["error"]
     assert (
         test_transaction["message"]
-        == codecs.encode(bytes(constant.TEST_VAA_BYTES), "hex_codec").decode()
+        == codecs.encode(bytes(constant.TEST_VAA_BYTES), "hex_codec").decode().upper()
     )
 
 
@@ -92,7 +92,7 @@ async def test_publish_fail(
     assert test_transaction["error"] == constant.UNIQUE_SET_ERROR_DETAIL
     assert (
         test_transaction["message"]
-        == codecs.encode(bytes(constant.TEST_VAA_BYTES), "hex_codec").decode()
+        == codecs.encode(bytes(constant.TEST_VAA_BYTES), "hex_codec").decode().upper()
     )
 
 

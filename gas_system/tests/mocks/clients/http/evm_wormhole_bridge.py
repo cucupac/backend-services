@@ -17,19 +17,17 @@ class EvmResult(str, Enum):
     FAILURE = "FAILURE"
 
 
-class MockEvmClient(IBlockchainClient):
+class MockWormholeBridgeEvmClient(IBlockchainClient):
     def __init__(self, result: EvmResult) -> None:
         self.result = result
 
-    async def update_fees(
-        self, remote_data: MinimumFees, local_chain_id: str
-    ) -> TransactionHash:
+    async def update_fees(self, remote_data: MinimumFees) -> TransactionHash:
         """Sends transaction to the destination blockchain."""
         if self.result == EvmResult.SUCCESS:
             return HexBytes(constant.TEST_TRANSACTION_HASH)
         raise BlockchainClientError(detail=constant.EVM_CLIENT_ERROR_DETAIL)
 
-    async def estimate_fees(self, chain_id: str) -> ComputeCosts:
+    async def estimate_fees(self) -> ComputeCosts:
         """Estimates a transaction's gas information."""
         if self.result == EvmResult.SUCCESS:
             return ComputeCosts(

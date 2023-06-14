@@ -22,10 +22,11 @@ ENV DB_URL=postgres://postgres:postgres@localhost:5432/ax_relayer_dev
 ENV PRICE_CLIENT_BASE_URL=inject_at_deployment
 
 # EVM
-ENV WH_BRIDGE_ADMIN_PRIVATE_KEY=inject_at_deployment
-ENV WH_BRIDGE_ADMIN_ADDRESS=inject_at_deployment
+ENV FEE_SETTER_ADDRESS=inject_at_deployment
+ENV FEE_SETTER_PRIVATE_KEY=inject_at_deployment
 ENV EVM_WORMHOLE_BRIDGE=inject_at_deployment
-ENV MOCK_FEE=1000000000000000
+ENV PRIORITY_FEE_PERCENTILE=inject_at_deployment
+ENV REMOTE_FEE_MULTIPLIER=inject_at_deployment
 
 # RPC URLs
 ENV ETHEREUM_RPC=inject_at_deployment
@@ -35,6 +36,9 @@ ENV AVALANCHE_RPC=inject_at_deployment
 ENV FANTOM_RPC=inject_at_deployment
 ENV ARBITRUM_RPC=inject_at_deployment
 ENV CELO_RPC=inject_at_deployment
+
+# Misc
+ENV MOCK_FEE=1000000000000000
 
 EXPOSE $SERVER_PORT
 

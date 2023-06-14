@@ -11,7 +11,7 @@ from aioredis import Redis, exceptions
 from app.settings import settings
 from app.usecases.interfaces.clients.unique_set import IUniqueSetClient
 from app.usecases.interfaces.repos.relays import IRelaysRepo
-from app.usecases.schemas.relays import Status, UpdateRepoAdapter
+from app.usecases.schemas.relays import CacheStatus, Status, UpdateRepoAdapter
 from app.usecases.schemas.unique_set import UniqueSetError, UniqueSetMessage
 
 
@@ -66,7 +66,7 @@ class RedisClient(IUniqueSetClient):
                                 sequence=message.sequence,
                                 status=Status.PENDING,
                                 error=None,
-                                from_cache=True,
+                                cache_status=CacheStatus.PREVIOUSLY_CACHED,
                             )
                         )
 
@@ -93,12 +93,6 @@ class RedisClient(IUniqueSetClient):
                 result = await self.redis.zadd(
                     settings.redis_zset, {set_message: current_time}
                 )
-                self.logger.info(
-                    "[RedisClient]: Message published; emitter chain: %s, sequence: %s",
-                    message.emitter_chain,
-                    message.sequence,
-                )
-                return result
             except exceptions.ConnectionError as e:
                 self.logger.error(
                     "[RedisClient]: Connection error; message not published; attempting reconnect..."
@@ -112,13 +106,30 @@ class RedisClient(IUniqueSetClient):
                 )
                 self.message_cache.append(message)
                 raise UniqueSetError(detail=str(e)) from e
-        else:
-            self.message_cache.append(message)
-            raise UniqueSetError(detail="Redis is not connected.")
+            if result == 1:
+                self.logger.info(
+                    "[RedisClient]: Message published; emitter chain: %s, sequence: %s",
+                    message.emitter_chain,
+                    message.sequence,
+                )
+            else:
+                self.logger.info(
+                    "[RedisClient]: Publish attempted - result not 1; emitter chain: %s, sequence: %s",
+                    message.emitter_chain,
+                    message.sequence,
+                )
+            return result
+        self.message_cache.append(message)
+        self.logger.error(
+            "[RedisClient]: Message cached; emitter chain: %s, sequence: %s",
+            message.emitter_chain,
+            message.sequence,
+        )
+        raise UniqueSetError(detail="Redis is not connected.")
 
     async def close_connection(self) -> None:
         """Closes external connection."""
         if self.redis:
-            self.redis.close()
+            await self.redis.close()
             self.redis = None
             self.logger.info("[RedisClient]: Connection closed.")

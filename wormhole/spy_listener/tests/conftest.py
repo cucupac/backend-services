@@ -17,7 +17,12 @@ from app.usecases.interfaces.clients.unique_set import IUniqueSetClient
 from app.usecases.interfaces.repos.relays import IRelaysRepo
 from app.usecases.interfaces.repos.transactions import ITransactionsRepo
 from app.usecases.interfaces.services.vaa_manager import IVaaManager
-from app.usecases.schemas.relays import Status, UpdateRepoAdapter
+from app.usecases.schemas.relays import (
+    CacheStatus,
+    RelayErrors,
+    Status,
+    UpdateRepoAdapter,
+)
 from app.usecases.schemas.transactions import CreateRepoAdapter, TransactionsJoinRelays
 from app.usecases.services.vaa_manager import VaaManager
 
@@ -124,6 +129,37 @@ async def many_inserted_transactions(
     return transactions
 
 
+@pytest_asyncio.fixture
+async def failed_transaction(test_db: Database) -> int:
+    async with test_db.transaction():
+        transaction_id = await test_db.execute(
+            """INSERT INTO transactions (emitter_address, from_address, to_address, source_chain_id, dest_chain_id, amount, sequence) VALUES (:emitter_address, :from_address, :to_address, :source_chain_id, :dest_chain_id, :amount, :sequence) RETURNING id""",
+            {
+                "emitter_address": constant.TEST_EMITTER_ADDRESS,
+                "from_address": None,
+                "to_address": None,
+                "source_chain_id": constant.TEST_SOURCE_CHAIN_ID,
+                "dest_chain_id": None,
+                "amount": None,
+                "sequence": constant.TEST_SEQUENCE,
+            },
+        )
+        await test_db.execute(
+            """INSERT INTO relays (transaction_id, message, status, transaction_hash, error, cache_status, grpc_status) VALUES (:transaction_id, :message, :status, :transaction_hash, :error, :cache_status, :grpc_status)""",
+            {
+                "transaction_id": transaction_id,
+                "status": Status.FAILED,
+                "error": RelayErrors.MISSED_VAA,
+                "message": None,
+                "transaction_hash": None,
+                "cache_status": CacheStatus.NEVER_CACHED,
+                "grpc_status": "failed",
+            },
+        )
+
+        return transaction_id
+
+
 # Repo Adapters
 @pytest_asyncio.fixture
 async def create_transaction_repo_adapter() -> CreateRepoAdapter:
@@ -137,6 +173,7 @@ async def create_transaction_repo_adapter() -> CreateRepoAdapter:
         sequence=constant.TEST_SEQUENCE,
         relay_status=Status.PENDING,
         relay_error=None,
+        relay_cache_status=CacheStatus.NEVER_CACHED,
         relay_message=constant.TEST_VAA,
     )
 
@@ -150,7 +187,7 @@ async def update_relays_repo_adapter() -> UpdateRepoAdapter:
         sequence=constant.TEST_SEQUENCE,
         error=None,
         status=Status.PENDING,
-        from_cache=True,
+        cache_status=CacheStatus.PREVIOUSLY_CACHED,
     )
 
 
