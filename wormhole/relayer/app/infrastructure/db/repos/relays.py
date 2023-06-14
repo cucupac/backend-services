@@ -219,7 +219,7 @@ class RelaysRepo(IRelaysRepo):
         query_conditions = [
             RELAYS.c.status == Status.PENDING,
             RELAYS.c.created_at
-            < datetime.utcnow() - timedelta(minutes=settings.max_pending_time),
+            < datetime.utcnow() - timedelta(minutes=settings.max_pending_time_minutes),
         ]
 
         j = TRANSACTIONS.join(RELAYS, TRANSACTIONS.c.id == RELAYS.c.transaction_id)

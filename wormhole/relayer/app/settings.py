@@ -52,7 +52,7 @@ class Settings(BaseSettings):
     gather_pending_frequency: int = 60 * 5
     verify_delivery_frequency: int = 60
     manage_locks_frequency: int = 60 * 5
-    max_pending_time: int = 5
+    max_pending_time_minutes: int = 5
 
     class Config:
         env_file = DOTENV_FILE

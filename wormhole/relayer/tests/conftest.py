@@ -371,7 +371,9 @@ async def pending_transactions(test_db: Database) -> None:
                     "grpc_status": "success",
                     "created_at": datetime.utcnow()
                     - timedelta(
-                        minutes=random.randint(settings.max_pending_time + 1, 15)
+                        minutes=random.randint(
+                            settings.max_pending_time_minutes + 1, 15
+                        )
                     ),
                 },
             )
