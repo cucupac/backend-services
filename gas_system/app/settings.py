@@ -27,7 +27,9 @@ class Settings(BaseSettings):
     mock_fee: int
     evm_wormhole_bridge: str
     priority_fee_percentile: int
-    remote_fee_multiplier: float
+    higher_ethereum_fee_multiplier: float
+    lower_ethereum_fee_multiplier: float
+    default_remote_fee_multiplier: float
 
     # RPC Urls
     ethereum_rpc: str

@@ -21,13 +21,13 @@ class WormholeBridgeEvmClient(IBlockchainClient):
         abi: List[Mapping[str, Any]],
         chain_id: int,
         rpc_url: str,
-        mock_set_send_fees_params: MinimumFees,
+        mock_payload: bytes,
         logger: Logger,
     ) -> None:
         self.abi = abi
         self.chain_id = chain_id
         self.rpc_url = rpc_url
-        self.mock_set_send_fees_params = mock_set_send_fees_params
+        self.payload = mock_payload
         self.web3_client = AsyncWeb3(AsyncHTTPProvider(self.rpc_url))
         self.contract = self.web3_client.eth.contract(
             address=self.web3_client.to_checksum_address(settings.evm_wormhole_bridge),
@@ -60,12 +60,8 @@ class WormholeBridgeEvmClient(IBlockchainClient):
         else:
             max_gas_price = transaction_dict["gasPrice"]
 
-        wormhole_chain_ids = await self.__translate_bridge_ids(
-            chain_ids=self.mock_set_send_fees_params.remote_chain_ids
-        )
-
-        transaction = await self.contract.functions.setSendFees(
-            wormhole_chain_ids, self.mock_set_send_fees_params.remote_fees
+        transaction = await self.contract.functions.processMessage(
+            self.payload
         ).build_transaction(transaction_dict)
 
         estimated_gas_units = await self.web3_client.eth.estimate_gas(transaction)

@@ -1,10 +1,12 @@
 import math
 from typing import Mapping
+from datetime import datetime
 
 from app.dependencies import CHAIN_DATA
 from app.usecases.interfaces.clients.http.blockchain import IBlockchainClient
 from app.usecases.interfaces.clients.http.prices import IPriceClient
 from app.usecases.interfaces.repos.fee_updates import IFeeUpdateRepo
+from app.usecases.interfaces.repos.transactions import ITransactionsRepo
 from app.usecases.interfaces.services.remote_price_manager import IRemotePriceManager
 from app.usecases.schemas.blockchain import BlockchainClientError, ComputeCosts, Chains
 from app.usecases.schemas.fees import FeeUpdate, MinimumFees
@@ -17,10 +19,12 @@ class RemotePriceManager(IRemotePriceManager):
         price_client: IPriceClient,
         blockchain_clients: Mapping[int, IBlockchainClient],
         fee_update_repo: IFeeUpdateRepo,
+        transactions_repo: ITransactionsRepo,
     ):
         self.price_client = price_client
         self.blockchain_clients = blockchain_clients
         self.fee_update_repo = fee_update_repo
+        self.transactions_repo = transactions_repo
 
     # pylint: disable = too-many-locals
     async def update_remote_fees(self) -> None:
@@ -55,12 +59,11 @@ class RemotePriceManager(IRemotePriceManager):
                         remote_fee_usd / local_compute_costs.native_value_usd
                     )
 
-                    # Add buffer if Ethereum is not involved.
-                    if (
-                        local_chain_id != Chains.ETHEREUM
-                        and remote_chain_id != Chains.ETHEREUM
-                    ):
-                        remote_fee_in_local_native *= settings.remote_fee_multiplier
+                    # Add buffer
+                    remote_fee_in_local_native = await self.add_buffer(
+                        remote_chain_id=remote_chain_id,
+                        remote_fee_in_local_native=remote_fee_in_local_native,
+                    )
 
                     remote_fee_updates[remote_chain_id] = math.ceil(
                         remote_fee_in_local_native
@@ -93,3 +96,20 @@ class RemotePriceManager(IRemotePriceManager):
                     error=error,
                 )
             )
+
+    async def add_buffer(
+        self, remote_chain_id: int, remote_fee_in_local_native: int
+    ) -> int:
+        """Adds buffer to remote fee."""
+
+        if remote_chain_id == Chains.ETHEREUM:
+            if datetime.utcnow().hour > 12 and datetime.utcnow().hour < 18:
+                return (
+                    remote_fee_in_local_native * settings.higher_ethereum_fee_multiplier
+                )
+            else:
+                return (
+                    remote_fee_in_local_native * settings.lower_ethereum_fee_multiplier
+                )
+        else:
+            return remote_fee_in_local_native * settings.default_remote_fee_multiplier
