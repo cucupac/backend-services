@@ -47,7 +47,9 @@ class WormholeBridgeEvmClient(IBlockchainClient):
                 transaction=signed_transaction.rawTransaction
             )
         except Exception as e:
-            self.logger.error("[EvmClient]: Fee update failed: %s", e)
+            self.logger.error(
+                "[EvmClient]: Chain ID: %s; fee update failed: %s", self.chain_id, e
+            )
             raise BlockchainClientError(detail=str(e)) from e
 
     async def estimate_fees(self) -> ComputeCosts:

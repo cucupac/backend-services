@@ -8,7 +8,12 @@ should be able to distinguish between them (the client should not be tightly cou
 """
 
 
-from app.dependencies import get_event_loop, get_remote_price_manager, logger
+from app.dependencies import (
+    get_event_loop,
+    get_remote_price_manager,
+    logger,
+    get_fee_updates_repo,
+)
 from app.usecases.schemas.blockchain import Ecosystem
 from app.usecases.schemas.bridges import Bridge
 from app.usecases.tasks.fee_update import UpdateFeesTask
@@ -21,8 +26,12 @@ async def evm_wormhole_bridge_fee_updates() -> None:
         ecosystem=Ecosystem.EVM, bridge=Bridge.WORMHOLE
     )
 
+    fee_updates_repo = await get_fee_updates_repo()
+
     get_update_fees_task = UpdateFeesTask(
-        remote_price_manager=remote_price_manager, logger=logger
+        remote_price_manager=remote_price_manager,
+        fee_updates_repo=fee_updates_repo,
+        logger=logger,
     )
 
     loop.create_task(get_update_fees_task.start_task())

@@ -1,9 +1,15 @@
 from datetime import datetime
 from typing import List, Mapping, Optional
+from enum import Enum
 
 from pydantic import BaseModel
 
 from app.usecases.schemas.blockchain import Chains
+
+
+class Status(str, Enum):
+    SUCCESS = "success"
+    FAILED = "failed"
 
 
 class MinimumFees(BaseModel):
@@ -15,6 +21,7 @@ class FeeUpdate(BaseModel):
     chain_id: int
     updates: Mapping[int, int]
     transaction_hash: Optional[str]
+    status: Status
     error: Optional[str]
 
 

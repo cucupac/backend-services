@@ -27,9 +27,18 @@ class Settings(BaseSettings):
     relayer_address: str
     evm_wormhole_bridge: str
     priority_fee_percentile: int
+
+    # Fee Updates
     higher_ethereum_fee_multiplier: float
     lower_ethereum_fee_multiplier: float
     default_remote_fee_multiplier: float
+    ethereum_update_frequency: int = 60 * 60 * 24
+    binance_update_frequency: int = 60 * 60
+    polygon_update_frequency: int = 60 * 60
+    avalanche_update_frequency: int = 60 * 60
+    fantom_update_frequency: int = 60 * 30
+    arbitrum_update_frequency: int = 60 * 60
+    celo_update_frequency: int = 60 * 30
 
     # RPC Urls
     ethereum_rpc: str
@@ -44,7 +53,7 @@ class Settings(BaseSettings):
     price_client_base_url: str
 
     # Tasks TODO: change back to once a day
-    update_fees_frequency: int = 30
+    update_fees_task_frequency: int = 60
 
     class Config:
         env_file = DOTENV_FILE

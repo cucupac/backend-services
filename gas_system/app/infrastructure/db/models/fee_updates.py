@@ -10,6 +10,7 @@ FEE_UPDATES = sa.Table(
     sa.Column("chain_id", sa.Integer, nullable=False),
     sa.Column("updates", sa.JSON, nullable=False),
     sa.Column("transaction_hash", sa.String, nullable=True),
+    sa.Column("status", sa.String, nullable=False, default="failed"),
     sa.Column("error", sa.Text(), nullable=True),
     sa.Column("created_at", sa.DateTime, nullable=False, server_default=sa.func.now()),
     sa.Column(

@@ -8,11 +8,11 @@ from fastapi import FastAPI
 from httpx import AsyncClient
 
 from app.dependencies import CHAIN_DATA
-from app.infrastructure.db.repos.fee_updates import FeeUpdateRepo
+from app.infrastructure.db.repos.fee_updates import FeeUpdatesRepo
 from app.infrastructure.web.setup import setup_app
 from app.usecases.interfaces.clients.http.blockchain import IBlockchainClient
 from app.usecases.interfaces.clients.http.prices import IPriceClient
-from app.usecases.interfaces.repos.fee_updates import IFeeUpdateRepo
+from app.usecases.interfaces.repos.fee_updates import IFeeUpdatesRepo
 from app.usecases.interfaces.services.remote_price_manager import IRemotePriceManager
 from app.usecases.services.remote_price_manager import RemotePriceManager
 from tests.mocks.clients.http.coingecko import MockPriceClient
@@ -50,8 +50,8 @@ async def test_db(test_db_url) -> Database:
 
 
 @pytest_asyncio.fixture
-async def fee_updates_repo(test_db: Database) -> IFeeUpdateRepo:
-    return FeeUpdateRepo(db=test_db)
+async def fee_updates_repo(test_db: Database) -> IFeeUpdatesRepo:
+    return FeeUpdatesRepo(db=test_db)
 
 
 @pytest_asyncio.fixture
@@ -73,7 +73,7 @@ async def test_price_client() -> IPriceClient:
 @pytest_asyncio.fixture
 async def remote_price_manager(
     test_evm_clients_success: IBlockchainClient,
-    fee_updates_repo: IFeeUpdateRepo,
+    fee_updates_repo: IFeeUpdatesRepo,
     test_price_client: IPriceClient,
 ) -> IRemotePriceManager:
     return RemotePriceManager(

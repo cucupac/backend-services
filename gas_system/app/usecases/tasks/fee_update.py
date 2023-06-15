@@ -1,14 +1,25 @@
-import asyncio
 from logging import Logger
+from datetime import datetime, timedelta
 
-from app.settings import settings
+import asyncio
+
+from app.dependencies import CHAIN_DATA, UPDATE_FEES_FREQUENCIES
 from app.usecases.interfaces.services.remote_price_manager import IRemotePriceManager
+from app.usecases.interfaces.repos.fee_updates import IFeeUpdatesRepo
 from app.usecases.interfaces.tasks.fee_update import IUpdateFeeTask
+from app.usecases.schemas.fees import Status
+from app.settings import settings
 
 
 class UpdateFeesTask(IUpdateFeeTask):
-    def __init__(self, remote_price_manager: IRemotePriceManager, logger: Logger):
+    def __init__(
+        self,
+        remote_price_manager: IRemotePriceManager,
+        fee_updates_repo: IFeeUpdatesRepo,
+        logger: Logger,
+    ):
         self.remote_price_manager = remote_price_manager
+        self.fee_updates_repo = fee_updates_repo
         self.logger = logger
 
     async def start_task(self) -> None:
@@ -21,10 +32,38 @@ class UpdateFeesTask(IUpdateFeeTask):
             except Exception as e:  # pylint: disable = broad-except
                 self.logger.exception(e)
 
-            await asyncio.sleep(settings.update_fees_frequency)
+            await asyncio.sleep(settings.update_fees_task_frequency)
 
     async def task(self):
         """Update remote fees."""
-        self.logger.info("[UpdateFeesTask]: Task started.")
-        await self.remote_price_manager.update_remote_fees()
-        self.logger.info("[UpdateFeesTask]: Task completed. Sleeping now...")
+        self.logger.info("[UpdateFeesTask]: Started.")
+
+        # Determine which chains need to be updated
+        chains_to_update = []
+        for chain_id in CHAIN_DATA:
+            last_fee_update = (
+                await self.fee_updates_repo.retrieve_last_update_by_chain_id(
+                    chain_id=chain_id
+                )
+            )
+
+            if last_fee_update is None:
+                chains_to_update.append(chain_id)
+
+            if last_fee_update is not None:
+                if last_fee_update.status == Status.FAILED:
+                    chains_to_update.append(chain_id)
+                else:
+                    if last_fee_update.created_at <= datetime.utcnow() - timedelta(
+                        seconds=UPDATE_FEES_FREQUENCIES[chain_id]
+                    ):
+                        chains_to_update.append(chains_to_update)
+
+        if chains_to_update:
+            await self.remote_price_manager.update_remote_fees(
+                chains_to_update=chains_to_update
+            )
+
+        self.logger.info(
+            "[UpdateFeesTask]: Task complete. Updated chains: %s", chains_to_update
+        )
