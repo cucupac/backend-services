@@ -19,12 +19,10 @@ class RemotePriceManager(IRemotePriceManager):
         price_client: IPriceClient,
         blockchain_clients: Mapping[int, IBlockchainClient],
         fee_update_repo: IFeeUpdateRepo,
-        transactions_repo: ITransactionsRepo,
     ):
         self.price_client = price_client
         self.blockchain_clients = blockchain_clients
         self.fee_update_repo = fee_update_repo
-        self.transactions_repo = transactions_repo
 
     # pylint: disable = too-many-locals
     async def update_remote_fees(self) -> None:

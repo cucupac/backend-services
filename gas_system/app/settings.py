@@ -24,7 +24,7 @@ class Settings(BaseSettings):
     # EVM
     fee_setter_private_key: str
     fee_setter_address: str
-    mock_fee: int
+    relayer_address: str
     evm_wormhole_bridge: str
     priority_fee_percentile: int
     higher_ethereum_fee_multiplier: float

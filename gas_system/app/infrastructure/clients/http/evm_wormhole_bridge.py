@@ -53,7 +53,9 @@ class WormholeBridgeEvmClient(IBlockchainClient):
     async def estimate_fees(self) -> ComputeCosts:
         """Estimates a transaction's gas information."""
 
-        transaction_dict = await self.__construct_transaction()
+        transaction_dict = await self.__construct_transaction(
+            sender=settings.relayer_address
+        )
 
         if transaction_dict.get("maxFeePerGas"):
             max_gas_price = transaction_dict["maxFeePerGas"]
@@ -77,7 +79,9 @@ class WormholeBridgeEvmClient(IBlockchainClient):
     ) -> SignedTransaction:
         """Craft a raw transaction to be sent to the blockchain."""
 
-        transaction_dict = await self.__construct_transaction()
+        transaction_dict = await self.__construct_transaction(
+            sender=settings.fee_setter_address
+        )
 
         wormhole_chain_ids = await self.__translate_bridge_ids(
             chain_ids=remote_data.remote_chain_ids
@@ -91,7 +95,7 @@ class WormholeBridgeEvmClient(IBlockchainClient):
             transaction_dict=transaction, private_key=settings.fee_setter_private_key
         )
 
-    async def __construct_transaction(self) -> Mapping[str, Any]:
+    async def __construct_transaction(self, sender: str) -> Mapping[str, Any]:
         """Constructs transaction dictionary."""
 
         # Obtain destination chain information
@@ -100,10 +104,8 @@ class WormholeBridgeEvmClient(IBlockchainClient):
 
         # Build transaction
         transaction_dict = {
-            "from": self.web3_client.to_checksum_address(settings.fee_setter_address),
-            "nonce": await self.web3_client.eth.get_transaction_count(
-                settings.fee_setter_address
-            ),
+            "from": self.web3_client.to_checksum_address(sender),
+            "nonce": await self.web3_client.eth.get_transaction_count(sender),
         }
 
         if post_london_upgrade:
@@ -116,9 +118,10 @@ class WormholeBridgeEvmClient(IBlockchainClient):
 
                 base_fee_per_gas = fee_history.baseFeePerGas[-1]
                 max_priority_fee = fee_history.reward[0][0]
+
             else:
-                base_fee_per_gas = await self.web3_client.eth.gas_price
-                max_priority_fee = await self.web3_client.eth.max_priority_fee
+                base_fee_per_gas = await self.web3_client.eth.gas_price  # Wei
+                max_priority_fee = await self.web3_client.eth.max_priority_fee  # Wei
 
             transaction_dict["maxFeePerGas"] = base_fee_per_gas + max_priority_fee
             transaction_dict["maxPriorityFeePerGas"] = max_priority_fee

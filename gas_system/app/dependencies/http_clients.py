@@ -1,5 +1,6 @@
 from app.dependencies import (
     CHAIN_DATA,
+    BRIDGE_DATA,
     WORMHOLE_BRIDGE_ABI,
     get_client_session,
     logger,
@@ -17,8 +18,9 @@ async def get_wormhole_bridge_client(source_chain_id: int) -> IBlockchainClient:
 
     transactions_repo = await get_transactions_repo()
 
-    test_transaction = await transactions_repo.retrieve_testing(
-        chain_id=source_chain_id
+    wormhole_chain_id = BRIDGE_DATA[source_chain_id]["wormhole"]["chain_id"]
+    test_transaction = await transactions_repo.retrieve_testing_by_chain_id(
+        chain_id=wormhole_chain_id
     )
 
     return WormholeBridgeEvmClient(
