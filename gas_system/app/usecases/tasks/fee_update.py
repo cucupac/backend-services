@@ -7,7 +7,7 @@ from app.dependencies import CHAIN_DATA, UPDATE_FEES_FREQUENCIES
 from app.usecases.interfaces.services.remote_price_manager import IRemotePriceManager
 from app.usecases.interfaces.repos.fee_updates import IFeeUpdatesRepo
 from app.usecases.interfaces.tasks.fee_update import IUpdateFeeTask
-from app.usecases.schemas.fees import Status
+from app.usecases.schemas.fees import Status, FeeUpdateError
 from app.settings import settings
 
 
@@ -47,10 +47,9 @@ class UpdateFeesTask(IUpdateFeeTask):
                 )
             )
 
-            if last_fee_update is None:
+            if not last_fee_update:
                 chains_to_update.append(chain_id)
-
-            if last_fee_update is not None:
+            else:
                 if last_fee_update.status == Status.FAILED:
                     chains_to_update.append(chain_id)
                 else:

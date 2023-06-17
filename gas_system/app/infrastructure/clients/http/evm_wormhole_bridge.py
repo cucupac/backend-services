@@ -3,6 +3,7 @@ from logging import Logger
 
 from eth_account.datastructures import SignedTransaction
 from web3 import AsyncHTTPProvider, AsyncWeb3
+from web3.types import BlockData
 
 from app.dependencies import BRIDGE_DATA, CHAIN_DATA
 from app.settings import settings
@@ -13,6 +14,7 @@ from app.usecases.schemas.blockchain import (
     ComputeCosts,
     TransactionHash,
 )
+from app.usecases.schemas.evm import GasPrices
 
 
 class WormholeBridgeEvmClient(IBlockchainClient):
@@ -20,12 +22,14 @@ class WormholeBridgeEvmClient(IBlockchainClient):
         self,
         abi: List[Mapping[str, Any]],
         chain_id: int,
+        lastest_blocks: int,
         rpc_url: str,
         mock_payload: bytes,
         logger: Logger,
     ) -> None:
         self.abi = abi
         self.chain_id = chain_id
+        self.latest_blocks = lastest_blocks
         self.rpc_url = rpc_url
         self.payload = mock_payload
         self.web3_client = AsyncWeb3(AsyncHTTPProvider(self.rpc_url))
@@ -52,7 +56,9 @@ class WormholeBridgeEvmClient(IBlockchainClient):
             )
             raise BlockchainClientError(detail=str(e)) from e
 
-    async def estimate_fees(self) -> ComputeCosts:
+    async def estimate_fees(
+        self,
+    ) -> ComputeCosts:
         """Estimates a transaction's gas information."""
 
         transaction_dict = await self.__construct_transaction(
@@ -100,35 +106,23 @@ class WormholeBridgeEvmClient(IBlockchainClient):
     async def __construct_transaction(self, sender: str) -> Mapping[str, Any]:
         """Constructs transaction dictionary."""
 
-        # Obtain destination chain information
-        post_london_upgrade = CHAIN_DATA[self.chain_id]["post_london_upgrade"]
-        has_fee_history = CHAIN_DATA[self.chain_id]["has_fee_history"]
-
-        # Build transaction
         transaction_dict = {
             "from": self.web3_client.to_checksum_address(sender),
             "nonce": await self.web3_client.eth.get_transaction_count(sender),
         }
 
-        if post_london_upgrade:
-            if has_fee_history:
-                fee_history = await self.web3_client.eth.fee_history(
-                    block_count=1,
-                    newest_block="latest",
-                    reward_percentiles=[settings.priority_fee_percentile],
-                )
+        gas_prices = await self.get_gas_prices(block_count=1)
 
-                base_fee_per_gas = fee_history.baseFeePerGas[-1]
-                max_priority_fee = fee_history.reward[0][0]
-
-            else:
-                base_fee_per_gas = await self.web3_client.eth.gas_price  # Wei
-                max_priority_fee = await self.web3_client.eth.max_priority_fee  # Wei
-
-            transaction_dict["maxFeePerGas"] = base_fee_per_gas + max_priority_fee
-            transaction_dict["maxPriorityFeePerGas"] = max_priority_fee
+        if gas_prices.base_fee_per_gas_list:
+            transaction_dict["maxFeePerGas"] = (
+                gas_prices.base_fee_per_gas_list[-1]
+                + gas_prices.max_priority_fee_per_gas_list[-1]
+            )
+            transaction_dict[
+                "maxPriorityFeePerGas"
+            ] = gas_prices.max_priority_fee_per_gas_list[-1]
         else:
-            transaction_dict["gasPrice"] = await self.web3_client.eth.gas_price
+            transaction_dict["gasPrice"] = gas_prices.gas_price_list[-1]
 
         return transaction_dict
 
@@ -139,3 +133,63 @@ class WormholeBridgeEvmClient(IBlockchainClient):
             BRIDGE_DATA[actual_chain_id]["wormhole"]["chain_id"]
             for actual_chain_id in chain_ids
         ]
+
+    async def get_gas_prices(self, block_count: int) -> GasPrices:
+        """Returns gas prices over specified number of recent blocks."""
+
+        post_london_upgrade = CHAIN_DATA[self.chain_id]["post_london_upgrade"]
+        has_fee_history = CHAIN_DATA[self.chain_id]["has_fee_history"]
+
+        if post_london_upgrade:
+            if has_fee_history:
+                fee_history = await self.web3_client.eth.fee_history(
+                    block_count=block_count,
+                    newest_block="latest",
+                    reward_percentiles=[settings.priority_fee_percentile],
+                )
+
+                base_fee_per_gas_list = fee_history.baseFeePerGas
+                max_priority_fee_list = [
+                    percentile_list[0] for percentile_list in fee_history.reward
+                ]
+            else:
+                recent_transactions = await self.__get_recent_transactions(
+                    block_count=block_count
+                )
+
+                base_fee_per_gas_list = []
+                max_priority_fee_list = []
+                for tx in recent_transactions:
+                    base_fee_per_gas_list.append(tx["baseFeePerGas"])
+                    max_priority_fee_list.append(tx["maxPriorityFeePerGas"])
+
+            return GasPrices(
+                base_fee_per_gas_list=base_fee_per_gas_list,
+                max_priority_fee_list=max_priority_fee_list,
+            )
+        else:
+            recent_transactions = await self.__get_recent_transactions(
+                block_count=block_count
+            )
+
+            gas_price_list = []
+            for tx in recent_transactions:
+                gas_price_list.append(tx["gasPrice"])
+
+            return GasPrices(gas_price_list=gas_price_list)
+
+    async def __get_recent_transactions(self, block_count: int) -> List[BlockData]:
+        """Returns a list of all transactions extracted from a specified number of
+        recent blocks (including the most recent)."""
+
+        latest_block_number = await self.web3_client.eth.block_number
+
+        transactions = []
+        for block_number in range(
+            latest_block_number - block_count + 1, latest_block_number + 1
+        ):
+            block = await self.web3_client.eth.get_block(block_number, True)
+            for tx in block.transactions:
+                transactions.append(tx)
+
+        return transactions

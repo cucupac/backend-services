@@ -27,11 +27,14 @@ class Settings(BaseSettings):
     relayer_address: str
     evm_wormhole_bridge: str
     priority_fee_percentile: int
+    latest_blocks_time: int = 60 * 2
 
     # Fee Updates
     higher_ethereum_fee_multiplier: float
     lower_ethereum_fee_multiplier: float
-    default_remote_fee_multiplier: float
+    remote_fee_multiplier: float
+    latest_blocks_time: int = 60 * 2
+    max_acceptable_fee_multiplier: int = 2
     ethereum_update_frequency: int = 60 * 60 * 24
     binance_update_frequency: int = 60 * 60
     polygon_update_frequency: int = 60 * 60

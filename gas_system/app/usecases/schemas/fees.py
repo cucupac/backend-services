@@ -12,6 +12,13 @@ class Status(str, Enum):
     FAILED = "failed"
 
 
+class FeeUpdateError(str, Enum):
+    DESTINATION_PRICE_TOO_HIGH = "One or more destination prices were too high."
+    TX_FEE_TOO_HIGH = (
+        "Fee update transaction fee was too high; waiting for a cheaper price."
+    )
+
+
 class MinimumFees(BaseModel):
     remote_chain_ids: List[Chains]
     remote_fees: List[int]
