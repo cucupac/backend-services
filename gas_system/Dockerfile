@@ -26,7 +26,11 @@ ENV FEE_SETTER_ADDRESS=inject_at_deployment
 ENV FEE_SETTER_PRIVATE_KEY=inject_at_deployment
 ENV EVM_WORMHOLE_BRIDGE=inject_at_deployment
 ENV PRIORITY_FEE_PERCENTILE=inject_at_deployment
+
+# Fee Updates
 ENV REMOTE_FEE_MULTIPLIER=inject_at_deployment
+ENV HIGHER_ETHEREUM_FEE_MULTIPLIER=inject_at_deployment
+ENV LOWER_ETHEREUM_FEE_MULTIPLIER=inject_at_deployment
 
 # RPC URLs
 ENV ETHEREUM_RPC=inject_at_deployment
