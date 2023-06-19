@@ -22,14 +22,14 @@ class WormholeBridgeEvmClient(IBlockchainClient):
         self,
         abi: List[Mapping[str, Any]],
         chain_id: int,
-        lastest_blocks: int,
+        latest_blocks: int,
         rpc_url: str,
         mock_payload: bytes,
         logger: Logger,
     ) -> None:
         self.abi = abi
         self.chain_id = chain_id
-        self.latest_blocks = lastest_blocks
+        self.latest_blocks = latest_blocks
         self.rpc_url = rpc_url
         self.payload = mock_payload
         self.web3_client = AsyncWeb3(AsyncHTTPProvider(self.rpc_url))
@@ -167,16 +167,16 @@ class WormholeBridgeEvmClient(IBlockchainClient):
                 base_fee_per_gas_list=base_fee_per_gas_list,
                 max_priority_fee_list=max_priority_fee_list,
             )
-        else:
-            recent_transactions = await self.__get_recent_transactions(
-                block_count=block_count
-            )
 
-            gas_price_list = []
-            for tx in recent_transactions:
-                gas_price_list.append(tx["gasPrice"])
+        recent_transactions = await self.__get_recent_transactions(
+            block_count=block_count
+        )
 
-            return GasPrices(gas_price_list=gas_price_list)
+        gas_price_list = []
+        for tx in recent_transactions:
+            gas_price_list.append(tx["gasPrice"])
+
+        return GasPrices(gas_price_list=gas_price_list)
 
     async def __get_recent_transactions(self, block_count: int) -> List[BlockData]:
         """Returns a list of all transactions extracted from a specified number of

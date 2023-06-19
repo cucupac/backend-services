@@ -2,7 +2,6 @@ from app.dependencies import (
     get_coingecko_client,
     get_wormhole_bridge_client,
     get_fee_updates_repo,
-    get_transactions_repo,
     CHAIN_DATA,
 )
 from app.usecases.interfaces.services.remote_price_manager import IRemotePriceManager
@@ -18,7 +17,6 @@ async def get_remote_price_manager(
 
     coingecko_client = await get_coingecko_client()
     fee_update_repo = await get_fee_updates_repo()
-    transactions_repo = await get_transactions_repo()
 
     if ecosystem == Ecosystem.EVM:
         if bridge == Bridge.WORMHOLE:

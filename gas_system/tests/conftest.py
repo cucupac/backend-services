@@ -9,21 +9,23 @@ from httpx import AsyncClient
 
 from app.dependencies import CHAIN_DATA
 from app.infrastructure.db.repos.fee_updates import FeeUpdatesRepo
+from app.infrastructure.db.repos.transactions import TransactionsRepo
+from app.usecases.schemas.transactions import Status, CacheStatus, GrpcStatus
 from app.infrastructure.web.setup import setup_app
 from app.usecases.interfaces.clients.http.blockchain import IBlockchainClient
 from app.usecases.interfaces.clients.http.prices import IPriceClient
+from app.usecases.interfaces.repos.transactions import ITransactionsRepo
 from app.usecases.interfaces.repos.fee_updates import IFeeUpdatesRepo
 from app.usecases.interfaces.services.remote_price_manager import IRemotePriceManager
 from app.usecases.services.remote_price_manager import RemotePriceManager
 from tests.mocks.clients.http.coingecko import MockPriceClient
+import tests.constants as constant
 
 # Mocks
 from tests.mocks.clients.http.evm_wormhole_bridge import (
     EvmResult,
     MockWormholeBridgeEvmClient,
 )
-
-# from app.usecases.services.remote_price_manager import ExampleService
 
 
 # Database Connection
@@ -49,11 +51,18 @@ async def test_db(test_db_url) -> Database:
     await test_db.disconnect()
 
 
+# Repos (Database Gateways)
+@pytest_asyncio.fixture
+async def transactions_repo(test_db: Database) -> ITransactionsRepo:
+    return TransactionsRepo(db=test_db)
+
+
 @pytest_asyncio.fixture
 async def fee_updates_repo(test_db: Database) -> IFeeUpdatesRepo:
     return FeeUpdatesRepo(db=test_db)
 
 
+# Clients
 @pytest_asyncio.fixture
 async def test_evm_clients_success() -> IBlockchainClient:
     supported_evm_clients = {}
@@ -95,10 +104,34 @@ async def remote_price_manager(
 #     )
 
 
-# # Database-inserted Objects
-
-
-# # Repo Adapters
+# Database-inserted Objects
+@pytest_asyncio.fixture
+async def testing_transaction(test_db: Database) -> None:
+    async with test_db.transaction():
+        transaction_id = await test_db.execute(
+            """INSERT INTO transactions (emitter_address, from_address, to_address, source_chain_id, dest_chain_id, amount, sequence) VALUES (:emitter_address, :from_address, :to_address, :source_chain_id, :dest_chain_id, :amount, :sequence) RETURNING id""",
+            {
+                "emitter_address": constant.TEST_EMITTER_ADDRESS,
+                "from_address": constant.TEST_USER_ADDRESS,
+                "to_address": constant.TEST_USER_ADDRESS,
+                "source_chain_id": constant.TEST_SOURCE_CHAIN_ID,
+                "dest_chain_id": constant.TEST_DESTINATION_CHAIN_ID,
+                "amount": constant.TEST_AMOUNT,
+                "sequence": constant.TEST_SEQUENCE,
+            },
+        )
+        await test_db.execute(
+            """INSERT INTO relays (transaction_id, message, status, transaction_hash, error, cache_status, grpc_status) VALUES (:transaction_id, :message, :status, :transaction_hash, :error, :cache_status, :grpc_status)""",
+            {
+                "transaction_id": transaction_id,
+                "status": Status.TESTING,
+                "error": None,
+                "message": constant.TEST_VAA,
+                "transaction_hash": None,
+                "cache_status": CacheStatus.NEVER_CACHED,
+                "grpc_status": GrpcStatus.FAILED,
+            },
+        )
 
 
 @pytest_asyncio.fixture

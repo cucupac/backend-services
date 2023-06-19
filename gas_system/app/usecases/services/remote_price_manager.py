@@ -35,7 +35,9 @@ class RemotePriceManager(IRemotePriceManager):
         self.no_update_chains = []
         for chain_id in CHAIN_DATA:
             compute_costs = compute_costs[chain_id]
-            do_update = await self.check_gas_price(compute_costs=compute_costs)
+            do_update = await self.check_gas_price(
+                chain_id=chain_id, compute_costs=compute_costs
+            )
 
             if not do_update:
                 self.no_update_chains.append(chain_id)
@@ -103,12 +105,8 @@ class RemotePriceManager(IRemotePriceManager):
                 return (
                     remote_fee_in_local_native * settings.higher_ethereum_fee_multiplier
                 )
-            else:
-                return (
-                    remote_fee_in_local_native * settings.lower_ethereum_fee_multiplier
-                )
-        else:
-            return remote_fee_in_local_native * settings.remote_fee_multiplier
+            return remote_fee_in_local_native * settings.lower_ethereum_fee_multiplier
+        return remote_fee_in_local_native * settings.remote_fee_multiplier
 
     async def get_chain_compute_costs(self) -> Mapping[int, ComputeCosts]:
         """Returns the cost of delivery data on all chains."""
@@ -189,8 +187,6 @@ class RemotePriceManager(IRemotePriceManager):
             median_gas_price = median(gas_prices.gas_price_list)
 
         return (
-            True
-            if compute_costs.gas_price
+            compute_costs.gas_price
             < median_gas_price * settings.max_acceptable_fee_multiplier
-            else False
         )

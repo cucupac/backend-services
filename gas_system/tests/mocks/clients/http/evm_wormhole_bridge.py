@@ -8,6 +8,7 @@ from app.usecases.schemas.blockchain import (
     ComputeCosts,
     TransactionHash,
 )
+from app.usecases.schemas.evm import GasPrices
 from app.usecases.schemas.fees import MinimumFees
 from tests import constants as constant
 
@@ -34,3 +35,7 @@ class MockWormholeBridgeEvmClient(IBlockchainClient):
                 gas_price=constant.MOCK_GAS_PRICE, gas_units=constant.MOCK_GAS_UNITS
             )
         raise BlockchainClientError(detail=constant.EVM_CLIENT_ERROR_DETAIL)
+
+    async def get_gas_prices(self, block_count: int) -> GasPrices:
+        """Returns gas prices over specified number of recent blocks."""
+        return GasPrices(constant.MOCK_GAS_PRICES)

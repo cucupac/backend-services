@@ -20,7 +20,9 @@ async def test_remote_price_manager(
     """Test that correct values were stored in the database."""
 
     # Process message
-    await remote_price_manager.update_remote_fees()
+    await remote_price_manager.update_remote_fees(
+        chains_to_update=constant.MOCK_CHAINS_TO_UPDATE
+    )
 
     for local_chain_id, local_data in CHAIN_DATA.items():
         test_fee_update = await test_db.fetch_one(
@@ -45,10 +47,7 @@ async def test_remote_price_manager(
                 )
 
                 # Add buffer if Ethereum is not involved.
-                if (
-                    local_chain_id != Chains.ETHEREUM
-                    and remote_chain_id != Chains.ETHEREUM
-                ):
+                if Chains.ETHEREUM not in (local_chain_id, remote_chain_id):
                     local_cost_native *= settings.remote_fee_multiplier
 
                 expected_updates[str(remote_chain_id)] = math.ceil(local_cost_native)
