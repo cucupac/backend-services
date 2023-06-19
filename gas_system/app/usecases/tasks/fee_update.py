@@ -1,14 +1,13 @@
-from logging import Logger
-from datetime import datetime, timedelta
-
 import asyncio
+from datetime import datetime, timedelta
+from logging import Logger
 
 from app.dependencies import CHAIN_DATA, UPDATE_FEES_FREQUENCIES
-from app.usecases.interfaces.services.remote_price_manager import IRemotePriceManager
+from app.settings import settings
 from app.usecases.interfaces.repos.fee_updates import IFeeUpdatesRepo
+from app.usecases.interfaces.services.remote_price_manager import IRemotePriceManager
 from app.usecases.interfaces.tasks.fee_update import IUpdateFeeTask
 from app.usecases.schemas.fees import Status
-from app.settings import settings
 
 
 class UpdateFeesTask(IUpdateFeeTask):

@@ -5,7 +5,7 @@ from app.usecases.schemas.fees import FeeUpdate, FeeUpdateInDb
 
 class IFeeUpdatesRepo(ABC):
     @abstractmethod
-    async def create(self, fee_update: FeeUpdate) -> None:
+    async def create(self, fee_update: FeeUpdate) -> FeeUpdateInDb:
         """Inserts and returns new fee update object."""
 
     @abstractmethod

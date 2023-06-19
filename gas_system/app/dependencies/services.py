@@ -1,8 +1,8 @@
 from app.dependencies import (
-    get_coingecko_client,
-    get_wormhole_bridge_client,
-    get_fee_updates_repo,
     CHAIN_DATA,
+    get_coingecko_client,
+    get_fee_updates_repo,
+    get_wormhole_bridge_client,
 )
 from app.usecases.interfaces.services.remote_price_manager import IRemotePriceManager
 from app.usecases.schemas.blockchain import Ecosystem

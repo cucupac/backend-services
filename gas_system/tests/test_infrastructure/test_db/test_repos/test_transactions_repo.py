@@ -1,12 +1,13 @@
 # pylint: disable=unused-argument
-from typing import List
 
 import pytest
 
 import tests.constants as constant
 from app.usecases.interfaces.repos.transactions import ITransactionsRepo
-from app.usecases.schemas.transactions import Status, CacheStatus, GrpcStatus
 from app.usecases.schemas.transactions import (
+    CacheStatus,
+    GrpcStatus,
+    Status,
     TransactionsJoinRelays,
 )
 

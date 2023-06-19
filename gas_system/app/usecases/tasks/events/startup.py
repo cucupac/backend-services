@@ -10,9 +10,9 @@ should be able to distinguish between them (the client should not be tightly cou
 
 from app.dependencies import (
     get_event_loop,
+    get_fee_updates_repo,
     get_remote_price_manager,
     logger,
-    get_fee_updates_repo,
 )
 from app.usecases.schemas.blockchain import Ecosystem
 from app.usecases.schemas.bridges import Bridge

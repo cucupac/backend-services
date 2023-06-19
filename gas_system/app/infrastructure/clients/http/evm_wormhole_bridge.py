@@ -1,5 +1,6 @@
-from typing import Any, List, Mapping
+# pylint: disable=too-many-instance-attributes, too-many-arguments
 from logging import Logger
+from typing import Any, List, Mapping
 
 from eth_account.datastructures import SignedTransaction
 from web3 import AsyncHTTPProvider, AsyncWeb3
@@ -8,13 +9,13 @@ from web3.types import BlockData
 from app.dependencies import BRIDGE_DATA, CHAIN_DATA
 from app.settings import settings
 from app.usecases.interfaces.clients.http.blockchain import IBlockchainClient
-from app.usecases.schemas.fees import MinimumFees
 from app.usecases.schemas.blockchain import (
     BlockchainClientError,
     ComputeCosts,
     TransactionHash,
 )
 from app.usecases.schemas.evm import GasPrices
+from app.usecases.schemas.fees import MinimumFees
 
 
 class WormholeBridgeEvmClient(IBlockchainClient):

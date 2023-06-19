@@ -1,5 +1,6 @@
 # pylint: disable=redefined-outer-name
 import os
+from math import floor
 
 import pytest_asyncio
 import respx
@@ -7,19 +8,21 @@ from databases import Database
 from fastapi import FastAPI
 from httpx import AsyncClient
 
+import tests.constants as constant
 from app.dependencies import CHAIN_DATA
 from app.infrastructure.db.repos.fee_updates import FeeUpdatesRepo
 from app.infrastructure.db.repos.transactions import TransactionsRepo
-from app.usecases.schemas.transactions import Status, CacheStatus, GrpcStatus
 from app.infrastructure.web.setup import setup_app
+from app.settings import settings
 from app.usecases.interfaces.clients.http.blockchain import IBlockchainClient
 from app.usecases.interfaces.clients.http.prices import IPriceClient
-from app.usecases.interfaces.repos.transactions import ITransactionsRepo
 from app.usecases.interfaces.repos.fee_updates import IFeeUpdatesRepo
+from app.usecases.interfaces.repos.transactions import ITransactionsRepo
 from app.usecases.interfaces.services.remote_price_manager import IRemotePriceManager
+from app.usecases.schemas.fees import FeeUpdate
+from app.usecases.schemas.transactions import CacheStatus, GrpcStatus, Status
 from app.usecases.services.remote_price_manager import RemotePriceManager
 from tests.mocks.clients.http.coingecko import MockPriceClient
-import tests.constants as constant
 
 # Mocks
 from tests.mocks.clients.http.evm_wormhole_bridge import (
@@ -66,9 +69,40 @@ async def fee_updates_repo(test_db: Database) -> IFeeUpdatesRepo:
 @pytest_asyncio.fixture
 async def test_evm_clients_success() -> IBlockchainClient:
     supported_evm_clients = {}
-    for chain_id in CHAIN_DATA:
+    for chain_id, chain_data in CHAIN_DATA.items():
+        latest_blocks = floor(
+            settings.latest_blocks_time / chain_data["avg_block_time_seconds"]
+        )
         supported_evm_clients[chain_id] = MockWormholeBridgeEvmClient(
-            result=EvmResult.SUCCESS
+            result=EvmResult.SUCCESS, latest_blocks=latest_blocks, chain_id=chain_id
+        )
+    return supported_evm_clients
+
+
+@pytest_asyncio.fixture
+async def test_evm_clients_failure() -> IBlockchainClient:
+    supported_evm_clients = {}
+    for chain_id, chain_data in CHAIN_DATA.items():
+        latest_blocks = floor(
+            settings.latest_blocks_time / chain_data["avg_block_time_seconds"]
+        )
+        supported_evm_clients[chain_id] = MockWormholeBridgeEvmClient(
+            result=EvmResult.FAILURE, latest_blocks=latest_blocks, chain_id=chain_id
+        )
+    return supported_evm_clients
+
+
+@pytest_asyncio.fixture
+async def test_evm_clients_median_testing() -> IBlockchainClient:
+    supported_evm_clients = {}
+    for chain_id, chain_data in CHAIN_DATA.items():
+        latest_blocks = floor(
+            settings.latest_blocks_time / chain_data["avg_block_time_seconds"]
+        )
+        supported_evm_clients[chain_id] = MockWormholeBridgeEvmClient(
+            result=EvmResult.MEDIAN_TESTING,
+            latest_blocks=latest_blocks,
+            chain_id=chain_id,
         )
     return supported_evm_clients
 
@@ -92,16 +126,41 @@ async def remote_price_manager(
     )
 
 
-# TODO: test this failing case
-# @pytest_asyncio.fixture
-# async def example_service_fail(
-#     test_evm_client_fail: IBlockchainClient,
-#     example_repo: IExampleRepo,
-# ) -> IExampleService:
-#     return ExampleService(
-#         example_repo=example_repo,
-#         evm_client=test_evm_client_fail,
-#     )
+@pytest_asyncio.fixture
+async def remote_price_manager_failed(
+    test_evm_clients_failure: IBlockchainClient,
+    fee_updates_repo: IFeeUpdatesRepo,
+    test_price_client: IPriceClient,
+) -> IRemotePriceManager:
+    return RemotePriceManager(
+        price_client=test_price_client,
+        blockchain_clients=test_evm_clients_failure,
+        fee_update_repo=fee_updates_repo,
+    )
+
+
+@pytest_asyncio.fixture
+async def remote_price_manager_median_testing(
+    test_evm_clients_median_testing: IBlockchainClient,
+    fee_updates_repo: IFeeUpdatesRepo,
+    test_price_client: IPriceClient,
+) -> IRemotePriceManager:
+    return RemotePriceManager(
+        price_client=test_price_client,
+        blockchain_clients=test_evm_clients_median_testing,
+        fee_update_repo=fee_updates_repo,
+    )
+
+
+@pytest_asyncio.fixture
+async def test_fee_update() -> FeeUpdate:
+    return FeeUpdate(
+        chain_id=constant.TEST_CHAIN_ID,
+        updates=constant.TEST_UPDATE,
+        transaction_hash=constant.TEST_TRANSACTION_HASH,
+        status=Status.SUCCESS,
+        error=None,
+    )
 
 
 # Database-inserted Objects

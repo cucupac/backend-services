@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import List, Mapping
 
-
 from app.usecases.schemas.blockchain import ComputeCosts
 
 

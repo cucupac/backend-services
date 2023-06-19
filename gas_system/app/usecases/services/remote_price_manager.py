@@ -1,16 +1,16 @@
+from datetime import datetime
 from math import ceil
 from statistics import median
-from typing import Mapping, List
-from datetime import datetime
+from typing import List, Mapping
 
 from app.dependencies import CHAIN_DATA
+from app.settings import settings
 from app.usecases.interfaces.clients.http.blockchain import IBlockchainClient
 from app.usecases.interfaces.clients.http.prices import IPriceClient
 from app.usecases.interfaces.repos.fee_updates import IFeeUpdatesRepo
 from app.usecases.interfaces.services.remote_price_manager import IRemotePriceManager
-from app.usecases.schemas.blockchain import BlockchainClientError, ComputeCosts, Chains
-from app.usecases.schemas.fees import FeeUpdate, MinimumFees, Status, FeeUpdateError
-from app.settings import settings
+from app.usecases.schemas.blockchain import BlockchainClientError, Chains, ComputeCosts
+from app.usecases.schemas.fees import FeeUpdate, FeeUpdateError, MinimumFees, Status
 
 
 class RemotePriceManager(IRemotePriceManager):
@@ -29,12 +29,12 @@ class RemotePriceManager(IRemotePriceManager):
         """Updates gas prices for remote computation in local native token."""
 
         # Estimate fees for each chain
-        compute_costs = await self.get_chain_compute_costs()
+        chain_compute_costs = await self.get_chain_compute_costs()
 
         # Check that gas prices are tolerable
         self.no_update_chains = []
         for chain_id in CHAIN_DATA:
-            compute_costs = compute_costs[chain_id]
+            compute_costs = chain_compute_costs[chain_id]
             do_update = await self.check_gas_price(
                 chain_id=chain_id, compute_costs=compute_costs
             )
@@ -44,7 +44,7 @@ class RemotePriceManager(IRemotePriceManager):
 
         # Construct remote fee information, per chain
         fee_updates = await self.get_remote_fees(
-            compute_costs=compute_costs, chains_to_update=chains_to_update
+            compute_costs=chain_compute_costs, chains_to_update=chains_to_update
         )
 
         # Update fees on each source chain
@@ -101,7 +101,7 @@ class RemotePriceManager(IRemotePriceManager):
         """Adds buffer to remote fee."""
 
         if remote_chain_id == Chains.ETHEREUM:
-            if datetime.utcnow().hour > 12 and datetime.utcnow().hour < 18:
+            if datetime.utcnow().hour >= 12 and datetime.utcnow().hour < 18:
                 return (
                     remote_fee_in_local_native * settings.higher_ethereum_fee_multiplier
                 )

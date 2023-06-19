@@ -1,12 +1,12 @@
 from math import floor
 
 from app.dependencies import (
-    CHAIN_DATA,
     BRIDGE_DATA,
+    CHAIN_DATA,
     WORMHOLE_BRIDGE_ABI,
     get_client_session,
-    logger,
     get_transactions_repo,
+    logger,
 )
 from app.infrastructure.clients.http.coingecko import CoingeckoClient
 from app.infrastructure.clients.http.evm_wormhole_bridge import WormholeBridgeEvmClient

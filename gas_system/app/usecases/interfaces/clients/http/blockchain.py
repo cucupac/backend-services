@@ -1,8 +1,8 @@
 from abc import ABC, abstractmethod
 
 from app.usecases.schemas.blockchain import ComputeCosts, TransactionHash
-from app.usecases.schemas.fees import MinimumFees
 from app.usecases.schemas.evm import GasPrices
+from app.usecases.schemas.fees import MinimumFees
 
 
 class IBlockchainClient(ABC):
