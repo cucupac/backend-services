@@ -4,6 +4,7 @@ from typing import Any, List, Mapping
 
 from eth_account.datastructures import SignedTransaction
 from web3 import AsyncHTTPProvider, AsyncWeb3
+from web3.middleware import async_geth_poa_middleware
 from web3.types import BlockData
 
 from app.dependencies import BRIDGE_DATA, CHAIN_DATA
@@ -39,6 +40,7 @@ class WormholeBridgeEvmClient(IBlockchainClient):
             abi=abi,
         )
         self.logger = logger
+        self.web3_client.middleware_onion.inject(async_geth_poa_middleware, layer=0)
 
     async def update_fees(self, remote_data: MinimumFees) -> TransactionHash:
         """Sends transaction to the blockchain."""
@@ -141,32 +143,21 @@ class WormholeBridgeEvmClient(IBlockchainClient):
         post_london_upgrade = CHAIN_DATA[self.chain_id]["post_london_upgrade"]
         has_fee_history = CHAIN_DATA[self.chain_id]["has_fee_history"]
 
-        if post_london_upgrade:
-            if has_fee_history:
-                fee_history = await self.web3_client.eth.fee_history(
-                    block_count=block_count,
-                    newest_block="latest",
-                    reward_percentiles=[settings.priority_fee_percentile],
-                )
+        if post_london_upgrade and has_fee_history:
+            fee_history = await self.web3_client.eth.fee_history(
+                block_count=block_count,
+                newest_block="latest",
+                reward_percentiles=[settings.priority_fee_percentile],
+            )
 
-                base_fee_per_gas_list = fee_history.baseFeePerGas
-                max_priority_fee_list = [
-                    percentile_list[0] for percentile_list in fee_history.reward
-                ]
-            else:
-                recent_transactions = await self.__get_recent_transactions(
-                    block_count=block_count
-                )
-
-                base_fee_per_gas_list = []
-                max_priority_fee_list = []
-                for tx in recent_transactions:
-                    base_fee_per_gas_list.append(tx["baseFeePerGas"])
-                    max_priority_fee_list.append(tx["maxPriorityFeePerGas"])
+            base_fee_per_gas_list = fee_history.baseFeePerGas
+            max_priority_fee_list = [
+                percentile_list[0] for percentile_list in fee_history.reward
+            ]
 
             return GasPrices(
                 base_fee_per_gas_list=base_fee_per_gas_list,
-                max_priority_fee_list=max_priority_fee_list,
+                max_priority_fee_per_gas_list=max_priority_fee_list,
             )
 
         recent_transactions = await self.__get_recent_transactions(

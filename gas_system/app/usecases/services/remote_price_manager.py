@@ -174,7 +174,13 @@ class RemotePriceManager(IRemotePriceManager):
             block_count=blockchain_client.latest_blocks
         )
 
-        if CHAIN_DATA[chain_id]["post_london_upgrade"]:
+        print("\n\n[check_gas_price]: chain_id: ", chain_id)
+        print("\n\n[check_gas_price]: gas_prices: ", gas_prices)
+
+        if (
+            CHAIN_DATA[chain_id]["post_london_upgrade"]
+            and CHAIN_DATA[chain_id]["has_fee_history"]
+        ):
             max_fee_per_gas_list = [
                 a + b
                 for a, b in zip(

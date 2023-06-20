@@ -49,7 +49,10 @@ class MockWormholeBridgeEvmClient(IBlockchainClient):
                 gas_price=gas_price,
                 gas_units=constant.MOCK_GAS_UNITS,
             )
-        if CHAIN_DATA[self.chain_id]["post_london_upgrade"]:
+        if (
+            CHAIN_DATA[self.chain_id]["post_london_upgrade"]
+            and CHAIN_DATA[self.chain_id]["has_fee_history"]
+        ):
             return ComputeCosts(
                 gas_price=constant.MOCK_BASE_FEES_PER_GAS[-1]
                 + constant.MOCK_MAX_PRIORITY_FEES_PER_GAS[-1],
@@ -74,7 +77,10 @@ class MockWormholeBridgeEvmClient(IBlockchainClient):
                     + [new_high_base_fee],
                     max_priority_fee_per_gas_list=constant.MOCK_MAX_PRIORITY_FEES_PER_GAS,
                 )
-            if CHAIN_DATA[self.chain_id]["post_london_upgrade"]:
+            if (
+                CHAIN_DATA[self.chain_id]["post_london_upgrade"]
+                and CHAIN_DATA[self.chain_id]["has_fee_history"]
+            ):
                 return GasPrices(
                     base_fee_per_gas_list=constant.MOCK_BASE_FEES_PER_GAS,
                     max_priority_fee_per_gas_list=constant.MOCK_MAX_PRIORITY_FEES_PER_GAS[
@@ -83,7 +89,10 @@ class MockWormholeBridgeEvmClient(IBlockchainClient):
                 )
             return GasPrices(gas_price_list=constant.MOCK_GAS_PRICES)
 
-        if CHAIN_DATA[self.chain_id]["post_london_upgrade"]:
+        if (
+            CHAIN_DATA[self.chain_id]["post_london_upgrade"]
+            and CHAIN_DATA[self.chain_id]["has_fee_history"]
+        ):
             return GasPrices(
                 base_fee_per_gas_list=constant.MOCK_BASE_FEES_PER_GAS,
                 max_priority_fee_per_gas_list=constant.MOCK_MAX_PRIORITY_FEES_PER_GAS[

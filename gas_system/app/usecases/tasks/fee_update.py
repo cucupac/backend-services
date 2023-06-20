@@ -55,7 +55,7 @@ class UpdateFeesTask(IUpdateFeeTask):
                     if last_fee_update.created_at <= datetime.utcnow() - timedelta(
                         seconds=UPDATE_FEES_FREQUENCIES[chain_id]
                     ):
-                        chains_to_update.append(chains_to_update)
+                        chains_to_update.append(chain_id)
 
         if chains_to_update:
             await self.remote_price_manager.update_remote_fees(
