@@ -1,11 +1,11 @@
 # pylint: disable=too-many-instance-attributes, too-many-arguments
 from logging import Logger
 from typing import Any, List, Mapping
+from statistics import median
 
 from eth_account.datastructures import SignedTransaction
 from web3 import AsyncHTTPProvider, AsyncWeb3
 from web3.middleware import async_geth_poa_middleware
-from web3.types import BlockData
 
 from app.dependencies import BRIDGE_DATA, CHAIN_DATA
 from app.settings import settings
@@ -55,7 +55,9 @@ class WormholeBridgeEvmClient(IBlockchainClient):
             )
         except Exception as e:
             self.logger.error(
-                "[EvmClient]: Chain ID: %s; fee update failed: %s", self.chain_id, e
+                "[WormholeBridgeEvmClient]: Chain ID: %s; fee update failed: %s",
+                self.chain_id,
+                e,
             )
             raise BlockchainClientError(detail=str(e)) from e
 
@@ -77,7 +79,14 @@ class WormholeBridgeEvmClient(IBlockchainClient):
             self.payload
         ).build_transaction(transaction_dict)
 
-        estimated_gas_units = await self.web3_client.eth.estimate_gas(transaction)
+        try:
+            estimated_gas_units = await self.web3_client.eth.estimate_gas(transaction)
+        except Exception as e:
+            self.logger.error(
+                "[WormholeBridgeEvmClient]: Chain ID: %s, fee estimation failed: %s",
+                self.chain_id,
+                e,
+            )
 
         return ComputeCosts(
             gas_price=max_gas_price,
@@ -114,9 +123,11 @@ class WormholeBridgeEvmClient(IBlockchainClient):
             "nonce": await self.web3_client.eth.get_transaction_count(sender),
         }
 
-        gas_prices = await self.get_gas_prices(block_count=1)
-
-        if gas_prices.base_fee_per_gas_list:
+        if (
+            CHAIN_DATA[self.chain_id]["post_london_upgrade"]
+            and CHAIN_DATA[self.chain_id]["has_fee_history"]
+        ):
+            gas_prices = await self.get_gas_prices(block_count=1)
             transaction_dict["maxFeePerGas"] = (
                 gas_prices.base_fee_per_gas_list[-1]
                 + gas_prices.max_priority_fee_per_gas_list[-1]
@@ -125,7 +136,7 @@ class WormholeBridgeEvmClient(IBlockchainClient):
                 "maxPriorityFeePerGas"
             ] = gas_prices.max_priority_fee_per_gas_list[-1]
         else:
-            transaction_dict["gasPrice"] = gas_prices.gas_price_list[-1]
+            transaction_dict["gasPrice"] = await self.web3_client.eth.gas_price
 
         return transaction_dict
 
@@ -160,28 +171,22 @@ class WormholeBridgeEvmClient(IBlockchainClient):
                 max_priority_fee_per_gas_list=max_priority_fee_list,
             )
 
-        recent_transactions = await self.__get_recent_transactions(
+        median_gas_prices_per_block = await self.__get_median_gas_prices(
             block_count=block_count
         )
+        return GasPrices(gas_price_list=median_gas_prices_per_block)
 
-        gas_price_list = []
-        for tx in recent_transactions:
-            gas_price_list.append(tx["gasPrice"])
-
-        return GasPrices(gas_price_list=gas_price_list)
-
-    async def __get_recent_transactions(self, block_count: int) -> List[BlockData]:
-        """Returns a list of all transactions extracted from a specified number of
-        recent blocks (including the most recent)."""
+    async def __get_median_gas_prices(self, block_count: int) -> List[int]:
+        """Returns a list of median gas prices per block in the case of no available fee history."""
 
         latest_block_number = await self.web3_client.eth.block_number
 
-        transactions = []
+        median_gas_prices_per_block = []
         for block_number in range(
             latest_block_number - block_count + 1, latest_block_number + 1
         ):
             block = await self.web3_client.eth.get_block(block_number, True)
-            for tx in block.transactions:
-                transactions.append(tx)
+            block_gas_prices = [tx["gasPrice"] for tx in block.transactions]
+            median_gas_prices_per_block.append(median(block_gas_prices))
 
-        return transactions
+        return median_gas_prices_per_block

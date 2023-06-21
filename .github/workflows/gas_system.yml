@@ -18,7 +18,7 @@ env:
   POSTGRES_PORT: ${{ secrets.POSTGRES_PORT }}
   POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
   DB_URL: "postgresql://user:password@localhost/example"
-  # Endpoints
+  # ENDPOINTS
   PRICE_CLIENT_BASE_URL: ${{ secrets.PRICE_CLIENT_BASE_URL }}
   # EVM
   FEE_SETTER_ADDRESS: "0x"
@@ -37,8 +37,6 @@ env:
   FANTOM_RPC: ${{ secrets.FANTOM_RPC }}
   ARBITRUM_RPC: ${{ secrets.ARBITRUM_RPC }}
   CELO_RPC: ${{ secrets.CELO_RPC }}
-  # Misc
-  MOCK_FEE: "1000000000000000"
 
 jobs:
   run-ci:

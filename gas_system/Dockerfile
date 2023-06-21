@@ -12,7 +12,7 @@ COPY . /app
 
 # Server
 ENV OPENAPI_URL="/openapi.json"
-ENV SERVER_PORT=9000
+ENV SERVER_PORT=10000
 ENV ENVIRONMENT=development
 
 # Database 
@@ -25,6 +25,7 @@ ENV PRICE_CLIENT_BASE_URL=inject_at_deployment
 ENV FEE_SETTER_ADDRESS=inject_at_deployment
 ENV FEE_SETTER_PRIVATE_KEY=inject_at_deployment
 ENV EVM_WORMHOLE_BRIDGE=inject_at_deployment
+ENV RELAYER_ADDRESS=inject_at_deployment
 ENV PRIORITY_FEE_PERCENTILE=inject_at_deployment
 
 # Fee Updates
@@ -40,9 +41,6 @@ ENV AVALANCHE_RPC=inject_at_deployment
 ENV FANTOM_RPC=inject_at_deployment
 ENV ARBITRUM_RPC=inject_at_deployment
 ENV CELO_RPC=inject_at_deployment
-
-# Misc
-ENV MOCK_FEE=1000000000000000
 
 EXPOSE $SERVER_PORT
 

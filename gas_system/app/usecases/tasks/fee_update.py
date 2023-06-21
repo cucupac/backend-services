@@ -63,5 +63,6 @@ class UpdateFeesTask(IUpdateFeeTask):
             )
 
         self.logger.info(
-            "[UpdateFeesTask]: Task complete. Updated chains: %s", chains_to_update
+            "[UpdateFeesTask]: Task complete. Attempted to update chains: %s",
+            chains_to_update,
         )

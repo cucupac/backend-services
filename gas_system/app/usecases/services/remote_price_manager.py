@@ -174,9 +174,6 @@ class RemotePriceManager(IRemotePriceManager):
             block_count=blockchain_client.latest_blocks
         )
 
-        print("\n\n[check_gas_price]: chain_id: ", chain_id)
-        print("\n\n[check_gas_price]: gas_prices: ", gas_prices)
-
         if (
             CHAIN_DATA[chain_id]["post_london_upgrade"]
             and CHAIN_DATA[chain_id]["has_fee_history"]
@@ -190,7 +187,7 @@ class RemotePriceManager(IRemotePriceManager):
             ]
             median_gas_price = median(max_fee_per_gas_list)
         else:
-            median_gas_price = median(gas_prices.gas_price_list)
+            median_gas_price = median(gas_prices.gas_price_list[:-1])
 
         return (
             compute_costs.gas_price
