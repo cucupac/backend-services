@@ -1,5 +1,3 @@
-from math import floor
-
 from app.dependencies import (
     BRIDGE_DATA,
     CHAIN_DATA,
@@ -25,15 +23,9 @@ async def get_wormhole_bridge_client(source_chain_id: int) -> IBlockchainClient:
         chain_id=wormhole_chain_id
     )
 
-    latest_blocks = floor(
-        settings.latest_blocks_time
-        / CHAIN_DATA[source_chain_id]["avg_block_time_seconds"]
-    )
-
     return WormholeBridgeEvmClient(
         abi=WORMHOLE_BRIDGE_ABI,
         chain_id=source_chain_id,
-        latest_blocks=latest_blocks,
         rpc_url=CHAIN_DATA[source_chain_id]["rpc"],
         mock_payload=bytes.fromhex(test_transaction.relay_message),
         logger=logger,

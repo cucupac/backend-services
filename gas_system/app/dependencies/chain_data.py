@@ -8,7 +8,6 @@ CHAIN_DATA = {
         "native": "ETH",
         "post_london_upgrade": True,
         "has_fee_history": True,
-        "avg_block_time_seconds": 12,
     },
     Chains.BSC.value: {
         "name": "BNB Smart Chain",
@@ -16,7 +15,6 @@ CHAIN_DATA = {
         "native": "BNB",
         "post_london_upgrade": False,
         "has_fee_history": True,
-        "avg_block_time_seconds": 3,
     },
     Chains.POLYGON.value: {
         "name": "Polygon",
@@ -24,7 +22,6 @@ CHAIN_DATA = {
         "native": "MATIC",
         "post_london_upgrade": True,
         "has_fee_history": True,
-        "avg_block_time_seconds": 2.25,
     },
     Chains.AVALANCHE.value: {
         "name": "Avalanche C-Chain",
@@ -32,7 +29,6 @@ CHAIN_DATA = {
         "native": "AVAX",
         "post_london_upgrade": True,
         "has_fee_history": True,
-        "avg_block_time_seconds": 2,
     },
     Chains.FANTOM.value: {
         "name": "Fantom Opera",
@@ -40,7 +36,6 @@ CHAIN_DATA = {
         "native": "FTM",
         "post_london_upgrade": True,
         "has_fee_history": True,
-        "avg_block_time_seconds": 2.32,
     },
     Chains.ARBITRUM.value: {
         "name": "Arbitrum One",
@@ -48,7 +43,6 @@ CHAIN_DATA = {
         "native": "ETH",
         "post_london_upgrade": True,
         "has_fee_history": True,
-        "avg_block_time_seconds": 0.22,
     },
     Chains.CELO.value: {
         "name": "Celo",
@@ -56,6 +50,5 @@ CHAIN_DATA = {
         "native": "CELO",
         "post_london_upgrade": True,
         "has_fee_history": False,
-        "avg_block_time_seconds": 5,
     },
 }

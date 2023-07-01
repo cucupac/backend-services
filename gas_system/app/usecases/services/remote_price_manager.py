@@ -1,6 +1,5 @@
 from datetime import datetime
 from math import ceil
-from statistics import median
 from typing import List, Mapping
 
 from app.dependencies import CHAIN_DATA
@@ -10,7 +9,7 @@ from app.usecases.interfaces.clients.http.prices import IPriceClient
 from app.usecases.interfaces.repos.fee_updates import IFeeUpdatesRepo
 from app.usecases.interfaces.services.remote_price_manager import IRemotePriceManager
 from app.usecases.schemas.blockchain import BlockchainClientError, Chains, ComputeCosts
-from app.usecases.schemas.fees import FeeUpdate, FeeUpdateError, MinimumFees, Status
+from app.usecases.schemas.fees import FeeUpdate, MinimumFees, Status
 
 
 class RemotePriceManager(IRemotePriceManager):
@@ -23,24 +22,12 @@ class RemotePriceManager(IRemotePriceManager):
         self.price_client = price_client
         self.blockchain_clients = blockchain_clients
         self.fee_update_repo = fee_update_repo
-        self.no_update_chains = []
 
     async def update_remote_fees(self, chains_to_update: List[int]) -> None:
         """Updates gas prices for remote computation in local native token."""
 
         # Estimate fees for each chain
         chain_compute_costs = await self.get_chain_compute_costs()
-
-        # Check that gas prices are tolerable
-        self.no_update_chains = []
-        for chain_id in CHAIN_DATA:
-            compute_costs = chain_compute_costs[chain_id]
-            do_update = await self.check_gas_price(
-                chain_id=chain_id, compute_costs=compute_costs
-            )
-
-            if not do_update:
-                self.no_update_chains.append(chain_id)
 
         # Construct remote fee information, per chain
         fee_updates = await self.get_remote_fees(
@@ -49,51 +36,34 @@ class RemotePriceManager(IRemotePriceManager):
 
         # Update fees on each source chain
         for chain_id, remote_fee_updates in fee_updates.items():
-            if chain_id not in self.no_update_chains:
-                blockchain_client = self.blockchain_clients[chain_id]
-                try:
-                    transaction_hash_bytes = await blockchain_client.update_fees(
-                        remote_data=MinimumFees(
-                            remote_chain_ids=list(remote_fee_updates.keys()),
-                            remote_fees=list(remote_fee_updates.values()),
-                        ),
-                    )
-                except BlockchainClientError as e:
-                    transaction_hash = None
-                    status = Status.FAILED
-                    error = e.detail
-                else:
-                    if any(
-                        chain_id in self.no_update_chains
-                        for chain_id in remote_fee_updates
-                    ):
-                        status = Status.FAILED
-                        error = FeeUpdateError.DESTINATION_PRICE_TOO_HIGH
-                    else:
-                        status = Status.SUCCESS
-                        error = None
-                    transaction_hash = transaction_hash_bytes.hex()
-
-                # Store fee update in database
-                await self.fee_update_repo.create(
-                    fee_update=FeeUpdate(
-                        chain_id=chain_id,
-                        updates=remote_fee_updates,
-                        transaction_hash=transaction_hash,
-                        status=status,
-                        error=error,
-                    )
+            blockchain_client = self.blockchain_clients[chain_id]
+            try:
+                transaction_hash_bytes = await blockchain_client.update_fees(
+                    remote_data=MinimumFees(
+                        remote_chain_ids=list(remote_fee_updates.keys()),
+                        remote_fees=list(remote_fee_updates.values()),
+                    ),
+                    compute_costs=chain_compute_costs[chain_id],
                 )
+            except BlockchainClientError as e:
+                transaction_hash = None
+                status = Status.FAILED
+                error = e.detail
             else:
-                await self.fee_update_repo.create(
-                    fee_update=FeeUpdate(
-                        chain_id=chain_id,
-                        updates=remote_fee_updates,
-                        transaction_hash=None,
-                        status=Status.FAILED,
-                        error=FeeUpdateError.TX_FEE_TOO_HIGH,
-                    )
+                status = Status.SUCCESS
+                error = None
+                transaction_hash = transaction_hash_bytes.hex()
+
+            # Store fee update in database
+            await self.fee_update_repo.create(
+                fee_update=FeeUpdate(
+                    chain_id=chain_id,
+                    updates=remote_fee_updates,
+                    transaction_hash=transaction_hash,
+                    status=status,
+                    error=error,
                 )
+            )
 
     async def add_buffer(
         self, remote_chain_id: int, remote_fee_in_local_native: int
@@ -138,24 +108,20 @@ class RemotePriceManager(IRemotePriceManager):
                 if remote_chain_id != local_chain_id:
                     remote_compute_costs = compute_costs.get(remote_chain_id)
 
-                    # Ensure prices are within the accepted tolerance
-                    if remote_chain_id not in self.no_update_chains:
-                        remote_fee_usd = (
-                            remote_compute_costs.gas_units
-                            * remote_compute_costs.gas_price
-                            * remote_compute_costs.native_value_usd
-                        )
-                        remote_fee_in_local_native = (
-                            remote_fee_usd / local_compute_costs.native_value_usd
-                        )
-                        # Add buffer
-                        remote_fee_in_local_native = await self.add_buffer(
-                            remote_chain_id=remote_chain_id,
-                            remote_fee_in_local_native=remote_fee_in_local_native,
-                        )
-                    else:
-                        # Zero values are not updated on the blockchain
-                        remote_fee_in_local_native = 0
+                    # Convert remote fee to local native token
+                    remote_fee_usd = (
+                        remote_compute_costs.gas_units
+                        * remote_compute_costs.median_gas_price
+                        * remote_compute_costs.native_value_usd
+                    )
+                    remote_fee_in_local_native = (
+                        remote_fee_usd / local_compute_costs.native_value_usd
+                    )
+                    # Add buffer
+                    remote_fee_in_local_native = await self.add_buffer(
+                        remote_chain_id=remote_chain_id,
+                        remote_fee_in_local_native=remote_fee_in_local_native,
+                    )
 
                     remote_fee_updates[remote_chain_id] = ceil(
                         remote_fee_in_local_native
@@ -164,32 +130,3 @@ class RemotePriceManager(IRemotePriceManager):
             fee_updates[local_chain_id] = remote_fee_updates
 
         return fee_updates
-
-    async def check_gas_price(self, chain_id: int, compute_costs: ComputeCosts) -> bool:
-        """Determines if the instantaneous, remote transaction fee is within an acceptable
-        range. Returns `True` if its acceptable and `False` if it's unacceptable."""
-
-        blockchain_client = self.blockchain_clients[chain_id]
-        gas_prices = await blockchain_client.get_gas_prices(
-            block_count=blockchain_client.latest_blocks
-        )
-
-        if (
-            CHAIN_DATA[chain_id]["post_london_upgrade"]
-            and CHAIN_DATA[chain_id]["has_fee_history"]
-        ):
-            max_fee_per_gas_list = [
-                a + b
-                for a, b in zip(
-                    gas_prices.base_fee_per_gas_list[:-2],
-                    gas_prices.max_priority_fee_per_gas_list[:-1],
-                )
-            ]
-            median_gas_price = median(max_fee_per_gas_list)
-        else:
-            median_gas_price = median(gas_prices.gas_price_list[:-1])
-
-        return (
-            compute_costs.gas_price
-            < median_gas_price * settings.max_acceptable_fee_multiplier
-        )

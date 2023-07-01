@@ -1,6 +1,5 @@
 # pylint: disable=redefined-outer-name
 import os
-from math import floor
 
 import pytest_asyncio
 import respx
@@ -13,7 +12,6 @@ from app.dependencies import CHAIN_DATA
 from app.infrastructure.db.repos.fee_updates import FeeUpdatesRepo
 from app.infrastructure.db.repos.transactions import TransactionsRepo
 from app.infrastructure.web.setup import setup_app
-from app.settings import settings
 from app.usecases.interfaces.clients.http.blockchain import IBlockchainClient
 from app.usecases.interfaces.clients.http.prices import IPriceClient
 from app.usecases.interfaces.repos.fee_updates import IFeeUpdatesRepo
@@ -69,12 +67,9 @@ async def fee_updates_repo(test_db: Database) -> IFeeUpdatesRepo:
 @pytest_asyncio.fixture
 async def test_evm_clients_success() -> IBlockchainClient:
     supported_evm_clients = {}
-    for chain_id, chain_data in CHAIN_DATA.items():
-        latest_blocks = floor(
-            settings.latest_blocks_time / chain_data["avg_block_time_seconds"]
-        )
+    for chain_id in CHAIN_DATA:
         supported_evm_clients[chain_id] = MockWormholeBridgeEvmClient(
-            result=EvmResult.SUCCESS, latest_blocks=latest_blocks, chain_id=chain_id
+            result=EvmResult.SUCCESS, chain_id=chain_id
         )
     return supported_evm_clients
 
@@ -82,27 +77,9 @@ async def test_evm_clients_success() -> IBlockchainClient:
 @pytest_asyncio.fixture
 async def test_evm_clients_failure() -> IBlockchainClient:
     supported_evm_clients = {}
-    for chain_id, chain_data in CHAIN_DATA.items():
-        latest_blocks = floor(
-            settings.latest_blocks_time / chain_data["avg_block_time_seconds"]
-        )
+    for chain_id in CHAIN_DATA:
         supported_evm_clients[chain_id] = MockWormholeBridgeEvmClient(
-            result=EvmResult.FAILURE, latest_blocks=latest_blocks, chain_id=chain_id
-        )
-    return supported_evm_clients
-
-
-@pytest_asyncio.fixture
-async def test_evm_clients_median_testing() -> IBlockchainClient:
-    supported_evm_clients = {}
-    for chain_id, chain_data in CHAIN_DATA.items():
-        latest_blocks = floor(
-            settings.latest_blocks_time / chain_data["avg_block_time_seconds"]
-        )
-        supported_evm_clients[chain_id] = MockWormholeBridgeEvmClient(
-            result=EvmResult.MEDIAN_TESTING,
-            latest_blocks=latest_blocks,
-            chain_id=chain_id,
+            result=EvmResult.FAILURE, chain_id=chain_id
         )
     return supported_evm_clients
 
@@ -135,19 +112,6 @@ async def remote_price_manager_failed(
     return RemotePriceManager(
         price_client=test_price_client,
         blockchain_clients=test_evm_clients_failure,
-        fee_update_repo=fee_updates_repo,
-    )
-
-
-@pytest_asyncio.fixture
-async def remote_price_manager_median_testing(
-    test_evm_clients_median_testing: IBlockchainClient,
-    fee_updates_repo: IFeeUpdatesRepo,
-    test_price_client: IPriceClient,
-) -> IRemotePriceManager:
-    return RemotePriceManager(
-        price_client=test_price_client,
-        blockchain_clients=test_evm_clients_median_testing,
         fee_update_repo=fee_updates_repo,
     )
 

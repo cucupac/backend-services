@@ -24,8 +24,3 @@ class IRemotePriceManager(ABC):
         self, compute_costs: Mapping[int, ComputeCosts], chains_to_update: List[int]
     ) -> Mapping[int, Mapping[int, int]]:
         """Returns a dictionary of fee updates, in terms of source chain native currency, for each source chain."""
-
-    @abstractmethod
-    async def check_gas_price(self, chain_id: int, compute_costs: ComputeCosts) -> bool:
-        """Determines if the instantaneous, remote transaction fee is within an acceptable
-        range. Returns `True` if its acceptable and `False` if it's unacceptable."""
