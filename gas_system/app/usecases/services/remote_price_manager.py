@@ -35,15 +35,15 @@ class RemotePriceManager(IRemotePriceManager):
         )
 
         # Update fees on each source chain
-        for chain_id, remote_fee_updates in fee_updates.items():
-            blockchain_client = self.blockchain_clients[chain_id]
+        for source_chain_id, remote_fee_updates in fee_updates.items():
+            blockchain_client = self.blockchain_clients[source_chain_id]
             try:
                 transaction_hash_bytes = await blockchain_client.update_fees(
                     remote_data=MinimumFees(
                         remote_chain_ids=list(remote_fee_updates.keys()),
                         remote_fees=list(remote_fee_updates.values()),
                     ),
-                    compute_costs=chain_compute_costs[chain_id],
+                    compute_costs=chain_compute_costs[source_chain_id],
                 )
             except BlockchainClientError as e:
                 transaction_hash = None
@@ -57,7 +57,7 @@ class RemotePriceManager(IRemotePriceManager):
             # Store fee update in database
             await self.fee_update_repo.create(
                 fee_update=FeeUpdate(
-                    chain_id=chain_id,
+                    chain_id=source_chain_id,
                     updates=remote_fee_updates,
                     transaction_hash=transaction_hash,
                     status=status,

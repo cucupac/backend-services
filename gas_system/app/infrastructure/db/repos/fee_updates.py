@@ -33,7 +33,7 @@ class FeeUpdatesRepo(IFeeUpdatesRepo):
         return FeeUpdateInDb(**result) if result else None
 
     async def retrieve_last_update_by_chain_id(self, chain_id: int) -> FeeUpdateInDb:
-        """Retrieves the last recorded feel update by chain ID."""
+        """Retrieves the last recorded fee update by chain ID."""
 
         query = (
             FEE_UPDATES.select()

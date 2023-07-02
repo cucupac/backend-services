@@ -158,7 +158,7 @@ class WormholeBridgeEvmClient(IBlockchainClient):
         self, gas_info: Union[PostLondonGasPrices, PreLondonGasPrices] = None
     ) -> Mapping[str, Any]:
         """
-        Description: constructs transcation for remote fee estimation.
+        Description: constructs transaction for remote fee estimation.
         Gas strategy:
             Post EIP-1559: median base fee, median priority fee over the last 100 blocks.
                 - Multi-block median protects against black swan gas prices.

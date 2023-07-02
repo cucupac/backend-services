@@ -58,11 +58,11 @@ class ComputeCosts(BaseModel):
 class PostLondonComputeCosts(ComputeCosts):
     next_block_base_fee: Optional[int] = Field(
         None,
-        description="If post-london-upgrade, the base fee per gas for the next, upcoming block.",
+        description="The base fee per gas for the next, upcoming block.",
         example=25000000000,
     )
     median_priority_fee: Optional[int] = Field(
         None,
-        description="If post-london-upgrade, the max priority per gas for the next, upcoming block.",
+        description="The median priority fee per gas over the last 100 blocks.",
         example=25000000000,
     )
