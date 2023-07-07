@@ -18,14 +18,22 @@ env:
   POSTGRES_PORT: ${{ secrets.POSTGRES_PORT }}
   POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
   DB_URL: "postgresql://user:password@localhost/example"
-  # Endpoints
+
+  # ENDPOINTS
   PRICE_CLIENT_BASE_URL: ${{ secrets.PRICE_CLIENT_BASE_URL }}
+
   # EVM
+  EVM_WORMHOLE_BRIDGE: "0x"
+  RELAYER_ADDRESS: "0x"
   FEE_SETTER_ADDRESS: "0x"
   FEE_SETTER_PRIVATE_KEY: "0x"
-  EVM_WORMHOLE_BRIDGE: "0x"
   PRIORITY_FEE_PERCENTILE: ${{ secrets.PRIORITY_FEE_PERCENTILE }}
+
+  # FEE UPDATES
   REMOTE_FEE_MULTIPLIER: ${{ secrets.REMOTE_FEE_MULTIPLIER }}
+  HIGHER_ETHEREUM_FEE_MULTIPLIER: ${{ secrets.HIGHER_ETHEREUM_FEE_MULTIPLIER }}
+  LOWER_ETHEREUM_FEE_MULTIPLIER: ${{ secrets.LOWER_ETHEREUM_FEE_MULTIPLIER }}
+
   # RPCs
   ETHEREUM_RPC: ${{ secrets.ETHEREUM_RPC }}
   BSC_RPC: ${{ secrets.BSC_RPC }}
@@ -34,8 +42,6 @@ env:
   FANTOM_RPC: ${{ secrets.FANTOM_RPC }}
   ARBITRUM_RPC: ${{ secrets.ARBITRUM_RPC }}
   CELO_RPC: ${{ secrets.CELO_RPC }}
-  # Misc
-  MOCK_FEE: "1000000000000000"
 
 jobs:
   run-ci:

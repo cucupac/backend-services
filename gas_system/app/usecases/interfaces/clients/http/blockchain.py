@@ -6,7 +6,9 @@ from app.usecases.schemas.fees import MinimumFees
 
 class IBlockchainClient(ABC):
     @abstractmethod
-    async def update_fees(self, remote_data: MinimumFees) -> TransactionHash:
+    async def update_fees(
+        self, remote_data: MinimumFees, compute_costs: ComputeCosts
+    ) -> TransactionHash:
         """Sends transaction to the blockchain."""
 
     @abstractmethod

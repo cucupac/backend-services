@@ -154,6 +154,13 @@ ABI = [
     },
     {
         "inputs": [],
+        "name": "feeSetter",
+        "outputs": [{"internalType": "address", "name": "", "type": "address"}],
+        "stateMutability": "view",
+        "type": "function",
+    },
+    {
+        "inputs": [],
         "name": "getTrustedContracts",
         "outputs": [{"internalType": "bytes32[]", "name": "", "type": "bytes32[]"}],
         "stateMutability": "view",
@@ -252,6 +259,15 @@ ABI = [
         "name": "sendMessage",
         "outputs": [{"internalType": "uint64", "name": "sequence", "type": "uint64"}],
         "stateMutability": "payable",
+        "type": "function",
+    },
+    {
+        "inputs": [
+            {"internalType": "address", "name": "_feeSetter", "type": "address"}
+        ],
+        "name": "setFeeSetter",
+        "outputs": [],
+        "stateMutability": "nonpayable",
         "type": "function",
     },
     {

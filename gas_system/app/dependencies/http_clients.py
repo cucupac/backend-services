@@ -1,27 +1,33 @@
-from app.dependencies import CHAIN_DATA, WORMHOLE_BRIDGE_ABI, get_client_session, logger
+from app.dependencies import (
+    BRIDGE_DATA,
+    CHAIN_DATA,
+    WORMHOLE_BRIDGE_ABI,
+    get_client_session,
+    get_transactions_repo,
+    logger,
+)
 from app.infrastructure.clients.http.coingecko import CoingeckoClient
 from app.infrastructure.clients.http.evm_wormhole_bridge import WormholeBridgeEvmClient
 from app.settings import settings
 from app.usecases.interfaces.clients.http.blockchain import IBlockchainClient
 from app.usecases.interfaces.clients.http.prices import IPriceClient
-from app.usecases.schemas.fees import MinimumFees
 
 
 async def get_wormhole_bridge_client(source_chain_id: int) -> IBlockchainClient:
     """Instantiate and return WormholeBridge client."""
 
-    mock_set_send_fees_params = MinimumFees(remote_chain_ids=[], remote_fees=[])
+    transactions_repo = await get_transactions_repo()
 
-    for dest_chain_id in CHAIN_DATA:
-        if dest_chain_id != source_chain_id:
-            mock_set_send_fees_params.remote_chain_ids.append(dest_chain_id)
-            mock_set_send_fees_params.remote_fees.append(settings.mock_fee)
+    wormhole_chain_id = BRIDGE_DATA[source_chain_id]["wormhole"]["chain_id"]
+    test_transaction = await transactions_repo.retrieve_testing_by_chain_id(
+        chain_id=wormhole_chain_id
+    )
 
     return WormholeBridgeEvmClient(
         abi=WORMHOLE_BRIDGE_ABI,
         chain_id=source_chain_id,
         rpc_url=CHAIN_DATA[source_chain_id]["rpc"],
-        mock_set_send_fees_params=mock_set_send_fees_params,
+        mock_payload=bytes.fromhex(test_transaction.relay_message),
         logger=logger,
     )
 
