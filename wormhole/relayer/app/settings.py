@@ -42,6 +42,7 @@ class Settings(BaseSettings):
     relayer_address: str
     evm_wormhole_bridge: str
     priority_fee_percentile: int
+    recent_blocks: int = 100
 
     # BRIDGE
     bridge_client_base_url: str
