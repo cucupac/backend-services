@@ -83,7 +83,10 @@ class WormholeBridgeEvmClient(IBlockchainClient):
         if isinstance(gas_info, PostLondonGasPrices):
             compute_costs = PostLondonComputeCosts(
                 median_gas_price=transaction_dict["maxFeePerGas"],
-                next_block_base_fee=gas_info.base_fee_per_gas_list[-1],
+                next_block_base_fee=max(
+                    gas_info.base_fee_per_gas_list[-1],
+                    gas_info.base_fee_per_gas_list[-2],
+                ),
                 median_priority_fee=ceil(
                     median(gas_info.max_priority_fee_per_gas_list)
                 ),

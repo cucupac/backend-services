@@ -1,4 +1,5 @@
 from logging import Logger
+from statistics import median
 from typing import Any, List, Mapping, Optional
 
 from eth_account.datastructures import SignedTransaction
@@ -83,13 +84,18 @@ class EvmClient(IEvmClient):
         if post_london_upgrade:
             if has_fee_history:
                 fee_history = await self.web3_client.eth.fee_history(
-                    block_count=1,
+                    block_count=settings.recent_blocks,
                     newest_block="latest",
                     reward_percentiles=[settings.priority_fee_percentile],
                 )
+                max_priority_fee_list = [
+                    percentile_list[0] for percentile_list in fee_history.reward
+                ]
 
-                base_fee_per_gas = fee_history.baseFeePerGas[-1]
-                max_priority_fee = fee_history.reward[0][0]
+                base_fee_per_gas = max(
+                    fee_history.baseFeePerGas[-1], fee_history.baseFeePerGas[-2]
+                )
+                max_priority_fee = median(max_priority_fee_list)
             else:
                 base_fee_per_gas = await self.web3_client.eth.gas_price
                 max_priority_fee = await self.web3_client.eth.max_priority_fee
