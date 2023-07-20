@@ -12,11 +12,9 @@ sys.path[0] = str(pathlib.Path(__file__).parents[1].resolve())
 load_dotenv()
 
 # Import Tables
-from migrations.models.metadata import METADATA
-from migrations.models.relays import RELAYS
-from migrations.models.transactions import TRANSACTIONS
-from migrations.models.fee_updates import FEE_UPDATES
-from migrations.models.tasks import TASKS, TASK_LOCKS
+from app.infrastructure.db.metadata import METADATA
+from app.infrastructure.db.models.relays import RELAYS
+from app.infrastructure.db.models.transactions import TRANSACTIONS
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -41,12 +39,11 @@ postgres_host = getenv("POSTGRES_HOST", default="localhost")
 postgres_port = getenv("POSTGRES_PORT", default="5432")
 postgres_user = getenv("POSTGRES_USER", default="postgres")
 postgres_password = getenv("POSTGRES_PASSWORD", default="postgres")
-postgres_database = getenv("POSTGRES_DB", default="ax_relayer_dev")
+postgres_database = getenv("POSTGRES_DB", default="ax_services_dev")
 
-url = f"postgresql://{postgres_user}:{postgres_password}@{postgres_host}:{postgres_port}/{postgres_database}"
-
-# NOTE: Uncomment the URL below and comment the URL above to run a test database migration
-# url = f"postgresql://{postgres_user}:{postgres_password}@{postgres_host}:5444/ax_relayer_dev_test"
+# NOTE: Use the test URL when migrating to the test database. Use the dev URL when migrating to the dev database.
+url = f"postgresql://{postgres_user}:{postgres_password}@{postgres_host}:{postgres_port}/{postgres_database}"  # DEV
+# url = f"postgresql://{postgres_user}:{postgres_password}@{postgres_host}:5444/ax_services_dev_test"  # TEST
 config.set_main_option("sqlalchemy.url", url)
 
 
@@ -75,12 +72,10 @@ def run_migrations_offline():
 
 
 def include_object(object, name, type_, reflected, compare_to):
-    # If the table has a specified schema, don't include it
-    if getenv("ENVIRONMENT") == "testing":
-        return True
-    elif type_ == "table" and object.schema:
+    if type_ == "table" and object.schema != getenv("DB_SCHEMA"):
         return False
-    return True
+    else:
+        return True
 
 
 def run_migrations_online():
@@ -101,6 +96,7 @@ def run_migrations_online():
             connection=connection,
             target_metadata=target_metadata,
             include_schemas=True,
+            version_table_schema=getenv("DB_SCHEMA"),
             include_object=include_object,
         )
 

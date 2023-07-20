@@ -1,7 +1,8 @@
 # pylint: disable=duplicate-code
 import sqlalchemy as sa
 
-from migrations.models.metadata import METADATA
+from app.infrastructure.db.metadata import METADATA
+from app.settings import settings
 
 TASKS = sa.Table(
     "tasks",
@@ -16,6 +17,7 @@ TASKS = sa.Table(
         server_default=sa.func.now(),
         onupdate=sa.func.now(),
     ),
+    schema=settings.db_schema,
 )
 
 
@@ -38,4 +40,5 @@ TASK_LOCKS = sa.Table(
         server_default=sa.func.now(),
         onupdate=sa.func.now(),
     ),
+    schema=settings.db_schema,
 )

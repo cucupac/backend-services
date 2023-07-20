@@ -64,7 +64,7 @@ async def test_delete(
         await tasks_repo.delete_lock(task_id=lock.task_id)
 
         deleted_lock = await test_db.fetch_one(
-            """SELECT * FROM task_locks AS tl WHERE tl.task_id=:task_id""",
+            """SELECT * FROM ax_relayer.task_locks AS tl WHERE tl.task_id=:task_id""",
             {
                 "task_id": lock.task_id,
             },

@@ -20,7 +20,7 @@ async def test_task_success(
     composite_ids = []
 
     test_undelivered_txs = await test_db.fetch_all(
-        """SELECT * FROM transactions AS t JOIN relays AS r ON t.id = r.transaction_id
+        """SELECT * FROM ax_relayer.transactions AS t JOIN ax_relayer.relays AS r ON t.id = r.transaction_id
             WHERE r.status=:status AND r.transaction_hash IS NOT NULL""",
         {"status": Status.PENDING},
     )
@@ -42,7 +42,7 @@ async def test_task_success(
 
     for composite_id in composite_ids:
         test_tx = await test_db.fetch_one(
-            """SELECT * FROM transactions AS t JOIN relays AS r ON t.id = r.transaction_id
+            """SELECT * FROM ax_relayer.transactions AS t JOIN ax_relayer.relays AS r ON t.id = r.transaction_id
             WHERE t.emitter_address=:emitter_address AND t.source_chain_id=:source_chain_id AND t.sequence=:sequence
             """,
             {
@@ -69,7 +69,7 @@ async def test_task_fail(
     composite_ids = []
 
     test_undelivered_txs = await test_db.fetch_all(
-        """SELECT * FROM transactions AS t JOIN relays AS r ON t.id = r.transaction_id
+        """SELECT * FROM ax_relayer.transactions AS t JOIN ax_relayer.relays AS r ON t.id = r.transaction_id
             WHERE r.status=:status AND r.transaction_hash IS NOT NULL""",
         {"status": Status.PENDING},
     )
@@ -91,7 +91,7 @@ async def test_task_fail(
 
     for composite_id in composite_ids:
         test_tx = await test_db.fetch_one(
-            """SELECT * FROM transactions AS t JOIN relays AS r ON t.id = r.transaction_id
+            """SELECT * FROM ax_relayer.transactions AS t JOIN ax_relayer.relays AS r ON t.id = r.transaction_id
             WHERE t.emitter_address=:emitter_address AND t.source_chain_id=:source_chain_id AND t.sequence=:sequence
             """,
             {
@@ -117,7 +117,7 @@ async def test_task_error(
     composite_ids = []
 
     test_undelivered_txs = await test_db.fetch_all(
-        """SELECT * FROM transactions AS t JOIN relays AS r ON t.id = r.transaction_id
+        """SELECT * FROM ax_relayer.transactions AS t JOIN ax_relayer.relays AS r ON t.id = r.transaction_id
             WHERE r.status=:status AND r.transaction_hash IS NOT NULL""",
         {"status": Status.PENDING},
     )
@@ -139,7 +139,7 @@ async def test_task_error(
 
     for composite_id in composite_ids:
         test_tx = await test_db.fetch_one(
-            """SELECT * FROM transactions AS t JOIN relays AS r ON t.id = r.transaction_id
+            """SELECT * FROM ax_relayer.transactions AS t JOIN ax_relayer.relays AS r ON t.id = r.transaction_id
             WHERE t.emitter_address=:emitter_address AND t.source_chain_id=:source_chain_id AND t.sequence=:sequence
             """,
             {

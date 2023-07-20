@@ -37,7 +37,7 @@ async def test_db_url() -> str:
     password = os.getenv("POSTGRES_PASSWORD", "postgres")
     host = os.getenv("POSTGRES_HOST", "localhost")
     port = os.getenv("POSTGRES_PORT", "5444")
-    database_name = os.getenv("POSTGRES_DB", "ax_relayer_dev_test")
+    database_name = os.getenv("POSTGRES_DB", "ax_services_dev_test")
     return f"postgres://{username}:{password}@{host}:{port}/{database_name}"
 
 
@@ -47,8 +47,8 @@ async def test_db(test_db_url) -> Database:
 
     await test_db.connect()
     yield test_db
-    await test_db.execute("TRUNCATE transactions CASCADE")
-    await test_db.execute("TRUNCATE relays CASCADE")
+    await test_db.execute("TRUNCATE ax_relayer.transactions CASCADE")
+    await test_db.execute("TRUNCATE ax_relayer.relays CASCADE")
     await test_db.disconnect()
 
 
@@ -133,7 +133,7 @@ async def many_inserted_transactions(
 async def failed_transaction(test_db: Database) -> int:
     async with test_db.transaction():
         transaction_id = await test_db.execute(
-            """INSERT INTO transactions (emitter_address, from_address, to_address, source_chain_id, dest_chain_id, amount, sequence) VALUES (:emitter_address, :from_address, :to_address, :source_chain_id, :dest_chain_id, :amount, :sequence) RETURNING id""",
+            """INSERT INTO ax_relayer.transactions (emitter_address, from_address, to_address, source_chain_id, dest_chain_id, amount, sequence) VALUES (:emitter_address, :from_address, :to_address, :source_chain_id, :dest_chain_id, :amount, :sequence) RETURNING id""",
             {
                 "emitter_address": constant.TEST_EMITTER_ADDRESS,
                 "from_address": None,
@@ -145,7 +145,7 @@ async def failed_transaction(test_db: Database) -> int:
             },
         )
         await test_db.execute(
-            """INSERT INTO relays (transaction_id, message, status, transaction_hash, error, cache_status, grpc_status) VALUES (:transaction_id, :message, :status, :transaction_hash, :error, :cache_status, :grpc_status)""",
+            """INSERT INTO ax_relayer.relays (transaction_id, message, status, transaction_hash, error, cache_status, grpc_status) VALUES (:transaction_id, :message, :status, :transaction_hash, :error, :cache_status, :grpc_status)""",
             {
                 "transaction_id": transaction_id,
                 "status": Status.FAILED,

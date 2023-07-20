@@ -14,7 +14,7 @@ services:
       - POSTGRES_PORT=5432
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=ax_relayer_dev
+      - POSTGRES_DB=ax_services_dev
     ports:
       - 5432:5432
 
@@ -31,7 +31,7 @@ services:
       - POSTGRES_PORT=5444
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=ax_relayer_dev_test
+      - POSTGRES_DB=ax_services_dev_test
     ports:
       - 5444:5444
     command: -p 5444

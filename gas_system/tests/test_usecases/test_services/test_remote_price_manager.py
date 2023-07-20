@@ -30,7 +30,7 @@ async def test_remote_price_manager(
 
     for local_chain_id, local_data in CHAIN_DATA.items():
         test_fee_update = await test_db.fetch_one(
-            """SELECT * FROM fee_updates WHERE fee_updates.chain_id=:chain_id
+            """SELECT * FROM gas_system.fee_updates AS f_u WHERE f_u.chain_id=:chain_id
             """,
             {
                 "chain_id": int(local_chain_id),
@@ -62,7 +62,7 @@ async def test_remote_price_manager_fail(
 
     for local_chain_id, local_data in CHAIN_DATA.items():
         test_fee_update = await test_db.fetch_one(
-            """SELECT * FROM fee_updates WHERE fee_updates.chain_id=:chain_id
+            """SELECT * FROM gas_system.fee_updates AS f_u WHERE f_u.chain_id=:chain_id
             """,
             {
                 "chain_id": int(local_chain_id),

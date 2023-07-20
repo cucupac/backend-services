@@ -3,6 +3,7 @@ import sqlalchemy as sa
 
 from app.infrastructure.db.metadata import METADATA
 from app.infrastructure.db.models.transactions import TRANSACTIONS
+from app.settings import settings
 
 RELAYS = sa.Table(
     "relays",
@@ -30,4 +31,5 @@ RELAYS = sa.Table(
         server_default=sa.func.now(),
         onupdate=sa.func.now(),
     ),
+    schema=settings.db_schema,
 )

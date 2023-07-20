@@ -21,7 +21,7 @@ async def test_task(
     # Assert that test missed VAAs are not in the database
     for test_sequence in constant.TEST_MISSED_VAAS_CELO_SEQUENCES:
         test_relay = await test_db.fetch_one(
-            """SELECT * FROM transactions AS t JOIN relays AS r ON t.id = r.transaction_id
+            """SELECT * FROM ax_relayer.transactions AS t JOIN ax_relayer.relays AS r ON t.id = r.transaction_id
             WHERE t.emitter_address=:emitter_address AND t.source_chain_id=:source_chain_id AND t.sequence=:sequence
             """,
             {
@@ -34,7 +34,7 @@ async def test_task(
 
     for test_sequence in constant.TEST_MISSED_VAAS_POLYGON_SEQUENCES:
         test_relay = await test_db.fetch_one(
-            """SELECT * FROM transactions AS t JOIN relays AS r ON t.id = r.transaction_id
+            """SELECT * FROM ax_relayer.transactions AS t JOIN ax_relayer.relays AS r ON t.id = r.transaction_id
             WHERE t.emitter_address=:emitter_address AND t.source_chain_id=:source_chain_id AND t.sequence=:sequence
             """,
             {
@@ -53,7 +53,7 @@ async def test_task(
     # Assert that previously missing VAAs are now tracked
     for test_sequence in constant.TEST_MISSED_VAAS_CELO_SEQUENCES:
         test_relay = await test_db.fetch_one(
-            """SELECT * FROM transactions AS t JOIN relays AS r ON t.id = r.transaction_id
+            """SELECT * FROM ax_relayer.transactions AS t JOIN ax_relayer.relays AS r ON t.id = r.transaction_id
             WHERE t.emitter_address=:emitter_address AND t.source_chain_id=:source_chain_id AND t.sequence=:sequence
             """,
             {
@@ -77,7 +77,7 @@ async def test_task(
 
     for test_sequence in constant.TEST_MISSED_VAAS_POLYGON_SEQUENCES:
         test_relay = await test_db.fetch_one(
-            """SELECT * FROM transactions AS t JOIN relays AS r ON t.id = r.transaction_id
+            """SELECT * FROM ax_relayer.transactions AS t JOIN ax_relayer.relays AS r ON t.id = r.transaction_id
             WHERE t.emitter_address=:emitter_address AND t.source_chain_id=:source_chain_id AND t.sequence=:sequence
             """,
             {

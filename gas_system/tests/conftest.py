@@ -10,15 +10,14 @@ from httpx import AsyncClient
 import tests.constants as constant
 from app.dependencies import CHAIN_DATA
 from app.infrastructure.db.repos.fee_updates import FeeUpdatesRepo
-from app.infrastructure.db.repos.transactions import TransactionsRepo
+from app.infrastructure.db.repos.mock_transactions import MockTransactionsRepo
 from app.infrastructure.web.setup import setup_app
 from app.usecases.interfaces.clients.http.blockchain import IBlockchainClient
 from app.usecases.interfaces.clients.http.prices import IPriceClient
 from app.usecases.interfaces.repos.fee_updates import IFeeUpdatesRepo
-from app.usecases.interfaces.repos.transactions import ITransactionsRepo
+from app.usecases.interfaces.repos.mock_transactions import IMockTransactionsRepo
 from app.usecases.interfaces.services.remote_price_manager import IRemotePriceManager
-from app.usecases.schemas.fees import FeeUpdate
-from app.usecases.schemas.transactions import CacheStatus, GrpcStatus, Status
+from app.usecases.schemas.fees import FeeUpdate, Status
 from app.usecases.services.remote_price_manager import RemotePriceManager
 from tests.mocks.clients.http.coingecko import MockPriceClient
 
@@ -36,7 +35,7 @@ async def test_db_url():
     password = os.getenv("POSTGRES_PASSWORD", "postgres")
     host = os.getenv("POSTGRES_HOST", "localhost")
     port = os.getenv("POSTGRES_PORT", "5444")
-    database_name = os.getenv("POSTGRES_DB", "ax_relayer_dev_test")
+    database_name = os.getenv("POSTGRES_DB", "ax_services_dev_test")
     return f"postgres://{username}:{password}@{host}:{port}/{database_name}"
 
 
@@ -46,16 +45,17 @@ async def test_db(test_db_url) -> Database:
 
     await test_db.connect()
     yield test_db
-    await test_db.execute("TRUNCATE transactions CASCADE")
-    await test_db.execute("TRUNCATE relays CASCADE")
-    await test_db.execute("TRUNCATE fee_updates CASCADE")
+    await test_db.execute("TRUNCATE gas_system.fee_updates CASCADE")
+    await test_db.execute("TRUNCATE gas_system.mock_transactions CASCADE")
+    await test_db.execute("TRUNCATE gas_system.tasks CASCADE")
+    await test_db.execute("TRUNCATE gas_system.task_locks CASCADE")
     await test_db.disconnect()
 
 
 # Repos (Database Gateways)
 @pytest_asyncio.fixture
-async def transactions_repo(test_db: Database) -> ITransactionsRepo:
-    return TransactionsRepo(db=test_db)
+async def mock_transactions_repo(test_db: Database) -> IMockTransactionsRepo:
+    return MockTransactionsRepo(db=test_db)
 
 
 @pytest_asyncio.fixture
@@ -129,32 +129,14 @@ async def test_fee_update() -> FeeUpdate:
 
 # Database-inserted Objects
 @pytest_asyncio.fixture
-async def testing_transaction(test_db: Database) -> None:
-    async with test_db.transaction():
-        transaction_id = await test_db.execute(
-            """INSERT INTO transactions (emitter_address, from_address, to_address, source_chain_id, dest_chain_id, amount, sequence) VALUES (:emitter_address, :from_address, :to_address, :source_chain_id, :dest_chain_id, :amount, :sequence) RETURNING id""",
-            {
-                "emitter_address": constant.TEST_EMITTER_ADDRESS,
-                "from_address": constant.TEST_USER_ADDRESS,
-                "to_address": constant.TEST_USER_ADDRESS,
-                "source_chain_id": constant.TEST_SOURCE_CHAIN_ID,
-                "dest_chain_id": constant.TEST_DESTINATION_CHAIN_ID,
-                "amount": constant.TEST_AMOUNT,
-                "sequence": constant.TEST_SEQUENCE,
-            },
-        )
-        await test_db.execute(
-            """INSERT INTO relays (transaction_id, message, status, transaction_hash, error, cache_status, grpc_status) VALUES (:transaction_id, :message, :status, :transaction_hash, :error, :cache_status, :grpc_status)""",
-            {
-                "transaction_id": transaction_id,
-                "status": Status.TESTING,
-                "error": None,
-                "message": constant.TEST_VAA,
-                "transaction_hash": None,
-                "cache_status": CacheStatus.NEVER_CACHED,
-                "grpc_status": GrpcStatus.FAILED,
-            },
-        )
+async def mock_transaction(test_db: Database) -> None:
+    await test_db.execute(
+        """INSERT INTO gas_system.mock_transactions (chain_id, payload) VALUES (:chain_id, :payload) RETURNING id""",
+        {
+            "chain_id": constant.TEST_CHAIN_ID,
+            "payload": constant.TEST_VAA_PAYLOAD.hex(),
+        },
+    )
 
 
 @pytest_asyncio.fixture
