@@ -1,10 +1,9 @@
 from databases import Database
 from sqlalchemy import select
 
-
 from app.infrastructure.db.models.mock_transactions import MOCK_TRANSACTIONS
-from app.usecases.schemas.mock_transaction import MockTransactionInDb
 from app.usecases.interfaces.repos.mock_transactions import IMockTransactionsRepo
+from app.usecases.schemas.mock_transaction import MockTransactionInDb
 
 
 class MockTransactionsRepo(IMockTransactionsRepo):

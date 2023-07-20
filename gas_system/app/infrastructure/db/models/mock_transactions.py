@@ -1,7 +1,6 @@
 import sqlalchemy as sa
 
 from app.infrastructure.db.metadata import METADATA
-
 from app.settings import settings
 
 MOCK_TRANSACTIONS = sa.Table(

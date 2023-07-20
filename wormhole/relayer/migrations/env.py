@@ -42,10 +42,9 @@ postgres_user = getenv("POSTGRES_USER", default="postgres")
 postgres_password = getenv("POSTGRES_PASSWORD", default="postgres")
 postgres_database = getenv("POSTGRES_DB", default="ax_services_dev")
 
-url = f"postgresql://{postgres_user}:{postgres_password}@{postgres_host}:{postgres_port}/{postgres_database}"
-
-# NOTE: Uncomment the URL below and comment the URL above to run a test database migration
-# url = f"postgresql://{postgres_user}:{postgres_password}@{postgres_host}:5444/ax_services_dev_test"
+# NOTE: Use the test URL when migrating to the test database. Use the dev URL when migrating to the dev database.
+url = f"postgresql://{postgres_user}:{postgres_password}@{postgres_host}:{postgres_port}/{postgres_database}"  # DEV
+# url = f"postgresql://{postgres_user}:{postgres_password}@{postgres_host}:5444/ax_services_dev_test"  # TEST
 config.set_main_option("sqlalchemy.url", url)
 
 

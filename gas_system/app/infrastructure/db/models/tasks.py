@@ -2,7 +2,6 @@
 import sqlalchemy as sa
 
 from app.infrastructure.db.metadata import METADATA
-
 from app.settings import settings
 
 TASKS = sa.Table(

@@ -45,7 +45,7 @@ def connect_to_db():
 
 
 def create_schema():
-    """Creates account-connections schema."""
+    """Creates schemas."""
 
     db_connection = psycopg2.connect(**CONNECTION_INFO)
     cursor = db_connection.cursor()
