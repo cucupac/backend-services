@@ -16,7 +16,7 @@ ENV OPENAPI_URL="/openapi.json"
 ENV SERVER_PORT=9000
 
 # Database 
-ENV DB_URL=postgres://postgres:postgres@localhost:5432/ax_relayer_dev
+ENV DB_URL=postgres://postgres:postgres@localhost:5432/ax_services_dev
 
 # RPC Urls
 ENV ETHEREUM_RPC=inject_at_deployment

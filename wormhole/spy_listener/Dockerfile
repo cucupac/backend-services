@@ -20,7 +20,7 @@ ENV SPY_SERVICE_FILTERS=inject_at_deployment
 ENV RECONNECT_WAIT_TIME=2
 
 # Database 
-ENV DB_URL=postgres://postgres:postgres@localhost:5432/ax_relayer_dev
+ENV DB_URL=postgres://postgres:postgres@localhost:5432/ax_services_dev
 
 # REDIS
 ENV REDIS_ZSET=inject_at_deployment

@@ -16,7 +16,7 @@ ENV SERVER_PORT=10000
 ENV ENVIRONMENT=development
 
 # Database 
-ENV DB_URL=postgres://postgres:postgres@localhost:5432/ax_relayer_dev
+ENV DB_URL=postgres://postgres:postgres@localhost:5432/ax_services_dev
 
 # Price Client
 ENV PRICE_CLIENT_BASE_URL=inject_at_deployment

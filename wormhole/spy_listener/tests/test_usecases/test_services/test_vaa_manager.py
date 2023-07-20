@@ -27,7 +27,7 @@ async def test_publish_success(
     # Assertions
     # The message was stored in the database with correct information
     test_transaction = await test_db.fetch_one(
-        """SELECT * FROM transactions AS t JOIN relays AS r ON t.id = r.transaction_id 
+        """SELECT * FROM ax_relayer.transactions AS t JOIN ax_relayer.relays AS r ON t.id = r.transaction_id 
         WHERE t.emitter_address=:emitter_address AND t.source_chain_id=:source_chain_id AND t.sequence=:sequence
         """,
         {
@@ -71,7 +71,7 @@ async def test_publish_fail(
     # Assertions
     # The message was stored in the database with correct information
     test_transaction = await test_db.fetch_one(
-        """SELECT * FROM transactions AS t JOIN relays AS r ON t.id = r.transaction_id 
+        """SELECT * FROM ax_relayer.transactions AS t JOIN ax_relayer.relays AS r ON t.id = r.transaction_id 
         WHERE t.emitter_address=:emitter_address AND t.source_chain_id=:source_chain_id AND t.sequence=:sequence
         """,
         {

@@ -20,6 +20,7 @@ class Settings(BaseSettings):
 
     # Database Settings
     db_url: str
+    db_schema: str
 
     # EVM
     fee_setter_private_key: str

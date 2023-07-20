@@ -25,6 +25,7 @@ class Settings(BaseSettings):
 
     # Database Settings
     db_url: str
+    db_schema: str
 
     # Redis
     redis_consumption_frequency: int = 1
