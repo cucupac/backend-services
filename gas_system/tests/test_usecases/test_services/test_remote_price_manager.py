@@ -12,7 +12,7 @@ import tests.constants as constant
 from app.dependencies import CHAIN_DATA
 from app.settings import settings
 from app.usecases.interfaces.services.remote_price_manager import IRemotePriceManager
-from app.usecases.schemas.blockchain import Chains, ComputeCosts
+from app.usecases.schemas.blockchain import AxChains, ComputeCosts
 from app.usecases.schemas.fees import Status
 
 
@@ -100,7 +100,7 @@ async def get_expected_fee_updates(
                 constant.MOCK_USD_VALUES[local_data["native"]]
             )
             # Add buffer
-            if remote_chain_id != Chains.ETHEREUM:
+            if remote_chain_id != AxChains.ETHEREUM:
                 local_cost_native *= settings.remote_fee_multiplier
             else:
                 # Given the fronzen time for this test, we use higher multiplier
@@ -120,7 +120,7 @@ async def test_add_buffer_ethereum_high(
 
     remote_fee_pre_buffer = 1
     remote_fee_post_buffer = await remote_price_manager.add_buffer(
-        remote_chain_id=Chains.ETHEREUM,
+        remote_chain_id=AxChains.ETHEREUM,
         remote_fee_in_local_native=remote_fee_pre_buffer,
     )
 
@@ -139,7 +139,7 @@ async def test_add_buffer_ethereum_low(
 
     remote_fee_pre_buffer = 1
     remote_fee_post_buffer = await remote_price_manager.add_buffer(
-        remote_chain_id=Chains.ETHEREUM,
+        remote_chain_id=AxChains.ETHEREUM,
         remote_fee_in_local_native=remote_fee_pre_buffer,
     )
 
@@ -158,7 +158,8 @@ async def test_add_buffer_non_ethereum(
 
     remote_fee_pre_buffer = 1
     remote_fee_post_buffer = await remote_price_manager.add_buffer(
-        remote_chain_id=Chains.POLYGON, remote_fee_in_local_native=remote_fee_pre_buffer
+        remote_chain_id=AxChains.POLYGON,
+        remote_fee_in_local_native=remote_fee_pre_buffer,
     )
 
     assert (

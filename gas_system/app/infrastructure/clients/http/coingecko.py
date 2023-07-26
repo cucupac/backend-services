@@ -4,7 +4,7 @@ from aiohttp import ClientSession
 
 from app.dependencies import CHAIN_DATA
 from app.usecases.interfaces.clients.http.prices import IPriceClient
-from app.usecases.schemas.blockchain import Chains
+from app.usecases.schemas.blockchain import AxChains
 from app.usecases.schemas.prices import (
     APIErrorBody,
     PriceClientError,
@@ -17,12 +17,12 @@ class CoingeckoClient(IPriceClient):
         self.client_session = client_session
         self.base_url = base_url
         self.id_lookup = {
-            "ethereum": Chains.ETHEREUM.value,
-            "binancecoin": Chains.BSC.value,
-            "matic-network": Chains.POLYGON.value,
-            "avalanche-2": Chains.AVALANCHE.value,
-            "fantom": Chains.FANTOM.value,
-            "celo": Chains.CELO.value,
+            "ethereum": AxChains.ETHEREUM.value,
+            "binancecoin": AxChains.BSC.value,
+            "matic-network": AxChains.POLYGON.value,
+            "avalanche-2": AxChains.AVALANCHE.value,
+            "fantom": AxChains.FANTOM.value,
+            "celo": AxChains.CELO.value,
         }
 
     async def api_call(

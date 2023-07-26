@@ -134,7 +134,7 @@ async def mock_transaction(test_db: Database) -> None:
         """INSERT INTO gas_system.mock_transactions (chain_id, payload) VALUES (:chain_id, :payload) RETURNING id""",
         {
             "chain_id": constant.TEST_CHAIN_ID,
-            "payload": constant.TEST_VAA_PAYLOAD.hex(),
+            "payload": constant.MOCK_VAA_PAYLOAD.hex(),
         },
     )
 

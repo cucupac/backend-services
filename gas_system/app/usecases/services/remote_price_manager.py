@@ -8,7 +8,11 @@ from app.usecases.interfaces.clients.http.blockchain import IBlockchainClient
 from app.usecases.interfaces.clients.http.prices import IPriceClient
 from app.usecases.interfaces.repos.fee_updates import IFeeUpdatesRepo
 from app.usecases.interfaces.services.remote_price_manager import IRemotePriceManager
-from app.usecases.schemas.blockchain import BlockchainClientError, Chains, ComputeCosts
+from app.usecases.schemas.blockchain import (
+    BlockchainClientError,
+    AxChains,
+    ComputeCosts,
+)
 from app.usecases.schemas.fees import FeeUpdate, MinimumFees, Status
 
 
@@ -70,7 +74,7 @@ class RemotePriceManager(IRemotePriceManager):
     ) -> int:
         """Adds buffer to remote fee."""
 
-        if remote_chain_id == Chains.ETHEREUM:
+        if remote_chain_id == AxChains.ETHEREUM:
             if datetime.utcnow().hour >= 12 and datetime.utcnow().hour < 18:
                 return (
                     remote_fee_in_local_native * settings.higher_ethereum_fee_multiplier
