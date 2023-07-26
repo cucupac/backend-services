@@ -4,7 +4,6 @@ from typing import Mapping
 
 from app.dependencies import CHAIN_ID_LOOKUP
 from app.usecases.interfaces.clients.evm import IEvmClient
-from app.usecases.interfaces.clients.websocket import IWebsocketClient
 from app.usecases.interfaces.repos.relays import IRelaysRepo
 from app.usecases.interfaces.services.vaa_delivery import IVaaDelivery
 from app.usecases.schemas.blockchain import BlockchainClientError, BlockchainErrors
@@ -17,12 +16,10 @@ class VaaDelivery(IVaaDelivery):
         self,
         relays_repo: IRelaysRepo,
         supported_evm_clients: Mapping[int, IEvmClient],
-        websocket_client: IWebsocketClient,
         logger: Logger,
     ):
         self.relays_repo = relays_repo
         self.supported_evm_clients = supported_evm_clients
-        self.websocket_client = websocket_client
         self.logger = logger
 
     async def process(self, set_message: bytes) -> None:
@@ -57,14 +54,6 @@ class VaaDelivery(IVaaDelivery):
                 message.sequence,
                 transaction_hash,
             )
-
-        # Notify client via web socket
-        await self.websocket_client.notify_client(
-            address=message.from_address,
-            status=status,
-            error=error,
-            transaction_hash=transaction_hash,
-        )
 
         # Update relay in the database
         await self.relays_repo.update(
