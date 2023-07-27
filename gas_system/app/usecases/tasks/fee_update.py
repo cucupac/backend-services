@@ -39,23 +39,23 @@ class UpdateFeesTask(IUpdateFeeTask):
 
         # Determine which chains need to be updated
         chains_to_update = []
-        for chain_id in CHAIN_DATA:
+        for ax_chain_id in CHAIN_DATA:
             last_fee_update = (
                 await self.fee_updates_repo.retrieve_last_update_by_chain_id(
-                    chain_id=chain_id
+                    chain_id=ax_chain_id
                 )
             )
 
             if not last_fee_update:
-                chains_to_update.append(chain_id)
+                chains_to_update.append(ax_chain_id)
             else:
                 if last_fee_update.status == Status.FAILED:
-                    chains_to_update.append(chain_id)
+                    chains_to_update.append(ax_chain_id)
                 else:
                     if last_fee_update.created_at <= datetime.utcnow() - timedelta(
-                        seconds=UPDATE_FEES_FREQUENCIES[chain_id]
+                        seconds=UPDATE_FEES_FREQUENCIES[ax_chain_id]
                     ):
-                        chains_to_update.append(chain_id)
+                        chains_to_update.append(ax_chain_id)
 
         if chains_to_update:
             await self.remote_price_manager.update_remote_fees(

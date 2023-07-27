@@ -9,8 +9,8 @@ from app.usecases.interfaces.clients.http.prices import IPriceClient
 from app.usecases.interfaces.repos.fee_updates import IFeeUpdatesRepo
 from app.usecases.interfaces.services.remote_price_manager import IRemotePriceManager
 from app.usecases.schemas.blockchain import (
-    BlockchainClientError,
     AxChains,
+    BlockchainClientError,
     ComputeCosts,
 )
 from app.usecases.schemas.fees import FeeUpdate, MinimumFees, Status

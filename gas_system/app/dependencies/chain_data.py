@@ -1,7 +1,6 @@
 from app.settings import settings
 from app.usecases.schemas.blockchain import AxChains
 
-
 CHAIN_DATA = {
     AxChains.ETHEREUM.value: {
         "name": "Ethereum",
