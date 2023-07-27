@@ -52,7 +52,7 @@ def create_schema():
     db_connection.set_isolation_level(0)
 
     try:
-        cursor.execute(f"CREATE SCHEMA ax_relayer;")
+        cursor.execute(f"CREATE SCHEMA wh_relayer;")
         cursor.execute(f"CREATE SCHEMA ax_scan;")
         cursor.execute(f"CREATE SCHEMA gas_system;")
     except Exception as e:

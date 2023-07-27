@@ -63,10 +63,10 @@ async def test_db(test_db_url) -> Database:
 
     await test_db.connect()
     yield test_db
-    await test_db.execute("TRUNCATE ax_relayer.transactions CASCADE")
-    await test_db.execute("TRUNCATE ax_relayer.relays CASCADE")
-    await test_db.execute("TRUNCATE ax_relayer.tasks CASCADE")
-    await test_db.execute("TRUNCATE ax_relayer.task_locks CASCADE")
+    await test_db.execute("TRUNCATE wh_relayer.transactions CASCADE")
+    await test_db.execute("TRUNCATE wh_relayer.relays CASCADE")
+    await test_db.execute("TRUNCATE wh_relayer.tasks CASCADE")
+    await test_db.execute("TRUNCATE wh_relayer.task_locks CASCADE")
     await test_db.disconnect()
 
 
@@ -244,7 +244,7 @@ async def manage_locks_task(
 async def inserted_transaction(test_db: Database) -> None:
     async with test_db.transaction():
         transaction_id = await test_db.execute(
-            """INSERT INTO ax_relayer.transactions (emitter_address, from_address, to_address, source_chain_id, dest_chain_id, amount, sequence) VALUES (:emitter_address, :from_address, :to_address, :source_chain_id, :dest_chain_id, :amount, :sequence) RETURNING id""",
+            """INSERT INTO wh_relayer.transactions (emitter_address, from_address, to_address, source_chain_id, dest_chain_id, amount, sequence) VALUES (:emitter_address, :from_address, :to_address, :source_chain_id, :dest_chain_id, :amount, :sequence) RETURNING id""",
             {
                 "emitter_address": constant.TEST_EMITTER_ADDRESS,
                 "from_address": constant.TEST_USER_ADDRESS,
@@ -256,7 +256,7 @@ async def inserted_transaction(test_db: Database) -> None:
             },
         )
         await test_db.execute(
-            """INSERT INTO ax_relayer.relays (transaction_id, message, status, transaction_hash, error, cache_status, grpc_status) VALUES (:transaction_id, :message, :status, :transaction_hash, :error, :cache_status, :grpc_status)""",
+            """INSERT INTO wh_relayer.relays (transaction_id, message, status, transaction_hash, error, cache_status, grpc_status) VALUES (:transaction_id, :message, :status, :transaction_hash, :error, :cache_status, :grpc_status)""",
             {
                 "transaction_id": transaction_id,
                 "status": Status.PENDING,
@@ -273,7 +273,7 @@ async def inserted_transaction(test_db: Database) -> None:
 async def failed_transaction(test_db: Database) -> None:
     async with test_db.transaction():
         transaction_id = await test_db.execute(
-            """INSERT INTO ax_relayer.transactions (emitter_address, from_address, to_address, source_chain_id, dest_chain_id, amount, sequence) VALUES (:emitter_address, :from_address, :to_address, :source_chain_id, :dest_chain_id, :amount, :sequence) RETURNING id""",
+            """INSERT INTO wh_relayer.transactions (emitter_address, from_address, to_address, source_chain_id, dest_chain_id, amount, sequence) VALUES (:emitter_address, :from_address, :to_address, :source_chain_id, :dest_chain_id, :amount, :sequence) RETURNING id""",
             {
                 "emitter_address": constant.TEST_EMITTER_ADDRESS,
                 "from_address": None,
@@ -285,7 +285,7 @@ async def failed_transaction(test_db: Database) -> None:
             },
         )
         await test_db.execute(
-            """INSERT INTO ax_relayer.relays (transaction_id, message, status, transaction_hash, error, cache_status, grpc_status) VALUES (:transaction_id, :message, :status, :transaction_hash, :error, :cache_status, :grpc_status)""",
+            """INSERT INTO wh_relayer.relays (transaction_id, message, status, transaction_hash, error, cache_status, grpc_status) VALUES (:transaction_id, :message, :status, :transaction_hash, :error, :cache_status, :grpc_status)""",
             {
                 "transaction_id": transaction_id,
                 "status": Status.FAILED,
@@ -303,7 +303,7 @@ async def pending_transactions(test_db: Database) -> None:
     for index in range(constant.DEFAULT_ITERATIONS):
         async with test_db.transaction():
             transaction_id = await test_db.execute(
-                """INSERT INTO ax_relayer.transactions (emitter_address, from_address, to_address, source_chain_id, dest_chain_id, amount, sequence) VALUES (:emitter_address, :from_address, :to_address, :source_chain_id, :dest_chain_id, :amount, :sequence) RETURNING id""",
+                """INSERT INTO wh_relayer.transactions (emitter_address, from_address, to_address, source_chain_id, dest_chain_id, amount, sequence) VALUES (:emitter_address, :from_address, :to_address, :source_chain_id, :dest_chain_id, :amount, :sequence) RETURNING id""",
                 {
                     "emitter_address": constant.TEST_EMITTER_ADDRESS,
                     "from_address": constant.TEST_USER_ADDRESS,
@@ -315,7 +315,7 @@ async def pending_transactions(test_db: Database) -> None:
                 },
             )
             await test_db.execute(
-                """INSERT INTO ax_relayer.relays (transaction_id, message, status, transaction_hash, error, cache_status, grpc_status, created_at) VALUES (:transaction_id, :message, :status, :transaction_hash, :error, :cache_status, :grpc_status, :created_at)""",
+                """INSERT INTO wh_relayer.relays (transaction_id, message, status, transaction_hash, error, cache_status, grpc_status, created_at) VALUES (:transaction_id, :message, :status, :transaction_hash, :error, :cache_status, :grpc_status, :created_at)""",
                 {
                     "transaction_id": transaction_id,
                     "status": Status.PENDING,
@@ -339,7 +339,7 @@ async def pending_transactions_with_tx_hash(test_db: Database) -> None:
     for index in range(constant.DEFAULT_ITERATIONS):
         async with test_db.transaction():
             transaction_id = await test_db.execute(
-                """INSERT INTO ax_relayer.transactions (emitter_address, from_address, to_address, source_chain_id, dest_chain_id, amount, sequence) VALUES (:emitter_address, :from_address, :to_address, :source_chain_id, :dest_chain_id, :amount, :sequence) RETURNING id""",
+                """INSERT INTO wh_relayer.transactions (emitter_address, from_address, to_address, source_chain_id, dest_chain_id, amount, sequence) VALUES (:emitter_address, :from_address, :to_address, :source_chain_id, :dest_chain_id, :amount, :sequence) RETURNING id""",
                 {
                     "emitter_address": constant.TEST_EMITTER_ADDRESS,
                     "from_address": constant.TEST_USER_ADDRESS,
@@ -351,7 +351,7 @@ async def pending_transactions_with_tx_hash(test_db: Database) -> None:
                 },
             )
             await test_db.execute(
-                """INSERT INTO ax_relayer.relays (transaction_id, message, status, transaction_hash, error, cache_status, grpc_status) VALUES (:transaction_id, :message, :status, :transaction_hash, :error, :cache_status, :grpc_status)""",
+                """INSERT INTO wh_relayer.relays (transaction_id, message, status, transaction_hash, error, cache_status, grpc_status) VALUES (:transaction_id, :message, :status, :transaction_hash, :error, :cache_status, :grpc_status)""",
                 {
                     "transaction_id": transaction_id,
                     "status": Status.PENDING,
@@ -369,7 +369,7 @@ async def inserted_recent_transactions(test_db: Database) -> None:
     for source_chain_id in constant.TEST_MISSED_VAAS_CHAIN_IDS:
         async with test_db.transaction():
             transaction_id = await test_db.execute(
-                """INSERT INTO ax_relayer.transactions (emitter_address, from_address, to_address, source_chain_id, dest_chain_id, amount, sequence) VALUES (:emitter_address, :from_address, :to_address, :source_chain_id, :dest_chain_id, :amount, :sequence) RETURNING id""",
+                """INSERT INTO wh_relayer.transactions (emitter_address, from_address, to_address, source_chain_id, dest_chain_id, amount, sequence) VALUES (:emitter_address, :from_address, :to_address, :source_chain_id, :dest_chain_id, :amount, :sequence) RETURNING id""",
                 {
                     "emitter_address": constant.TEST_EMITTER_ADDRESS,
                     "from_address": None,
@@ -383,7 +383,7 @@ async def inserted_recent_transactions(test_db: Database) -> None:
                 },
             )
         await test_db.execute(
-            """INSERT INTO ax_relayer.relays (transaction_id, message, status, transaction_hash, error, cache_status, grpc_status) VALUES (:transaction_id, :message, :status, :transaction_hash, :error, :cache_status, :grpc_status)""",
+            """INSERT INTO wh_relayer.relays (transaction_id, message, status, transaction_hash, error, cache_status, grpc_status) VALUES (:transaction_id, :message, :status, :transaction_hash, :error, :cache_status, :grpc_status)""",
             {
                 "transaction_id": transaction_id,
                 "status": Status.FAILED,
@@ -399,7 +399,7 @@ async def inserted_recent_transactions(test_db: Database) -> None:
 @pytest_asyncio.fixture
 async def inserted_tasks(test_db: Database) -> None:
     for name in TaskName:
-        query = """INSERT INTO ax_relayer.tasks (name) VALUES (:name) RETURNING id"""
+        query = """INSERT INTO wh_relayer.tasks (name) VALUES (:name) RETURNING id"""
         values = {"name": name.value}
         await test_db.execute(query, values)
 
@@ -414,7 +414,7 @@ async def stale_locks(test_db: Database, tasks_repo: ITasksRepo, inserted_tasks:
             stale_timestamp = datetime.utcnow() - timedelta(
                 minutes=random.randint(6, 10)
             )
-            query = """INSERT INTO ax_relayer.task_locks (task_id, created_at) VALUES (:task_id, :created_at)"""
+            query = """INSERT INTO wh_relayer.task_locks (task_id, created_at) VALUES (:task_id, :created_at)"""
             values = {"task_id": task.id, "created_at": stale_timestamp}
             await test_db.execute(query, values)
 

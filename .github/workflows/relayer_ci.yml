@@ -18,7 +18,7 @@ env:
   POSTGRES_PORT: ${{ secrets.POSTGRES_PORT }}
   POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
   DB_URL: "postgresql://user:password@localhost/example"
-  DB_SCHEMA: "ax_relayer"
+  DB_SCHEMA: "wh_relayer"
 
   # Unique Set
   REDIS_ZSET: ${{ secrets.REDIS_ZSET }}

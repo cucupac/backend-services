@@ -22,7 +22,7 @@ async def test_task(
 
     for index in range(constant.DEFAULT_ITERATIONS):
         test_relay = await test_db.fetch_one(
-            """SELECT * FROM ax_relayer.transactions AS t JOIN ax_relayer.relays AS r ON t.id = r.transaction_id
+            """SELECT * FROM wh_relayer.transactions AS t JOIN wh_relayer.relays AS r ON t.id = r.transaction_id
             WHERE t.emitter_address=:emitter_address AND t.source_chain_id=:source_chain_id AND t.sequence=:sequence
             """,
             {
