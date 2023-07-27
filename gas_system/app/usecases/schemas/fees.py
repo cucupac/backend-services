@@ -4,7 +4,7 @@ from typing import List, Mapping, Optional
 
 from pydantic import BaseModel
 
-from app.usecases.schemas.blockchain import Chains
+from app.usecases.schemas.blockchain import AxChains
 
 
 class Status(str, Enum):
@@ -13,7 +13,7 @@ class Status(str, Enum):
 
 
 class MinimumFees(BaseModel):
-    remote_chain_ids: List[Chains]
+    remote_chain_ids: List[AxChains]
     remote_fees: List[int]
 
 

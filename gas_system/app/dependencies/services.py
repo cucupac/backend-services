@@ -21,11 +21,11 @@ async def get_remote_price_manager(
     if ecosystem == Ecosystem.EVM:
         if bridge == Bridge.WORMHOLE:
             blockchain_clients = {}
-            for chain_id in CHAIN_DATA:
+            for ax_chain_id in CHAIN_DATA:
                 wormhole_bridge_client = await get_wormhole_bridge_client(
-                    source_chain_id=chain_id
+                    source_ax_chain_id=ax_chain_id
                 )
-                blockchain_clients[chain_id] = wormhole_bridge_client
+                blockchain_clients[ax_chain_id] = wormhole_bridge_client
 
     return RemotePriceManager(
         price_client=coingecko_client,

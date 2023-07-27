@@ -8,7 +8,7 @@ from eth_account.datastructures import SignedTransaction
 from web3 import AsyncHTTPProvider, AsyncWeb3
 from web3.middleware import async_geth_poa_middleware
 
-from app.dependencies import BRIDGE_DATA, CHAIN_DATA
+from app.dependencies import CHAIN_DATA
 from app.settings import settings
 from app.usecases.interfaces.clients.http.blockchain import IBlockchainClient
 from app.usecases.schemas.blockchain import (
@@ -194,7 +194,7 @@ class WormholeBridgeEvmClient(IBlockchainClient):
         """Craft a raw transaction to be sent to the blockchain."""
 
         wormhole_chain_ids = await self.__translate_bridge_ids(
-            chain_ids=remote_data.remote_chain_ids
+            ax_chain_ids=remote_data.remote_chain_ids
         )
 
         transaction = await self.contract.functions.setSendFees(
@@ -205,10 +205,7 @@ class WormholeBridgeEvmClient(IBlockchainClient):
             transaction_dict=transaction, private_key=settings.fee_setter_private_key
         )
 
-    async def __translate_bridge_ids(self, chain_ids: List[int]) -> List[int]:
-        """Translates actual chain IDs to Wormhole chain IDs."""
+    async def __translate_bridge_ids(self, ax_chain_ids: List[int]) -> List[int]:
+        """Translates Ax chain IDs to Wormhole chain IDs."""
 
-        return [
-            BRIDGE_DATA[actual_chain_id]["wormhole"]["chain_id"]
-            for actual_chain_id in chain_ids
-        ]
+        return [CHAIN_DATA[ax_chain_id]["wh_chain_id"] for ax_chain_id in ax_chain_ids]

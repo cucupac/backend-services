@@ -12,7 +12,7 @@ import tests.constants as constant
 from app.dependencies import CHAIN_DATA
 from app.settings import settings
 from app.usecases.interfaces.services.remote_price_manager import IRemotePriceManager
-from app.usecases.schemas.blockchain import Chains, ComputeCosts
+from app.usecases.schemas.blockchain import AxChains, ComputeCosts
 from app.usecases.schemas.fees import Status
 
 
@@ -33,16 +33,27 @@ async def test_remote_price_manager(
             """SELECT * FROM gas_system.fee_updates AS f_u WHERE f_u.chain_id=:chain_id
             """,
             {
-                "chain_id": int(local_chain_id),
+                "chain_id": local_chain_id,
             },
         )
+
+        # Convert str keys to int keys
+        test_fee_update_int_keys = {
+            int(key): value
+            for key, value in json.loads(test_fee_update["updates"]).items()
+        }
 
         # Construct expected updates dictionary here
         expected_updates = await get_expected_fee_updates(
             local_chain_id=local_chain_id, local_data=local_data
         )
 
-        assert json.loads(test_fee_update["updates"]) == expected_updates
+        # Assertions
+        for remote_chain_id in test_fee_update_int_keys:
+            assert remote_chain_id in CHAIN_DATA
+            assert AxChains(remote_chain_id)
+
+        assert test_fee_update_int_keys == expected_updates
         assert test_fee_update["error"] is None
         assert test_fee_update["transaction_hash"] == constant.TEST_TRANSACTION_HASH
         assert test_fee_update["status"] == Status.SUCCESS
@@ -65,28 +76,39 @@ async def test_remote_price_manager_fail(
             """SELECT * FROM gas_system.fee_updates AS f_u WHERE f_u.chain_id=:chain_id
             """,
             {
-                "chain_id": int(local_chain_id),
+                "chain_id": local_chain_id,
             },
         )
+
+        # Convert str keys to int keys
+        test_fee_update_int_keys = {
+            int(key): value
+            for key, value in json.loads(test_fee_update["updates"]).items()
+        }
 
         # Construct expected updates dictionary here
         expected_updates = await get_expected_fee_updates(
             local_chain_id=local_chain_id, local_data=local_data
         )
 
-        assert json.loads(test_fee_update["updates"]) == expected_updates
+        # Assertions
+        for remote_chain_id in test_fee_update_int_keys:
+            assert remote_chain_id in CHAIN_DATA
+            assert AxChains(remote_chain_id)
+
+        assert test_fee_update_int_keys == expected_updates
         assert test_fee_update["error"] == constant.EVM_CLIENT_ERROR_DETAIL
         assert test_fee_update["transaction_hash"] is None
         assert test_fee_update["status"] == Status.FAILED
 
 
 async def get_expected_fee_updates(
-    local_chain_id: int, local_data: Mapping[str, Any]
+    local_chain_id: int, local_data: Mapping[int, Any]
 ) -> Mapping[int, int]:
     """This function is not a test; it's a helper function for calculating expected updates to
     compare actual database values to."""
 
-    expected_updates: Mapping[str, int] = {}
+    expected_updates: Mapping[int, int] = {}
     for remote_chain_id, remote_data in CHAIN_DATA.items():
         if remote_chain_id != local_chain_id:
             # Convert remote fee to local native token
@@ -100,13 +122,13 @@ async def get_expected_fee_updates(
                 constant.MOCK_USD_VALUES[local_data["native"]]
             )
             # Add buffer
-            if remote_chain_id != Chains.ETHEREUM:
+            if remote_chain_id != AxChains.ETHEREUM:
                 local_cost_native *= settings.remote_fee_multiplier
             else:
                 # Given the fronzen time for this test, we use higher multiplier
                 local_cost_native *= settings.higher_ethereum_fee_multiplier
 
-            expected_updates[str(remote_chain_id)] = math.ceil(local_cost_native)
+            expected_updates[remote_chain_id] = math.ceil(local_cost_native)
 
     return expected_updates
 
@@ -120,7 +142,7 @@ async def test_add_buffer_ethereum_high(
 
     remote_fee_pre_buffer = 1
     remote_fee_post_buffer = await remote_price_manager.add_buffer(
-        remote_chain_id=Chains.ETHEREUM,
+        remote_chain_id=AxChains.ETHEREUM,
         remote_fee_in_local_native=remote_fee_pre_buffer,
     )
 
@@ -139,7 +161,7 @@ async def test_add_buffer_ethereum_low(
 
     remote_fee_pre_buffer = 1
     remote_fee_post_buffer = await remote_price_manager.add_buffer(
-        remote_chain_id=Chains.ETHEREUM,
+        remote_chain_id=AxChains.ETHEREUM,
         remote_fee_in_local_native=remote_fee_pre_buffer,
     )
 
@@ -158,7 +180,8 @@ async def test_add_buffer_non_ethereum(
 
     remote_fee_pre_buffer = 1
     remote_fee_post_buffer = await remote_price_manager.add_buffer(
-        remote_chain_id=Chains.POLYGON, remote_fee_in_local_native=remote_fee_pre_buffer
+        remote_chain_id=AxChains.POLYGON,
+        remote_fee_in_local_native=remote_fee_pre_buffer,
     )
 
     assert (
@@ -184,6 +207,7 @@ async def test_get_chain_compute_costs(
 
     for chain_id, compute_costs in test_compute_costs.items():
         assert chain_id in CHAIN_DATA
+        assert AxChains(chain_id)
         assert isinstance(compute_costs, ComputeCosts)
 
     for chain, chain_data in CHAIN_DATA.items():
@@ -208,13 +232,16 @@ async def test_get_remote_fees(
     assert len(test_fee_updates) == len(CHAIN_DATA)
 
     for local_chain_id, remote_data in test_fee_updates.items():
+        assert local_chain_id in CHAIN_DATA
+        assert AxChains(local_chain_id)
+        assert local_chain_id not in remote_data.keys()
+
         expected_remote_data = await get_expected_fee_updates(
             local_chain_id=local_chain_id, local_data=CHAIN_DATA[local_chain_id]
         )
 
-        assert isinstance(local_chain_id, int)
-        assert local_chain_id not in remote_data.keys()
-
         for remote_chain_id, native_price in remote_data.items():
+            assert remote_chain_id in CHAIN_DATA
+            assert AxChains(remote_chain_id)
             assert isinstance(remote_chain_id, int) and isinstance(native_price, int)
-            assert native_price == expected_remote_data[str(remote_chain_id)]
+            assert native_price == expected_remote_data[remote_chain_id]

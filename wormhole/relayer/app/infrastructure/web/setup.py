@@ -6,7 +6,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.dependencies import get_client_session, get_event_loop, get_redis_client
 from app.infrastructure.db.core import get_or_create_database
 from app.infrastructure.web.endpoints.metrics import health
-from app.infrastructure.web.endpoints.public import transactions
 from app.settings import settings
 from app.usecases.tasks.events.startup import (
     start_gather_missed_task,
@@ -24,9 +23,6 @@ def setup_app() -> FastAPI:
         openapi_url=settings.openapi_url,
     )
     fastapi_app.include_router(health.health_router, prefix="/metrics/health")
-    fastapi_app.include_router(
-        transactions.transactions_router, prefix="/public/transactions"
-    )
 
     # CORS (Cross-Origin Resource Sharing)
     origins = ["*"]

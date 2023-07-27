@@ -18,4 +18,4 @@ async def test_retrieve(
 
     assert isinstance(test_mock_transaction, MockTransactionInDb)
     assert test_mock_transaction.chain_id == constant.TEST_CHAIN_ID
-    assert test_mock_transaction.payload == constant.TEST_VAA_PAYLOAD.hex()
+    assert test_mock_transaction.payload == constant.MOCK_VAA_PAYLOAD.hex()

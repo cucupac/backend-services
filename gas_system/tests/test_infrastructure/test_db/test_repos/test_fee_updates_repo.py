@@ -10,11 +10,11 @@ from app.usecases.schemas.fees import FeeUpdate, FeeUpdateInDb, Status
 async def test_create(
     fee_updates_repo: IFeeUpdatesRepo, test_fee_update: FeeUpdate
 ) -> None:
-    test_fee_update = await fee_updates_repo.create(fee_update=test_fee_update)
+    created_fee_update = await fee_updates_repo.create(fee_update=test_fee_update)
 
-    assert isinstance(test_fee_update, FeeUpdateInDb)
+    assert isinstance(created_fee_update, FeeUpdateInDb)
     for key, value in test_fee_update.dict().items():
-        assert value == test_fee_update.dict()[key]
+        assert value == created_fee_update.dict()[key]
 
 
 @pytest.mark.asyncio

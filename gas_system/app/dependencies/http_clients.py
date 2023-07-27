@@ -1,5 +1,4 @@
 from app.dependencies import (
-    BRIDGE_DATA,
     CHAIN_DATA,
     WORMHOLE_BRIDGE_ABI,
     get_client_session,
@@ -13,18 +12,19 @@ from app.usecases.interfaces.clients.http.blockchain import IBlockchainClient
 from app.usecases.interfaces.clients.http.prices import IPriceClient
 
 
-async def get_wormhole_bridge_client(source_chain_id: int) -> IBlockchainClient:
+async def get_wormhole_bridge_client(source_ax_chain_id: int) -> IBlockchainClient:
     """Instantiate and return WormholeBridge client."""
 
     mock_transactions_repo = await get_mock_transactions_repo()
 
-    wormhole_chain_id = BRIDGE_DATA[source_chain_id]["wormhole"]["chain_id"]
-    mock_transaction = await mock_transactions_repo.retrieve(chain_id=wormhole_chain_id)
+    mock_transaction = await mock_transactions_repo.retrieve(
+        chain_id=source_ax_chain_id
+    )
 
     return WormholeBridgeEvmClient(
         abi=WORMHOLE_BRIDGE_ABI,
-        chain_id=source_chain_id,
-        rpc_url=CHAIN_DATA[source_chain_id]["rpc"],
+        chain_id=source_ax_chain_id,
+        rpc_url=CHAIN_DATA[source_ax_chain_id]["rpc"],
         mock_payload=bytes.fromhex(mock_transaction.payload),
         logger=logger,
     )

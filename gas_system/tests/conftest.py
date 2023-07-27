@@ -67,9 +67,9 @@ async def fee_updates_repo(test_db: Database) -> IFeeUpdatesRepo:
 @pytest_asyncio.fixture
 async def test_evm_clients_success() -> IBlockchainClient:
     supported_evm_clients = {}
-    for chain_id in CHAIN_DATA:
-        supported_evm_clients[chain_id] = MockWormholeBridgeEvmClient(
-            result=EvmResult.SUCCESS, chain_id=chain_id
+    for ax_chain_id in CHAIN_DATA:
+        supported_evm_clients[ax_chain_id] = MockWormholeBridgeEvmClient(
+            result=EvmResult.SUCCESS, chain_id=ax_chain_id
         )
     return supported_evm_clients
 
@@ -77,9 +77,9 @@ async def test_evm_clients_success() -> IBlockchainClient:
 @pytest_asyncio.fixture
 async def test_evm_clients_failure() -> IBlockchainClient:
     supported_evm_clients = {}
-    for chain_id in CHAIN_DATA:
-        supported_evm_clients[chain_id] = MockWormholeBridgeEvmClient(
-            result=EvmResult.FAILURE, chain_id=chain_id
+    for ax_chain_id in CHAIN_DATA:
+        supported_evm_clients[ax_chain_id] = MockWormholeBridgeEvmClient(
+            result=EvmResult.FAILURE, chain_id=ax_chain_id
         )
     return supported_evm_clients
 
@@ -134,7 +134,7 @@ async def mock_transaction(test_db: Database) -> None:
         """INSERT INTO gas_system.mock_transactions (chain_id, payload) VALUES (:chain_id, :payload) RETURNING id""",
         {
             "chain_id": constant.TEST_CHAIN_ID,
-            "payload": constant.TEST_VAA_PAYLOAD.hex(),
+            "payload": constant.MOCK_VAA_PAYLOAD.hex(),
         },
     )
 

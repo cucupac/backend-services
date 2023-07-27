@@ -11,14 +11,16 @@ class Ecosystem(str, Enum):
     APTOS = "APTOS"
 
 
-class Chains(int, Enum):
+class AxChains(int, Enum):
     ETHEREUM = 1
-    BSC = 56
-    POLYGON = 137
-    AVALANCHE = 43114
-    FANTOM = 250
-    ARBITRUM = 42161
-    CELO = 42220
+    # OPTIMISM = 2
+    ARBITRUM = 3
+    POLYGON = 4
+    # GNOSIS = 5
+    CELO = 6
+    FANTOM = 7
+    AVALANCHE = 8
+    BSC = 9
 
 
 class TransactionHash(HexBytes):

@@ -2,7 +2,6 @@ from app.dependencies import (
     CHAIN_DATA,
     get_evm_client,
     get_relays_repo,
-    get_websocket_client,
     logger,
 )
 from app.usecases.interfaces.services.message_processor import IVaaProcessor
@@ -15,7 +14,6 @@ async def get_vaa_delivery() -> IVaaDelivery:
     """Instantiates and returns the VAA Delivery Service."""
 
     relays_repo = await get_relays_repo()
-    websocket_client = await get_websocket_client()
 
     supported_evm_clients = {}
     for chain_id in CHAIN_DATA:
@@ -25,7 +23,6 @@ async def get_vaa_delivery() -> IVaaDelivery:
     return VaaDelivery(
         relays_repo=relays_repo,
         supported_evm_clients=supported_evm_clients,
-        websocket_client=websocket_client,
         logger=logger,
     )
 

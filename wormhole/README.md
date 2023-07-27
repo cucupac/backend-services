@@ -27,7 +27,7 @@ Listens for VAAs (messages) in Wormhole's Guardian Network via gRPC subscription
 
 ## Relayer
 
-Receives messages from the [Redis set](https://redis.io/), delivers the messages, and pays the corresponding gas fees at the destination chain. Additionally, clients can track the status of a cross-chain message via a websocket connection.
+Receives messages from the [Redis set](https://redis.io/), delivers the messages, and pays the corresponding gas fees at the destination chain.
 
 ## Docker Containers
 
