@@ -2,6 +2,7 @@ import sqlalchemy as sa
 from sqlalchemy import CheckConstraint
 
 from app.infrastructure.db.metadata import METADATA
+from app.settings import settings
 
 
 EVM_TRANSACTIONS = sa.Table(
@@ -12,7 +13,7 @@ EVM_TRANSACTIONS = sa.Table(
     sa.Column("transaction_hash", sa.String, nullable=False),
     sa.Column("block_hash", sa.String, nullable=False),
     sa.Column("block_number", sa.Integer, nullable=False),
-    sa.Column("status", sa.Integer, nullable=False),
+    sa.Column("status", sa.String, nullable=False),
     CheckConstraint("status IN ('success', 'pending', 'failed')", name="check_status"),
     sa.Column("gas_price", sa.Integer, nullable=True),
     sa.Column("gas_used", sa.Integer, nullable=True),
@@ -25,4 +26,5 @@ EVM_TRANSACTIONS = sa.Table(
         server_default=sa.func.now(),
         onupdate=sa.func.now(),
     ),
+    schema=settings.db_schema,
 )

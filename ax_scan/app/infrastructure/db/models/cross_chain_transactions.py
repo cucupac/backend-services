@@ -4,6 +4,7 @@ import sqlalchemy as sa
 from app.infrastructure.db.metadata import METADATA
 from app.infrastructure.db.models.bridges import BRIDGES
 from app.infrastructure.db.models.evm_transactions import EVM_TRANSACTIONS
+from app.settings import settings
 
 
 CROSS_CHAIN_TRANSACTIONS = sa.Table(
@@ -47,4 +48,5 @@ CROSS_CHAIN_TRANSACTIONS = sa.Table(
         server_default=sa.func.now(),
         onupdate=sa.func.now(),
     ),
+    schema=settings.db_schema,
 )

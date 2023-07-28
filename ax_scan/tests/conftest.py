@@ -25,7 +25,7 @@ async def test_db_url():
     password = os.getenv("POSTGRES_PASSWORD", "postgres")
     host = os.getenv("POSTGRES_HOST", "localhost")
     port = os.getenv("POSTGRES_PORT", "5444")
-    database_name = os.getenv("POSTGRES_DB", "ax_relayer_dev_test")
+    database_name = os.getenv("POSTGRES_DB", "ax_services_dev_test")
     return f"postgres://{username}:{password}@{host}:{port}/{database_name}"
 
 

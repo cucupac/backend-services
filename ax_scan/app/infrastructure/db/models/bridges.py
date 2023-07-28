@@ -1,6 +1,7 @@
 import sqlalchemy as sa
 
 from app.infrastructure.db.metadata import METADATA
+from app.settings import settings
 
 BRIDGES = sa.Table(
     "bridges",
@@ -15,4 +16,5 @@ BRIDGES = sa.Table(
         server_default=sa.func.now(),
         onupdate=sa.func.now(),
     ),
+    schema=settings.db_schema,
 )

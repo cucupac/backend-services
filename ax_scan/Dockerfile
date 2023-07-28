@@ -16,7 +16,7 @@ ENV SERVER_PORT=11000
 ENV ENVIRONMENT=development
 
 # Database 
-ENV DB_URL=postgres://postgres:postgres@localhost:5432/ax_relayer_dev
+ENV DB_URL=postgres://postgres:postgres@localhost:5432/ax_services_dev
 
 EXPOSE $SERVER_PORT
 

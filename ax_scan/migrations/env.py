@@ -14,12 +14,12 @@ load_dotenv()
 # Import Tables
 from app.infrastructure.db.metadata import METADATA
 from app.infrastructure.db.models.bridges import BRIDGES
-from app.infrastructure.db.models.wormhole_messages import WORMHOLE_MESSAGES
+from app.infrastructure.db.models.evm_transactions import EVM_TRANSACTIONS
 from app.infrastructure.db.models.cross_chain_transactions import (
     CROSS_CHAIN_TRANSACTIONS,
 )
-from app.infrastructure.db.models.chain_transactions import EVM_TRANSACTIONS
 from app.infrastructure.db.models.layer_zero_messages import LAYER_ZERO_MESSAGES
+from app.infrastructure.db.models.wormhole_messages import WORMHOLE_MESSAGES
 from app.infrastructure.db.models.tasks import TASKS, TASK_LOCKS
 
 # this is the Alembic Config object, which provides
@@ -45,12 +45,12 @@ postgres_host = getenv("POSTGRES_HOST", default="localhost")
 postgres_port = getenv("POSTGRES_PORT", default="5432")
 postgres_user = getenv("POSTGRES_USER", default="postgres")
 postgres_password = getenv("POSTGRES_PASSWORD", default="postgres")
-postgres_database = getenv("POSTGRES_DB", default="ax_relayer_dev")
+postgres_database = getenv("POSTGRES_DB", default="ax_services_dev")
 
-url = f"postgresql://{postgres_user}:{postgres_password}@{postgres_host}:{postgres_port}/{postgres_database}"
 
-# NOTE: Uncomment the URL below and comment the URL above to run a test database migration
-url = f"postgresql://{postgres_user}:{postgres_password}@{postgres_host}:5444/ax_relayer_dev_test"
+# NOTE: Use the test URL when migrating to the test database. Use the dev URL when migrating to the dev database.
+# url = f"postgresql://{postgres_user}:{postgres_password}@{postgres_host}:{postgres_port}/{postgres_database}"  # DEV
+url = f"postgresql://{postgres_user}:{postgres_password}@{postgres_host}:5444/ax_services_dev_test"  # TEST
 config.set_main_option("sqlalchemy.url", url)
 
 
@@ -103,6 +103,7 @@ def run_migrations_online():
             connection=connection,
             target_metadata=target_metadata,
             include_schemas=True,
+            version_table_schema=getenv("DB_SCHEMA"),
             include_object=include_object,
         )
 
