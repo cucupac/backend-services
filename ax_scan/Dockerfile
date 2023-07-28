@@ -1,0 +1,23 @@
+FROM python:3.8
+
+WORKDIR /app
+
+COPY ./requirements.txt /app/requirements.txt
+
+RUN pip install --no-cache-dir --upgrade -r /app/requirements.txt
+
+COPY . /app
+
+# Environment Variables
+
+# Server
+ENV OPENAPI_URL="/openapi.json"
+ENV SERVER_PORT=11000
+ENV ENVIRONMENT=development
+
+# Database 
+ENV DB_URL=postgres://postgres:postgres@localhost:5432/ax_relayer_dev
+
+EXPOSE $SERVER_PORT
+
+CMD ["python", "-m", "app"]
