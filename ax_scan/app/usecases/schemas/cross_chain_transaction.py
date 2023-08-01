@@ -7,9 +7,9 @@ from app.usecases.schemas.bridge import Bridges
 
 
 class CrossChainTransaction(BaseModel):
-    bridge_id: Bridges = Field(
+    bridge: Bridges = Field(
         ...,
-        description="The Ax-protocol-assigned bridge ID for the utilized bridge.",
+        description="The Ax-protocol-assigned bridge for the utilized bridge.",
         example=Bridges.WORMHOLE,
     )
     from_address: Optional[str] = Field(
@@ -70,10 +70,10 @@ class CrossChainTransactionInDB(CrossChainTransaction):
 
 
 class UpdateCrossChainTransaction(BaseModel):
-    from_address: Optional[str]
-    to_address: Optional[str]
-    source_chain_tx_id: Optional[int]
-    dest_chain_tx_id: Optional[int]
+    from_address: Optional[str] = None
+    to_address: Optional[str] = None
+    source_chain_tx_id: Optional[int] = None
+    dest_chain_tx_id: Optional[int] = None
 
 
 # TODO: come back to this...

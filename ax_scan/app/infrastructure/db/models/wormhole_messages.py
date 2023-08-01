@@ -1,3 +1,4 @@
+# pylint: disable=duplicate-code
 import sqlalchemy as sa
 
 from app.infrastructure.db.metadata import METADATA
@@ -5,7 +6,6 @@ from app.infrastructure.db.models.cross_chain_transactions import (
     CROSS_CHAIN_TRANSACTIONS,
 )
 from app.settings import settings
-
 
 WORMHOLE_MESSAGES = sa.Table(
     "wormhole_messages",

@@ -1,15 +1,14 @@
 # pylint: disable=duplicate-code
-import time
-from typing import Mapping
-from logging import Logger
-
 import asyncio
+import time
+from logging import Logger
+from typing import Mapping
 
 from app.dependencies import BRIDGE_DATA
-from app.usecases.schemas.tasks import TaskName
+from app.settings import settings
 from app.usecases.interfaces.clients.evm import IEvmClient
 from app.usecases.interfaces.tasks.gather_transactions import IGatherTransactionsTask
-from app.settings import settings
+from app.usecases.schemas.tasks import TaskName
 
 
 class GatherTransactionsTask(IGatherTransactionsTask):

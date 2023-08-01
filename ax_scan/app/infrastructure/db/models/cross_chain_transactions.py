@@ -1,23 +1,17 @@
 # pylint: disable=duplicate-code
 import sqlalchemy as sa
+from sqlalchemy import CheckConstraint
 
 from app.infrastructure.db.metadata import METADATA
-from app.infrastructure.db.models.bridges import BRIDGES
 from app.infrastructure.db.models.evm_transactions import EVM_TRANSACTIONS
 from app.settings import settings
 
-
 CROSS_CHAIN_TRANSACTIONS = sa.Table(
-    "cross_chain_transcations",
+    "cross_chain_transactions",
     METADATA,
     sa.Column("id", sa.BigInteger, primary_key=True, autoincrement=True),
-    sa.Column(
-        "bridge_id",
-        sa.BigInteger,
-        sa.ForeignKey(BRIDGES.c.id),
-        unique=True,
-        nullable=False,
-    ),
+    sa.Column("bridge", sa.String, nullable=False),
+    CheckConstraint("bridge IN ('wormhole', 'layer_zero')", name="check_bridge"),
     sa.Column("from_address", sa.String, index=True, nullable=True),
     sa.Column(
         "to_address",
@@ -33,12 +27,14 @@ CROSS_CHAIN_TRANSACTIONS = sa.Table(
         sa.BigInteger,
         sa.ForeignKey(EVM_TRANSACTIONS.c.id),
         nullable=True,
+        unique=True,
     ),
     sa.Column(
         "dest_chain_tx_id",
         sa.BigInteger,
         sa.ForeignKey(EVM_TRANSACTIONS.c.id),
         nullable=True,
+        unique=True,
     ),
     sa.Column("created_at", sa.DateTime, nullable=False, server_default=sa.func.now()),
     sa.Column(

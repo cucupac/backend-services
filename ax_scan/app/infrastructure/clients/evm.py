@@ -2,10 +2,10 @@ from logging import Logger
 from typing import Any, List, Mapping
 
 from web3 import AsyncHTTPProvider, AsyncWeb3
-from web3.types import TxReceipt, LogReceipt
+from web3.types import LogReceipt, TxReceipt
 
-from app.settings import settings
 from app.dependencies import CHAIN_DATA
+from app.settings import settings
 from app.usecases.interfaces.clients.evm import IEvmClient
 from app.usecases.schemas.blockchain import BlockchainClientError
 

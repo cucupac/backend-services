@@ -1,5 +1,5 @@
-from app.usecases.interfaces.services.example import IExample
 from app.settings import settings
+from app.usecases.interfaces.services.example import IExample
 
 
 class ExampleService(IExample):

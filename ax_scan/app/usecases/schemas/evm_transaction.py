@@ -1,11 +1,11 @@
-from typing import Optional
-from enum import Enum
 from datetime import datetime
+from enum import Enum
+from typing import Optional
 
 from pydantic import BaseModel
 
 
-class EvmTransactionStatus(Enum):
+class EvmTransactionStatus(str, Enum):
     SUCCESS = "success"
     PENDING = "pending"
     FAILED = "failed"

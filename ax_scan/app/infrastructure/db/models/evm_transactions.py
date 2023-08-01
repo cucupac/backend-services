@@ -4,7 +4,6 @@ from sqlalchemy import CheckConstraint
 from app.infrastructure.db.metadata import METADATA
 from app.settings import settings
 
-
 EVM_TRANSACTIONS = sa.Table(
     "evm_transactions",
     METADATA,
@@ -27,4 +26,12 @@ EVM_TRANSACTIONS = sa.Table(
         onupdate=sa.func.now(),
     ),
     schema=settings.db_schema,
+)
+
+
+sa.Index(
+    "ix_transaction_hash_chain_id",
+    EVM_TRANSACTIONS.c.transaction_hash,
+    EVM_TRANSACTIONS.c.chain_id,
+    unique=True,
 )

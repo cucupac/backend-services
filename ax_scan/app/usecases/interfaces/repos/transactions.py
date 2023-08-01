@@ -19,7 +19,7 @@ class ITransactionsRepo(ABC):
     @abstractmethod
     async def update_cross_chain_tx(
         self,
-        id: int,
+        cross_chain_tx_id: int,
         update_values: UpdateCrossChainTransaction,
     ) -> None:
         """Updates a cross-chain transaction."""

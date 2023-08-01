@@ -13,7 +13,6 @@ load_dotenv()
 
 # Import Tables
 from app.infrastructure.db.metadata import METADATA
-from app.infrastructure.db.models.bridges import BRIDGES
 from app.infrastructure.db.models.evm_transactions import EVM_TRANSACTIONS
 from app.infrastructure.db.models.cross_chain_transactions import (
     CROSS_CHAIN_TRANSACTIONS,

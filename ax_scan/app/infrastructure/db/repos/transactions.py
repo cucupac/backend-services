@@ -36,29 +36,34 @@ class TransactionsRepo(ITransactionsRepo):
         """Inserts a cross-chain transaction; returns cross_chain_transaction id."""
 
         cross_chain_tx_insert_stmt = CROSS_CHAIN_TRANSACTIONS.insert().values(
-            bridge_id=cross_chain_tx.bridge_id,
+            bridge=cross_chain_tx.bridge,
             from_address=cross_chain_tx.from_address,
             to_address=cross_chain_tx.to_address,
             source_chain_id=cross_chain_tx.source_chain_id,
             dest_chain_id=cross_chain_tx.dest_chain_id,
             amount=cross_chain_tx.amount,
-            source_chain_tx_id=cross_chain_tx.source_chain_id,
-            dest_chain_tx_id=cross_chain_tx.dest_chain_id,
+            source_chain_tx_id=cross_chain_tx.source_chain_tx_id,
+            dest_chain_tx_id=cross_chain_tx.dest_chain_tx_id,
         )
 
         return await self.db.execute(cross_chain_tx_insert_stmt)
 
     async def update_cross_chain_tx(
         self,
-        id: int,
+        cross_chain_tx_id: int,
         update_values: UpdateCrossChainTransaction,
     ) -> None:
         """Updates a cross-chain transaction."""
 
+        update_dict = {}
+        for key, value in update_values.model_dump().items():
+            if value is not None:
+                update_dict[key] = value
+
         cross_chain_tx_update_stmt = (
             CROSS_CHAIN_TRANSACTIONS.update()
-            .values(update_values.model_dump())
-            .where(CROSS_CHAIN_TRANSACTIONS.c.id == id)
+            .values(update_dict)
+            .where(CROSS_CHAIN_TRANSACTIONS.c.id == cross_chain_tx_id)
         )
 
         await self.db.execute(cross_chain_tx_update_stmt)

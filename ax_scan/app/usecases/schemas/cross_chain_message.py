@@ -9,7 +9,7 @@ class LzCompositeIndex(BaseModel):
     emitter_address: str
     source_chain_id: int
     dest_chain_id: int
-    message_id: int
+    nonce: int
 
 
 class WhCompositeIndex(BaseModel):
@@ -17,7 +17,7 @@ class WhCompositeIndex(BaseModel):
 
     emitter_address: str
     source_chain_id: int
-    message_id: int
+    sequence: int
 
 
 class LzMessage(LzCompositeIndex):

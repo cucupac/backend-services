@@ -3,9 +3,9 @@ import asyncio
 import time
 from logging import Logger
 
-from app.usecases.schemas.tasks import TaskName
-from app.usecases.interfaces.tasks.verify_transactions import IVerifyTransactionsTask
 from app.settings import settings
+from app.usecases.interfaces.tasks.verify_transactions import IVerifyTransactionsTask
+from app.usecases.schemas.tasks import TaskName
 
 
 class VerifyTransactionsTask(IVerifyTransactionsTask):

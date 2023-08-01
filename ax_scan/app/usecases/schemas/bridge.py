@@ -1,6 +1,6 @@
 from enum import Enum
 
 
-class Bridges(int, Enum):
-    WORMHOLE = 1
-    LAYER_ZERO = 2
+class Bridges(str, Enum):
+    WORMHOLE = "wormhole"
+    LAYER_ZERO = "layer_zero"

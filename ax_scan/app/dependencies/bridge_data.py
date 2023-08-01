@@ -1,6 +1,5 @@
-from app.usecases.schemas.blockchain import AxChains
-
 from app.settings import settings
+from app.usecases.schemas.blockchain import AxChains
 
 BRIDGE_DATA = {
     AxChains.ETHEREUM.value: {
