@@ -7,7 +7,8 @@ from app.usecases.schemas.cross_chain_transaction import (
     CrossChainTransaction,
     UpdateCrossChainTransaction,
 )
-from app.usecases.schemas.evm_transaction import EvmTransaction
+from app.usecases.schemas.evm_transaction import EvmTransaction, EvmTransactionInDb
+import tests.constants as constant
 
 
 @pytest.mark.asyncio
@@ -87,3 +88,27 @@ async def test_update_cross_chain_tx(
             assert value == inserted_wh_dest_evm_transaction
         elif key != "updated_at":
             assert value == pre_update_cross_chain_tx[key]
+
+
+@pytest.mark.asyncio
+async def test_retrieve_last_transaction(
+    inserted_wh_evm_transaction: int,
+    inserted_lz_evm_transaction: int,
+    test_db: Database,
+    transactions_repo: ITransactionsRepo,
+) -> None:
+    retrieved_evm_txs = await test_db.fetch_all(
+        """SELECT * FROM ax_scan.evm_transactions AS evm_txs WHERE evm_txs.chain_id=:chain_id""",
+        {
+            "chain_id": constant.TEST_SOURCE_CHAIN_ID,
+        },
+    )
+
+    retrieved_evm_tx = await transactions_repo.retrieve_last_transaction(
+        chain_id=constant.TEST_SOURCE_CHAIN_ID
+    )
+
+    # Sort the retrieved transactions in descending order of block_number
+    retrieved_evm_txs.sort(key=lambda tx: tx.block_number, reverse=True)
+
+    assert retrieved_evm_tx == EvmTransactionInDb(**retrieved_evm_txs[0])

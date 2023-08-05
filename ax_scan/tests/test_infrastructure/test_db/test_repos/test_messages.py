@@ -17,7 +17,7 @@ async def test_create_layer_zero_message(
     test_layer_zero_message: LzMessage,
 ) -> None:
     await messages_repo.create_layer_zero_message(
-        cross_chain_transaction_id=inserted_lz_cross_chain_tx,
+        cross_chain_tx_id=inserted_lz_cross_chain_tx,
         message=test_layer_zero_message,
     )
 
@@ -37,7 +37,7 @@ async def test_create_wormhole_message(
     test_wormhole_message: WhMessage,
 ) -> None:
     await messages_repo.create_wormhole_message(
-        cross_chain_transaction_id=inserted_wh_cross_chain_tx,
+        cross_chain_tx_id=inserted_wh_cross_chain_tx,
         message=test_wormhole_message,
     )
 

@@ -30,11 +30,13 @@ class WhMessage(WhCompositeIndex):
 
 class LayerZeroMessageInDb(LzMessage):
     id: int
+    cross_chain_tx_id: int
     created_at: datetime
     updated_at: datetime
 
 
 class WormholeMessageInDb(WhMessage):
     id: int
+    cross_chain_tx_id: int
     created_at: datetime
     updated_at: datetime

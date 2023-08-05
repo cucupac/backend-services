@@ -1,4 +1,7 @@
+from typing import Optional
+
 from databases import Database
+from sqlalchemy import select
 
 from app.infrastructure.db.models.cross_chain_transactions import (
     CROSS_CHAIN_TRANSACTIONS,
@@ -9,7 +12,7 @@ from app.usecases.schemas.cross_chain_transaction import (
     CrossChainTransaction,
     UpdateCrossChainTransaction,
 )
-from app.usecases.schemas.evm_transaction import EvmTransaction
+from app.usecases.schemas.evm_transaction import EvmTransaction, EvmTransactionInDb
 
 
 class TransactionsRepo(ITransactionsRepo):
@@ -67,3 +70,20 @@ class TransactionsRepo(ITransactionsRepo):
         )
 
         await self.db.execute(cross_chain_tx_update_stmt)
+
+    async def retrieve_last_transaction(
+        self,
+        chain_id: int,
+    ) -> Optional[EvmTransactionInDb]:
+        """Retrieves last-stored transaction by chain_id."""
+
+        query = (
+            select([EVM_TRANSACTIONS])
+            .where(EVM_TRANSACTIONS.c.chain_id == chain_id)
+            .order_by(EVM_TRANSACTIONS.c.block_number.desc())
+            .limit(1)
+        )
+
+        result = await self.db.fetch_one(query)
+
+        return EvmTransactionInDb(**result) if result else None

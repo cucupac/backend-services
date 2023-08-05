@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
 
-class IGatherTransactionsTask(ABC):
+class IGatherEventsTask(ABC):
     @abstractmethod
     async def start_task(self) -> None:
         """Starts task."""

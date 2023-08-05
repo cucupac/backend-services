@@ -12,7 +12,7 @@ WORMHOLE_MESSAGES = sa.Table(
     METADATA,
     sa.Column("id", sa.BigInteger, primary_key=True, autoincrement=True),
     sa.Column(
-        "cross_chain_transaction_id",
+        "cross_chain_tx_id",
         sa.BigInteger,
         sa.ForeignKey(CROSS_CHAIN_TRANSACTIONS.c.id),
         index=True,

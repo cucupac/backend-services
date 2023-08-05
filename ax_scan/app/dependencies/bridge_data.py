@@ -1,6 +1,28 @@
 from app.settings import settings
 from app.usecases.schemas.blockchain import AxChains
 
+WH_LOOKUP = {
+    2: AxChains.ETHEREUM.value,
+    4: AxChains.BSC.value,
+    5: AxChains.POLYGON.value,
+    6: AxChains.AVALANCHE.value,
+    10: AxChains.FANTOM.value,
+    23: AxChains.ARBITRUM.value,
+    14: AxChains.CELO.value,
+}
+
+LZ_LOOKUP = {
+    101: AxChains.ETHEREUM.value,
+    102: AxChains.BSC.value,
+    109: AxChains.POLYGON.value,
+    106: AxChains.AVALANCHE.value,
+    112: AxChains.FANTOM.value,
+    110: AxChains.ARBITRUM.value,
+    125: AxChains.CELO.value,
+    111: AxChains.OPTIMISM.value,
+    145: AxChains.GNOSIS.value,
+}
+
 BRIDGE_DATA = {
     AxChains.ETHEREUM.value: {
         "wormhole": {"chain_id": 2, "emitter_address": settings.evm_wormhole_bridge},

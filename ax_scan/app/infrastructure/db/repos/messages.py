@@ -21,12 +21,12 @@ class MessagesRepo(IMessagesRepo):
         self.db = db
 
     async def create_layer_zero_message(
-        self, cross_chain_transaction_id: int, message: LzMessage
+        self, cross_chain_tx_id: int, message: LzMessage
     ) -> None:
         """Inserts a Layer Zero message."""
 
         lz_messages_insert_stmt = LAYER_ZERO_MESSAGES.insert().values(
-            cross_chain_transaction_id=cross_chain_transaction_id,
+            cross_chain_tx_id=cross_chain_tx_id,
             emitter_address=message.emitter_address,
             source_chain_id=message.source_chain_id,
             dest_chain_id=message.dest_chain_id,
@@ -36,12 +36,12 @@ class MessagesRepo(IMessagesRepo):
         await self.db.execute(lz_messages_insert_stmt)
 
     async def create_wormhole_message(
-        self, cross_chain_transaction_id: int, message: WhMessage
+        self, cross_chain_tx_id: int, message: WhMessage
     ) -> None:
         """Inserts a Wormhole message."""
 
         wh_messages_insert_stmt = WORMHOLE_MESSAGES.insert().values(
-            cross_chain_transaction_id=cross_chain_transaction_id,
+            cross_chain_tx_id=cross_chain_tx_id,
             emitter_address=message.emitter_address,
             source_chain_id=message.source_chain_id,
             sequence=message.sequence,

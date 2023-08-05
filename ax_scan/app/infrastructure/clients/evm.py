@@ -1,33 +1,31 @@
 from logging import Logger
-from typing import Any, List, Mapping
+from typing import List, Union
 
 from web3 import AsyncHTTPProvider, AsyncWeb3
-from web3.types import LogReceipt, TxReceipt
+from web3.datastructures import AttributeDict
 
-from app.dependencies import CHAIN_DATA
 from app.settings import settings
 from app.usecases.interfaces.clients.evm import IEvmClient
 from app.usecases.schemas.blockchain import BlockchainClientError
+from app.usecases.schemas.events import SendToChain, ReceiveFromChain
 
 
 class EvmClient(IEvmClient):
     def __init__(
         self,
-        abi: List[Mapping[str, Any]],
         chain_id: int,
         rpc_url: str,
         logger: Logger,
     ) -> None:
-        self.abi = abi
         self.chain_id = chain_id
         self.web3_client = AsyncWeb3(AsyncHTTPProvider(rpc_url))
         self.logger = logger
 
-    async def fetch_receipt(self, transaction_hash: str) -> TxReceipt:
+    async def fetch_receipt(self, transaction_hash: str) -> AttributeDict:
         """Fetches the transaction receipt for a given transaction hash."""
         try:
-            return await self.web3_client.eth.wait_for_transaction_receipt(
-                transaction_hash=transaction_hash, timeout=120, poll_latency=0.1
+            return await self.web3_client.eth.get_transaction_receipt(
+                transaction_hash=transaction_hash
             )
         except Exception as e:
             self.logger.error("[EvmClient]: Tx receipt retrieval failed. Error: %s", e)
@@ -35,14 +33,60 @@ class EvmClient(IEvmClient):
 
     async def fetch_events(
         self, contract: str, from_block: int, to_block: int
-    ) -> List[LogReceipt]:
+    ) -> List[Union[SendToChain, ReceiveFromChain]]:
         """Fetches events emitted from given contract, for a given block range."""
 
         event_filter = {
             "address": contract,
             "fromBlock": from_block,
             "toBlock": to_block,
-            "topics": [settings.send_to_chain_topic, settings.receive_from_chain_topic],
+            "topics": [
+                [settings.send_to_chain_topic, settings.receive_from_chain_topic]
+            ],
         }
 
-        return self.web3_client.eth.get_logs(event_filter)
+        events_raw = await self.web3_client.eth.get_logs(event_filter)
+
+        events = []
+        for event in events_raw:
+            if event.topics[0].hex() == settings.send_to_chain_topic:
+                """SendToChain"""
+                events.append(
+                    SendToChain(
+                        emitter_address=event.address,
+                        block_number=event.blockNumber,
+                        block_hash=event.blockHash,
+                        transaction_hash=event.transactionsHash,
+                        source_chain_id=self.chain_id,
+                        dest_chain_id=int(event.topics[1], 16),
+                        amount=int(event.data[2:66], 16),
+                        message_id=int(event.data[66:130], 16),
+                        from_address=AsyncWeb3.to_checksum_address(
+                            event.topics[2][2:].lstrip("0")
+                        ),
+                    )
+                )
+            else:
+                """ReceiveFromChain"""
+                events.append(
+                    ReceiveFromChain(
+                        emitter_address=event.address,
+                        block_number=event.blockNumber,
+                        block_hash=event.blockHash,
+                        transaction_hash=event.transactionsHash,
+                        source_chain_id=int(event.topics[1], 16),
+                        dest_chain_id=self.chain_id,
+                        amount=int(event.data[2:66], 16),
+                        message_id=int(event.data[66:130], 16),
+                        to_address=AsyncWeb3.to_checksum_address(
+                            event.topics[3][2:].lstrip("0")
+                        ),
+                    )
+                )
+
+        return events
+
+    async def fetch_latest_block_number(self) -> int:
+        """Fetches the latest block number."""
+
+        return await self.web3_client.eth.block_number

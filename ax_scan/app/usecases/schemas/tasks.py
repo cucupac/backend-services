@@ -6,7 +6,7 @@ from pydantic import BaseModel, Field
 
 
 class TaskName(str, Enum):
-    GATHER_TRANSACTIONS = "gather_transactions"
+    GATHER_EVENTS = "gather_events"
     VERIFY_TRANSACTIONS = "verify_transactions"
 
 

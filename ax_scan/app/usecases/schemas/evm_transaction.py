@@ -19,9 +19,9 @@ class EvmTransaction(BaseModel):
     block_hash: str
     block_number: int
     status: EvmTransactionStatus
-    gas_price: Optional[int]
-    gas_used: Optional[int]
-    timestamp: Optional[int]
+    gas_price: Optional[int] = None
+    gas_used: Optional[int] = None
+    timestamp: Optional[int] = None
 
 
 class EvmTransactionInDb(EvmTransaction):

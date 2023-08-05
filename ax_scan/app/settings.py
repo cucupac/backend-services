@@ -34,6 +34,9 @@ class Settings(BaseSettings):
     evm_wormhole_bridge: str
     evm_layerzero_bridge: str
 
+    # Tasks
+    gather_txs_frequency: int = 60
+
     # RPC Urls
     ethereum_rpc: str
     bsc_rpc: str

@@ -14,13 +14,13 @@ from app.usecases.schemas.cross_chain_message import (
 class IMessagesRepo(ABC):
     @abstractmethod
     async def create_layer_zero_message(
-        self, cross_chain_transaction_id: int, message: LzMessage
+        self, cross_chain_tx_id: int, message: LzMessage
     ) -> None:
         """Inserts a Layer Zero message."""
 
     @abstractmethod
     async def create_wormhole_message(
-        self, cross_chain_transaction_id: int, message: WhMessage
+        self, cross_chain_tx_id: int, message: WhMessage
     ) -> None:
         """Inserts a Wormhole message."""
 

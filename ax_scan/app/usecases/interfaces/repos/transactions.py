@@ -1,10 +1,11 @@
 from abc import ABC, abstractmethod
+from typing import Optional
 
 from app.usecases.schemas.cross_chain_transaction import (
     CrossChainTransaction,
     UpdateCrossChainTransaction,
 )
-from app.usecases.schemas.evm_transaction import EvmTransaction
+from app.usecases.schemas.evm_transaction import EvmTransaction, EvmTransactionInDb
 
 
 class ITransactionsRepo(ABC):
@@ -23,3 +24,10 @@ class ITransactionsRepo(ABC):
         update_values: UpdateCrossChainTransaction,
     ) -> None:
         """Updates a cross-chain transaction."""
+
+    @abstractmethod
+    async def retrieve_last_transaction(
+        self,
+        chain_id: int,
+    ) -> Optional[EvmTransactionInDb]:
+        """Retrieves last-stored transactions by chain_id."""

@@ -2,7 +2,7 @@
 import os
 import random
 from datetime import datetime, timedelta
-from typing import List
+from typing import List, Mapping
 
 import pytest_asyncio
 import respx
@@ -10,21 +10,34 @@ from databases import Database
 from fastapi import FastAPI
 from httpx import AsyncClient
 
+from app.dependencies import CHAIN_DATA, logger
 import tests.constants as constant
+from app.infrastructure.web.setup import setup_app
+
 from app.infrastructure.db.repos.messages import MessagesRepo
 from app.infrastructure.db.repos.tasks import TasksRepo
 from app.infrastructure.db.repos.transactions import TransactionsRepo
-from app.infrastructure.web.setup import setup_app
+
 from app.usecases.interfaces.repos.messages import IMessagesRepo
 from app.usecases.interfaces.repos.tasks import ITasksRepo
 from app.usecases.interfaces.repos.transactions import ITransactionsRepo
+from app.usecases.interfaces.tasks.gather_events import IGatherEventsTask
+from app.usecases.interfaces.clients.evm import IEvmClient
+
 from app.usecases.schemas.bridge import Bridges
 from app.usecases.schemas.cross_chain_message import LzMessage, WhMessage
 from app.usecases.schemas.cross_chain_transaction import CrossChainTransaction
 from app.usecases.schemas.evm_transaction import EvmTransaction, EvmTransactionStatus
 from app.usecases.schemas.tasks import TaskInDb, TaskName
 
+from app.usecases.tasks.gather_events import GatherEventsTask
+
 # Mocks
+from tests.mocks.clients.evm import (
+    MockEvmClientInsertFlow,
+    MockEvmClientUpdateFlow,
+    EvmResult,
+)
 
 
 # Database Connection
@@ -70,12 +83,68 @@ async def tasks_repo(test_db: Database, inserted_tasks: None) -> ITasksRepo:
 
 
 # Clients
+@pytest_asyncio.fixture
+async def test_evm_clients_success_insert() -> IEvmClient:
+    supported_evm_clients = {}
+    for ax_chain_id in CHAIN_DATA:
+        supported_evm_clients[ax_chain_id] = MockEvmClientInsertFlow(
+            result=EvmResult.SUCCESS, chain_id=ax_chain_id
+        )
+    return supported_evm_clients
+
+
+@pytest_asyncio.fixture
+async def test_evm_clients_update() -> IEvmClient:
+    supported_evm_clients = {}
+    for ax_chain_id in CHAIN_DATA:
+        supported_evm_clients[ax_chain_id] = MockEvmClientUpdateFlow(
+            result=EvmResult.SUCCESS,
+            chain_id=ax_chain_id,
+        )
+    return supported_evm_clients
 
 
 # Services
 # @pytest_asyncio.fixture
 # async def example_service() -> IExample:
 #     return ExampleService
+
+
+# Tasks
+@pytest_asyncio.fixture
+async def gather_events_task_insert(
+    test_db: Database,
+    test_evm_clients_success_insert: Mapping[int, IEvmClient],
+    transactions_repo: ITransactionsRepo,
+    messages_repo: IMessagesRepo,
+    tasks_repo: ITasksRepo,
+) -> IGatherEventsTask:
+    return GatherEventsTask(
+        db=test_db,
+        supported_evm_clients=test_evm_clients_success_insert,
+        transactions_repo=transactions_repo,
+        messages_repo=messages_repo,
+        tasks_repo=tasks_repo,
+        logger=logger,
+    )
+
+
+@pytest_asyncio.fixture
+async def gather_events_task_update(
+    test_db: Database,
+    test_evm_clients_update: Mapping[int, IEvmClient],
+    transactions_repo: ITransactionsRepo,
+    messages_repo: IMessagesRepo,
+    tasks_repo: ITasksRepo,
+) -> IGatherEventsTask:
+    return GatherEventsTask(
+        db=test_db,
+        supported_evm_clients=test_evm_clients_update,
+        transactions_repo=transactions_repo,
+        messages_repo=messages_repo,
+        tasks_repo=tasks_repo,
+        logger=logger,
+    )
 
 
 # Repo Adapters
@@ -85,7 +154,7 @@ async def test_layer_zero_message() -> LzMessage:
         emitter_address=constant.LZ_EMITTER_ADDRESS,
         source_chain_id=constant.LZ_SOURCE_CHAIN_ID,
         dest_chain_id=constant.LZ_DEST_CHAIN_ID,
-        nonce=constant.LZ_NONCE,
+        nonce=constant.TEST_MESSAGE_ID,
     )
 
 
@@ -94,16 +163,16 @@ async def test_wormhole_message() -> WhMessage:
     return WhMessage(
         emitter_address=constant.WH_EMITTER_ADDRESS,
         source_chain_id=constant.WH_SOURCE_CHAIN_ID,
-        sequence=constant.WH_SEQUENCE,
+        sequence=constant.TEST_MESSAGE_ID,
     )
 
 
 @pytest_asyncio.fixture
 async def test_lz_evm_tx() -> EvmTransaction:
     return EvmTransaction(
-        chain_id=constant.LZ_CHAIN_ID,
-        transaction_hash=constant.LZ_TRANSACTION_HASH,
-        block_hash=constant.LZ_BLOCK_HASH,
+        chain_id=constant.TEST_SOURCE_CHAIN_ID,
+        transaction_hash=constant.LZ_SOURCE_TX_HASH,
+        block_hash=constant.LZ_SOURCE_BLOCK_HASH,
         block_number=constant.LZ_BLOCK_NUMBER,
         status=EvmTransactionStatus.PENDING,
         gas_price=None,
@@ -115,7 +184,7 @@ async def test_lz_evm_tx() -> EvmTransaction:
 @pytest_asyncio.fixture
 async def test_wh_evm_tx() -> EvmTransaction:
     return EvmTransaction(
-        chain_id=constant.WH_SOURCE_CHAIN_ID,
+        chain_id=constant.TEST_SOURCE_CHAIN_ID,
         transaction_hash=constant.WH_SOURCE_TX_HASH,
         block_hash=constant.WH_SOURCE_BLOCK_HASH,
         block_number=constant.WH_SOURCE_BLOCK_NUMBER,
@@ -129,7 +198,7 @@ async def test_wh_evm_tx() -> EvmTransaction:
 @pytest_asyncio.fixture
 async def test_wh_dest_evm_tx() -> EvmTransaction:
     return EvmTransaction(
-        chain_id=constant.WH_DEST_CHAIN_ID,
+        chain_id=constant.TEST_DEST_CHAIN_ID,
         transaction_hash=constant.WH_DEST_TX_HASH,
         block_hash=constant.WH_DEST_BLOCK_HASH,
         block_number=constant.WH_DEST_BLOCK_NUMBER,
@@ -148,11 +217,11 @@ async def test_lz_cross_chain_tx(
 
     return CrossChainTransaction(
         bridge=Bridges.LAYER_ZERO,
-        from_address=constant.FROM_ADDRESS,
-        to_address=constant.TO_ADDRESS,
-        source_chain_id=constant.SOURCE_CHAIN_ID,
-        dest_chain_id=constant.DEST_CHAIN_ID,
-        amount=constant.AMOUNT,
+        from_address=constant.TEST_FROM_ADDRESS,
+        to_address=None,
+        source_chain_id=constant.TEST_SOURCE_CHAIN_ID,
+        dest_chain_id=constant.TEST_DEST_CHAIN_ID,
+        amount=constant.TEST_AMOUNT,
         source_chain_tx_id=inserted_lz_evm_transaction,
         dest_chain_tx_id=None,
     )
@@ -166,11 +235,11 @@ async def test_wh_cross_chain_tx(
 
     return CrossChainTransaction(
         bridge=Bridges.WORMHOLE,
-        from_address=constant.FROM_ADDRESS,
-        to_address=constant.TO_ADDRESS,
-        source_chain_id=constant.SOURCE_CHAIN_ID,
-        dest_chain_id=constant.DEST_CHAIN_ID,
-        amount=constant.AMOUNT,
+        from_address=constant.TEST_FROM_ADDRESS,
+        to_address=None,
+        source_chain_id=constant.TEST_SOURCE_CHAIN_ID,
+        dest_chain_id=constant.TEST_DEST_CHAIN_ID,
+        amount=constant.TEST_AMOUNT,
         source_chain_tx_id=inserted_wh_evm_transaction,
         dest_chain_tx_id=None,
     )
@@ -228,7 +297,7 @@ async def inserted_wormhole_message(
 ) -> None:
     """[WH flow]: Insert #3"""
     await messages_repo.create_wormhole_message(
-        cross_chain_transaction_id=inserted_wh_cross_chain_tx,
+        cross_chain_tx_id=inserted_wh_cross_chain_tx,
         message=test_wormhole_message,
     )
 
@@ -241,7 +310,7 @@ async def inserted_layer_zero_message(
 ) -> None:
     """[LZ flow]: Insert #3"""
     await messages_repo.create_layer_zero_message(
-        cross_chain_transaction_id=inserted_lz_cross_chain_tx,
+        cross_chain_tx_id=inserted_lz_cross_chain_tx,
         message=test_layer_zero_message,
     )
 
