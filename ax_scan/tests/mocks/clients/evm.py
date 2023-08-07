@@ -3,6 +3,7 @@ from typing import Union, List
 
 from web3.datastructures import AttributeDict
 
+from app.dependencies import CHAIN_DATA
 from app.usecases.interfaces.clients.evm import IEvmClient
 from app.usecases.schemas.events import SendToChain, ReceiveFromChain
 import tests.constants as constant
@@ -132,6 +133,44 @@ class MockEvmClientUpdateFlow(IEvmClient):
         """Fetches the latest block number."""
 
         return constant.TEST_BLOCK_NUMBER
+
+
+class MockEvmClientBlockRange(IEvmClient):
+    def __init__(
+        self, result: EvmResult, greater_than_max_range: bool, chain_id: int
+    ) -> None:
+        self.result = result
+        self.chain_id = chain_id
+        self.greater_than_max_range = greater_than_max_range
+
+    async def fetch_receipt(self, transaction_hash: str) -> AttributeDict:
+        """Fetches the transaction receipt for a given transaction hash."""
+        return
+
+    async def fetch_events(
+        self, contract: str, from_block: int, to_block: int
+    ) -> List[Union[SendToChain, ReceiveFromChain]]:
+        """Fetches events emitted from given contract, for a given block range."""
+
+        return []
+
+    async def fetch_latest_block_number(self) -> int:
+        """Fetches the latest block number."""
+
+        last_stored = constant.WH_SOURCE_BLOCK_NUMBER
+
+        if self.greater_than_max_range:
+            """We should assert that to_block is max_possible_to_block."""
+            latest_block = (
+                last_stored + CHAIN_DATA[self.chain_id]["max_block_range"] + 2
+            )
+            return latest_block
+        else:
+            """We should assert that to_block is latest minus 1."""
+            latest_block = (
+                last_stored + CHAIN_DATA[self.chain_id]["max_block_range"] + 1
+            )
+            return latest_block
 
     # return AttributeDict(
     #     {

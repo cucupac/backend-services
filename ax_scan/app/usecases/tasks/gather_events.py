@@ -77,10 +77,12 @@ class GatherEventsTask(IGatherEventsTask):
         self.logger.info("[GatherEventsTask]: Started.")
         task_start_time = time.time()
 
+        event_count = 0
+
         for ax_chain_id, chain_data in CHAIN_DATA.items():
             evm_client = self.supported_evm_clients[ax_chain_id]
 
-            block_range = await self.__get_block_range(ax_chain_id=ax_chain_id)
+            block_range = await self.get_block_range(ax_chain_id=ax_chain_id)
 
             # Process WormholeBridge events
             if chain_data.get("wh_chain_id"):
@@ -92,6 +94,7 @@ class GatherEventsTask(IGatherEventsTask):
 
                 for event in events:
                     await self.__store_event_data(ax_chain_id=ax_chain_id, event=event)
+                    event_count += 1
 
             # Process LayerZeroBridge events
             if chain_data.get("lz_chain_id"):
@@ -103,16 +106,17 @@ class GatherEventsTask(IGatherEventsTask):
 
                 for event in events:
                     await self.__store_event_data(ax_chain_id=ax_chain_id, event=event)
+                    event_count += 1
 
         await self.tasks_repo.delete_lock(task_id=task_id)
 
         self.logger.info(
-            "[GatherEventsTask]: Finished; processed %s pending transactions in %s seconds.",
-            len("something"),
+            "[GatherEventsTask]: Finished; processed %s events in %s seconds.",
+            event_count,
             round(time.time() - task_start_time, 4),
         )
 
-    async def __get_block_range(self, ax_chain_id: int) -> BlockRange:
+    async def get_block_range(self, ax_chain_id: int) -> BlockRange:
         """Returns starting block and end block for a given chain's data query."""
 
         evm_client = self.supported_evm_clients[ax_chain_id]
@@ -123,7 +127,6 @@ class GatherEventsTask(IGatherEventsTask):
 
         latest_chain_blk_num = await evm_client.fetch_latest_block_number()
 
-        # NOTE: does "- 1" work for all chains, including chains with high probability of re-orgs?
         max_upper_bound = latest_chain_blk_num - 1
 
         if last_stored_block is None:

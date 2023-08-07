@@ -45,46 +45,50 @@ class EvmClient(IEvmClient):
             ],
         }
 
-        events_raw = await self.web3_client.eth.get_logs(event_filter)
-
-        events = []
-        for event in events_raw:
-            if event.topics[0].hex() == settings.send_to_chain_topic:
-                """SendToChain"""
-                events.append(
-                    SendToChain(
-                        emitter_address=event.address,
-                        block_number=event.blockNumber,
-                        block_hash=event.blockHash,
-                        transaction_hash=event.transactionsHash,
-                        source_chain_id=self.chain_id,
-                        dest_chain_id=int(event.topics[1], 16),
-                        amount=int(event.data[2:66], 16),
-                        message_id=int(event.data[66:130], 16),
-                        from_address=AsyncWeb3.to_checksum_address(
-                            event.topics[2][2:].lstrip("0")
-                        ),
+        try:
+            events_raw = await self.web3_client.eth.get_logs(event_filter)
+        except Exception as e:
+            self.logger.error("[EvmClient]: Event retrieval failed. Error: %s", e)
+            raise BlockchainClientError(detail=str(e)) from e
+        else:
+            events = []
+            for event in events_raw:
+                if event.topics[0].hex() == settings.send_to_chain_topic:
+                    """SendToChain"""
+                    events.append(
+                        SendToChain(
+                            emitter_address=event.address,
+                            block_number=event.blockNumber,
+                            block_hash=event.blockHash,
+                            transaction_hash=event.transactionsHash,
+                            source_chain_id=self.chain_id,
+                            dest_chain_id=int(event.topics[1], 16),
+                            amount=int(event.data[2:66], 16),
+                            message_id=int(event.data[66:130], 16),
+                            from_address=AsyncWeb3.to_checksum_address(
+                                event.topics[2][2:].lstrip("0")
+                            ),
+                        )
                     )
-                )
-            else:
-                """ReceiveFromChain"""
-                events.append(
-                    ReceiveFromChain(
-                        emitter_address=event.address,
-                        block_number=event.blockNumber,
-                        block_hash=event.blockHash,
-                        transaction_hash=event.transactionsHash,
-                        source_chain_id=int(event.topics[1], 16),
-                        dest_chain_id=self.chain_id,
-                        amount=int(event.data[2:66], 16),
-                        message_id=int(event.data[66:130], 16),
-                        to_address=AsyncWeb3.to_checksum_address(
-                            event.topics[3][2:].lstrip("0")
-                        ),
+                else:
+                    """ReceiveFromChain"""
+                    events.append(
+                        ReceiveFromChain(
+                            emitter_address=event.address,
+                            block_number=event.blockNumber,
+                            block_hash=event.blockHash,
+                            transaction_hash=event.transactionsHash,
+                            source_chain_id=int(event.topics[1], 16),
+                            dest_chain_id=self.chain_id,
+                            amount=int(event.data[2:66], 16),
+                            message_id=int(event.data[66:130], 16),
+                            to_address=AsyncWeb3.to_checksum_address(
+                                event.topics[3][2:].lstrip("0")
+                            ),
+                        )
                     )
-                )
 
-        return events
+            return events
 
     async def fetch_latest_block_number(self) -> int:
         """Fetches the latest block number."""

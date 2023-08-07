@@ -36,6 +36,7 @@ from app.usecases.tasks.gather_events import GatherEventsTask
 from tests.mocks.clients.evm import (
     MockEvmClientInsertFlow,
     MockEvmClientUpdateFlow,
+    MockEvmClientBlockRange,
     EvmResult,
 )
 
@@ -104,6 +105,30 @@ async def test_evm_clients_update() -> IEvmClient:
     return supported_evm_clients
 
 
+@pytest_asyncio.fixture
+async def test_evm_clients_block_range_gt() -> IEvmClient:
+    supported_evm_clients = {}
+    for ax_chain_id in CHAIN_DATA:
+        supported_evm_clients[ax_chain_id] = MockEvmClientBlockRange(
+            result=EvmResult.SUCCESS,
+            greater_than_max_range=True,
+            chain_id=ax_chain_id,
+        )
+    return supported_evm_clients
+
+
+@pytest_asyncio.fixture
+async def test_evm_clients_block_range_lt() -> IEvmClient:
+    supported_evm_clients = {}
+    for ax_chain_id in CHAIN_DATA:
+        supported_evm_clients[ax_chain_id] = MockEvmClientBlockRange(
+            result=EvmResult.SUCCESS,
+            greater_than_max_range=False,
+            chain_id=ax_chain_id,
+        )
+    return supported_evm_clients
+
+
 # Services
 # @pytest_asyncio.fixture
 # async def example_service() -> IExample:
@@ -140,6 +165,42 @@ async def gather_events_task_update(
     return GatherEventsTask(
         db=test_db,
         supported_evm_clients=test_evm_clients_update,
+        transactions_repo=transactions_repo,
+        messages_repo=messages_repo,
+        tasks_repo=tasks_repo,
+        logger=logger,
+    )
+
+
+@pytest_asyncio.fixture
+async def gather_events_task_block_range_gt(
+    test_db: Database,
+    test_evm_clients_block_range_gt: Mapping[int, IEvmClient],
+    transactions_repo: ITransactionsRepo,
+    messages_repo: IMessagesRepo,
+    tasks_repo: ITasksRepo,
+) -> IGatherEventsTask:
+    return GatherEventsTask(
+        db=test_db,
+        supported_evm_clients=test_evm_clients_block_range_gt,
+        transactions_repo=transactions_repo,
+        messages_repo=messages_repo,
+        tasks_repo=tasks_repo,
+        logger=logger,
+    )
+
+
+@pytest_asyncio.fixture
+async def gather_events_task_block_range_lt(
+    test_db: Database,
+    test_evm_clients_block_range_lt: Mapping[int, IEvmClient],
+    transactions_repo: ITransactionsRepo,
+    messages_repo: IMessagesRepo,
+    tasks_repo: ITasksRepo,
+) -> IGatherEventsTask:
+    return GatherEventsTask(
+        db=test_db,
+        supported_evm_clients=test_evm_clients_block_range_lt,
         transactions_repo=transactions_repo,
         messages_repo=messages_repo,
         tasks_repo=tasks_repo,
