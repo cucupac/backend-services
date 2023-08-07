@@ -1,14 +1,14 @@
 from abc import ABC, abstractmethod
 from typing import List, Union
 
-from web3.datastructures import AttributeDict
 
 from app.usecases.schemas.events import SendToChain, ReceiveFromChain
+from app.usecases.schemas.blockchain import TransactionReceipt
 
 
 class IEvmClient(ABC):
     @abstractmethod
-    async def fetch_receipt(self, transaction_hash: str) -> AttributeDict:
+    async def fetch_receipt(self, transaction_hash: str) -> TransactionReceipt:
         """Fetches the transaction receipt for a given transaction hash."""
 
     @abstractmethod

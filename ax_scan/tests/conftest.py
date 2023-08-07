@@ -31,12 +31,14 @@ from app.usecases.schemas.evm_transaction import EvmTransaction, EvmTransactionS
 from app.usecases.schemas.tasks import TaskInDb, TaskName
 
 from app.usecases.tasks.gather_events import GatherEventsTask
+from app.usecases.tasks.verify_transactions import VerifyTransactionsTask
 
 # Mocks
 from tests.mocks.clients.evm import (
     MockEvmClientInsertFlow,
     MockEvmClientUpdateFlow,
     MockEvmClientBlockRange,
+    MockEvmClientTxReciept,
     EvmResult,
 )
 
@@ -85,7 +87,7 @@ async def tasks_repo(test_db: Database, inserted_tasks: None) -> ITasksRepo:
 
 # Clients
 @pytest_asyncio.fixture
-async def test_evm_clients_success_insert() -> IEvmClient:
+async def evm_clients_success_insert() -> IEvmClient:
     supported_evm_clients = {}
     for ax_chain_id in CHAIN_DATA:
         supported_evm_clients[ax_chain_id] = MockEvmClientInsertFlow(
@@ -95,7 +97,7 @@ async def test_evm_clients_success_insert() -> IEvmClient:
 
 
 @pytest_asyncio.fixture
-async def test_evm_clients_update() -> IEvmClient:
+async def evm_clients_update() -> IEvmClient:
     supported_evm_clients = {}
     for ax_chain_id in CHAIN_DATA:
         supported_evm_clients[ax_chain_id] = MockEvmClientUpdateFlow(
@@ -106,7 +108,7 @@ async def test_evm_clients_update() -> IEvmClient:
 
 
 @pytest_asyncio.fixture
-async def test_evm_clients_block_range_gt() -> IEvmClient:
+async def evm_clients_block_range_gt() -> IEvmClient:
     supported_evm_clients = {}
     for ax_chain_id in CHAIN_DATA:
         supported_evm_clients[ax_chain_id] = MockEvmClientBlockRange(
@@ -118,12 +120,64 @@ async def test_evm_clients_block_range_gt() -> IEvmClient:
 
 
 @pytest_asyncio.fixture
-async def test_evm_clients_block_range_lt() -> IEvmClient:
+async def evm_clients_block_range_lt() -> IEvmClient:
     supported_evm_clients = {}
     for ax_chain_id in CHAIN_DATA:
         supported_evm_clients[ax_chain_id] = MockEvmClientBlockRange(
             result=EvmResult.SUCCESS,
             greater_than_max_range=False,
+            chain_id=ax_chain_id,
+        )
+    return supported_evm_clients
+
+
+@pytest_asyncio.fixture
+async def evm_clients_tx_receipt_found_status_is_one() -> IEvmClient:
+    supported_evm_clients = {}
+    for ax_chain_id in CHAIN_DATA:
+        supported_evm_clients[ax_chain_id] = MockEvmClientTxReciept(
+            result=EvmResult.SUCCESS,
+            tx_exists=True,
+            status_is_one=True,
+            chain_id=ax_chain_id,
+        )
+    return supported_evm_clients
+
+
+@pytest_asyncio.fixture
+async def evm_clients_tx_receipt_found_status_not_one() -> IEvmClient:
+    supported_evm_clients = {}
+    for ax_chain_id in CHAIN_DATA:
+        supported_evm_clients[ax_chain_id] = MockEvmClientTxReciept(
+            result=EvmResult.SUCCESS,
+            tx_exists=True,
+            status_is_one=False,
+            chain_id=ax_chain_id,
+        )
+    return supported_evm_clients
+
+
+@pytest_asyncio.fixture
+async def evm_clients_tx_receipt_not_found() -> IEvmClient:
+    supported_evm_clients = {}
+    for ax_chain_id in CHAIN_DATA:
+        supported_evm_clients[ax_chain_id] = MockEvmClientTxReciept(
+            result=EvmResult.FAILURE,
+            tx_exists=False,
+            status_is_one=False,
+            chain_id=ax_chain_id,
+        )
+    return supported_evm_clients
+
+
+@pytest_asyncio.fixture
+async def evm_clients_tx_receipt_general_error() -> IEvmClient:
+    supported_evm_clients = {}
+    for ax_chain_id in CHAIN_DATA:
+        supported_evm_clients[ax_chain_id] = MockEvmClientTxReciept(
+            result=EvmResult.FAILURE,
+            tx_exists=True,
+            status_is_one=False,
             chain_id=ax_chain_id,
         )
     return supported_evm_clients
@@ -139,14 +193,14 @@ async def test_evm_clients_block_range_lt() -> IEvmClient:
 @pytest_asyncio.fixture
 async def gather_events_task_insert(
     test_db: Database,
-    test_evm_clients_success_insert: Mapping[int, IEvmClient],
+    evm_clients_success_insert: Mapping[int, IEvmClient],
     transactions_repo: ITransactionsRepo,
     messages_repo: IMessagesRepo,
     tasks_repo: ITasksRepo,
 ) -> IGatherEventsTask:
     return GatherEventsTask(
         db=test_db,
-        supported_evm_clients=test_evm_clients_success_insert,
+        supported_evm_clients=evm_clients_success_insert,
         transactions_repo=transactions_repo,
         messages_repo=messages_repo,
         tasks_repo=tasks_repo,
@@ -157,14 +211,14 @@ async def gather_events_task_insert(
 @pytest_asyncio.fixture
 async def gather_events_task_update(
     test_db: Database,
-    test_evm_clients_update: Mapping[int, IEvmClient],
+    evm_clients_update: Mapping[int, IEvmClient],
     transactions_repo: ITransactionsRepo,
     messages_repo: IMessagesRepo,
     tasks_repo: ITasksRepo,
 ) -> IGatherEventsTask:
     return GatherEventsTask(
         db=test_db,
-        supported_evm_clients=test_evm_clients_update,
+        supported_evm_clients=evm_clients_update,
         transactions_repo=transactions_repo,
         messages_repo=messages_repo,
         tasks_repo=tasks_repo,
@@ -175,14 +229,14 @@ async def gather_events_task_update(
 @pytest_asyncio.fixture
 async def gather_events_task_block_range_gt(
     test_db: Database,
-    test_evm_clients_block_range_gt: Mapping[int, IEvmClient],
+    evm_clients_block_range_gt: Mapping[int, IEvmClient],
     transactions_repo: ITransactionsRepo,
     messages_repo: IMessagesRepo,
     tasks_repo: ITasksRepo,
 ) -> IGatherEventsTask:
     return GatherEventsTask(
         db=test_db,
-        supported_evm_clients=test_evm_clients_block_range_gt,
+        supported_evm_clients=evm_clients_block_range_gt,
         transactions_repo=transactions_repo,
         messages_repo=messages_repo,
         tasks_repo=tasks_repo,
@@ -193,16 +247,72 @@ async def gather_events_task_block_range_gt(
 @pytest_asyncio.fixture
 async def gather_events_task_block_range_lt(
     test_db: Database,
-    test_evm_clients_block_range_lt: Mapping[int, IEvmClient],
+    evm_clients_block_range_lt: Mapping[int, IEvmClient],
     transactions_repo: ITransactionsRepo,
     messages_repo: IMessagesRepo,
     tasks_repo: ITasksRepo,
 ) -> IGatherEventsTask:
     return GatherEventsTask(
         db=test_db,
-        supported_evm_clients=test_evm_clients_block_range_lt,
+        supported_evm_clients=evm_clients_block_range_lt,
         transactions_repo=transactions_repo,
         messages_repo=messages_repo,
+        tasks_repo=tasks_repo,
+        logger=logger,
+    )
+
+
+@pytest_asyncio.fixture
+async def verify_transactions_task_found_status_is_one(
+    evm_clients_tx_receipt_found_status_is_one: Mapping[int, IEvmClient],
+    transactions_repo: ITransactionsRepo,
+    tasks_repo: ITasksRepo,
+) -> IGatherEventsTask:
+    return VerifyTransactionsTask(
+        supported_evm_clients=evm_clients_tx_receipt_found_status_is_one,
+        transactions_repo=transactions_repo,
+        tasks_repo=tasks_repo,
+        logger=logger,
+    )
+
+
+@pytest_asyncio.fixture
+async def verify_transactions_task_found_status_not_one(
+    evm_clients_tx_receipt_found_status_not_one: Mapping[int, IEvmClient],
+    transactions_repo: ITransactionsRepo,
+    tasks_repo: ITasksRepo,
+) -> IGatherEventsTask:
+    return VerifyTransactionsTask(
+        supported_evm_clients=evm_clients_tx_receipt_found_status_not_one,
+        transactions_repo=transactions_repo,
+        tasks_repo=tasks_repo,
+        logger=logger,
+    )
+
+
+@pytest_asyncio.fixture
+async def verify_transactions_task_not_found(
+    evm_clients_tx_receipt_not_found: Mapping[int, IEvmClient],
+    transactions_repo: ITransactionsRepo,
+    tasks_repo: ITasksRepo,
+) -> IGatherEventsTask:
+    return VerifyTransactionsTask(
+        supported_evm_clients=evm_clients_tx_receipt_not_found,
+        transactions_repo=transactions_repo,
+        tasks_repo=tasks_repo,
+        logger=logger,
+    )
+
+
+@pytest_asyncio.fixture
+async def verify_transactions_task_general_error(
+    evm_clients_tx_receipt_general_error: Mapping[int, IEvmClient],
+    transactions_repo: ITransactionsRepo,
+    tasks_repo: ITasksRepo,
+) -> IGatherEventsTask:
+    return VerifyTransactionsTask(
+        supported_evm_clients=evm_clients_tx_receipt_general_error,
+        transactions_repo=transactions_repo,
         tasks_repo=tasks_repo,
         logger=logger,
     )
@@ -238,7 +348,7 @@ async def test_lz_evm_tx() -> EvmTransaction:
         status=EvmTransactionStatus.PENDING,
         gas_price=None,
         gas_used=None,
-        timestamp=None,
+        error=None,
     )
 
 
@@ -252,7 +362,7 @@ async def test_wh_evm_tx() -> EvmTransaction:
         status=EvmTransactionStatus.PENDING,
         gas_price=None,
         gas_used=None,
-        timestamp=None,
+        error=None,
     )
 
 
@@ -266,7 +376,7 @@ async def test_wh_dest_evm_tx() -> EvmTransaction:
         status=EvmTransactionStatus.PENDING,
         gas_price=None,
         gas_used=None,
-        timestamp=None,
+        error=None,
     )
 
 
@@ -321,6 +431,24 @@ async def inserted_wh_evm_transaction(
 ) -> int:
     """[WH flow]: Insert #1"""
     return await transactions_repo.create_evm_tx(evm_tx=test_wh_evm_tx)
+
+
+@pytest_asyncio.fixture
+async def mixed_status_evm_transactions(
+    transactions_repo: ITransactionsRepo, test_wh_evm_tx: EvmTransaction
+) -> None:
+    """Evm transactions with mixed statuses."""
+    for i in range(4):
+        if i % 2 == 0:
+            test_wh_evm_tx.status = EvmTransactionStatus.PENDING
+        elif i == 1:
+            test_wh_evm_tx.status = EvmTransactionStatus.SUCCESS
+        elif i == 3:
+            test_wh_evm_tx.status = EvmTransactionStatus.SUCCESS
+
+        test_wh_evm_tx.transaction_hash += str(i)
+
+        await transactions_repo.create_evm_tx(evm_tx=test_wh_evm_tx)
 
 
 @pytest_asyncio.fixture

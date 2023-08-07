@@ -1,11 +1,15 @@
 from abc import ABC, abstractmethod
-from typing import Optional
+from typing import Optional, List
 
 from app.usecases.schemas.cross_chain_transaction import (
     CrossChainTransaction,
     UpdateCrossChainTransaction,
 )
-from app.usecases.schemas.evm_transaction import EvmTransaction, EvmTransactionInDb
+from app.usecases.schemas.evm_transaction import (
+    EvmTransaction,
+    EvmTransactionInDb,
+    UpdateEvmTransaction,
+)
 
 
 class ITransactionsRepo(ABC):
@@ -31,3 +35,18 @@ class ITransactionsRepo(ABC):
         chain_id: int,
     ) -> Optional[EvmTransactionInDb]:
         """Retrieves last-stored transactions by chain_id."""
+
+    @abstractmethod
+    async def retrieve_pending(
+        self,
+        chain_id: int,
+    ) -> List[EvmTransactionInDb]:
+        """Retrieves pending evm transactions by chain ID."""
+
+    @abstractmethod
+    async def update_evm_tx(
+        self,
+        evm_tx_id: int,
+        update_values: UpdateEvmTransaction,
+    ) -> None:
+        """Updates evm transactions by chain ID."""

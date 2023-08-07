@@ -7,7 +7,12 @@ from app.usecases.schemas.cross_chain_transaction import (
     CrossChainTransaction,
     UpdateCrossChainTransaction,
 )
-from app.usecases.schemas.evm_transaction import EvmTransaction, EvmTransactionInDb
+from app.usecases.schemas.evm_transaction import (
+    EvmTransaction,
+    EvmTransactionInDb,
+    EvmTransactionStatus,
+    UpdateEvmTransaction,
+)
 import tests.constants as constant
 
 
@@ -112,3 +117,64 @@ async def test_retrieve_last_transaction(
     retrieved_evm_txs.sort(key=lambda tx: tx.block_number, reverse=True)
 
     assert retrieved_evm_tx == EvmTransactionInDb(**retrieved_evm_txs[0])
+
+
+@pytest.mark.asyncio
+async def test_retrieve_pending(
+    mixed_status_evm_transactions: None,
+    transactions_repo: ITransactionsRepo,
+) -> None:
+    """Tests that only pending transactions are retreived."""
+    retrieved_evm_txs = await transactions_repo.retrieve_pending(
+        chain_id=constant.TEST_SOURCE_CHAIN_ID
+    )
+
+    assert len(retrieved_evm_txs) == 2
+    for tx in retrieved_evm_txs:
+        assert tx.status == EvmTransactionStatus.PENDING
+
+
+@pytest.mark.asyncio
+async def test_update_evm_tx(
+    inserted_wh_evm_transaction: int,
+    transactions_repo: ITransactionsRepo,
+    test_db: Database,
+) -> None:
+    """Tests that an evm transaction is updated properly."""
+
+    # Pre-action assertions
+    retrieved_evm_tx = await test_db.fetch_one(
+        """SELECT * FROM ax_scan.evm_transactions AS evm_txs WHERE evm_txs.id=:id""",
+        {
+            "id": inserted_wh_evm_transaction,
+        },
+    )
+
+    assert retrieved_evm_tx["status"] == EvmTransactionStatus.PENDING
+    assert retrieved_evm_tx["gas_price"] is None
+    assert retrieved_evm_tx["gas_used"] is None
+    assert retrieved_evm_tx["error"] is None
+
+    # Act
+    await transactions_repo.update_evm_tx(
+        evm_tx_id=inserted_wh_evm_transaction,
+        update_values=UpdateEvmTransaction(
+            status=EvmTransactionStatus.SUCCESS,
+            gas_price=constant.TEST_GAS_PRICE,
+            gas_used=constant.TEST_GAS_USED,
+            error=None,
+        ),
+    )
+
+    # Post-action assertions
+    retrieved_evm_tx = await test_db.fetch_one(
+        """SELECT * FROM ax_scan.evm_transactions AS evm_txs WHERE evm_txs.id=:id""",
+        {
+            "id": inserted_wh_evm_transaction,
+        },
+    )
+
+    assert retrieved_evm_tx["status"] == EvmTransactionStatus.SUCCESS
+    assert retrieved_evm_tx["gas_price"] == constant.TEST_GAS_PRICE
+    assert retrieved_evm_tx["gas_used"] == constant.TEST_GAS_USED
+    assert retrieved_evm_tx["error"] is None

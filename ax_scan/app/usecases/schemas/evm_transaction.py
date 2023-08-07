@@ -21,7 +21,7 @@ class EvmTransaction(BaseModel):
     status: EvmTransactionStatus
     gas_price: Optional[int] = None
     gas_used: Optional[int] = None
-    timestamp: Optional[int] = None
+    error: Optional[str] = None
 
 
 class EvmTransactionInDb(EvmTransaction):
@@ -30,3 +30,10 @@ class EvmTransactionInDb(EvmTransaction):
     id: int
     created_at: datetime
     updated_at: datetime
+
+
+class UpdateEvmTransaction(BaseModel):
+    status: EvmTransactionStatus
+    gas_price: Optional[int] = None
+    gas_used: Optional[int] = None
+    error: Optional[str] = None

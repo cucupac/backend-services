@@ -1,8 +1,8 @@
-"""Initial message.
+"""Initial schema
 
 Revision ID: 0001
 Revises: 
-Create Date: 2023-08-04 11:11:13.173461
+Create Date: 2023-08-07 15:15:12.119673
 
 """
 from alembic import op
@@ -24,10 +24,10 @@ def upgrade():
     sa.Column('transaction_hash', sa.String(), nullable=False),
     sa.Column('block_hash', sa.String(), nullable=False),
     sa.Column('block_number', sa.Integer(), nullable=False),
-    sa.Column('status', sa.String(), nullable=False),
-    sa.Column('gas_price', sa.Integer(), nullable=True),
+    sa.Column('gas_price', sa.BigInteger(), nullable=True),
     sa.Column('gas_used', sa.Integer(), nullable=True),
-    sa.Column('timestamp', sa.DateTime(), nullable=True),
+    sa.Column('status', sa.String(), nullable=False),
+    sa.Column('error', sa.Text(), nullable=True),
     sa.Column('created_at', sa.DateTime(), server_default=sa.text('now()'), nullable=False),
     sa.Column('updated_at', sa.DateTime(), server_default=sa.text('now()'), nullable=False),
     sa.CheckConstraint("status IN ('success', 'pending', 'failed')", name='check_status'),

@@ -36,6 +36,7 @@ class Settings(BaseSettings):
 
     # Tasks
     gather_txs_frequency: int = 60
+    verify_txs_frequency: int = 60
 
     # RPC Urls
     ethereum_rpc: str

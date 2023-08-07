@@ -18,7 +18,7 @@ class AxChains(int, Enum):
 
 class BlockchainErrors(str, Enum):
     TX_RECEIPT_STATUS_NOT_ONE = "Tx receipt exists, but status is not 1."
-    TX_HASH_NOT_IN_CHAIN = "is not in the chain after"
+    TX_NOT_FOUND = "not found"
 
 
 class BlockchainClientException(Exception):
@@ -35,13 +35,15 @@ class BlockchainClientError(BlockchainClientException):
 
 class TransactionReceipt(BaseModel):
     status: int
+    gas_used: int
+    gas_price: int
 
 
 class TransactionReceiptResponse(BaseModel):
     receipt: Optional[TransactionReceipt] = Field(
         None,
         description="The extracted version of the transaction object received from the blockchain.",
-        example=TransactionReceipt(status=1),
+        example=TransactionReceipt(status=1, gas_price=100000000, gas_used=70000),
     )
     error: Optional[str] = Field(
         None,

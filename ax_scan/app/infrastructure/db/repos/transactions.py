@@ -1,7 +1,7 @@
-from typing import Optional
+from typing import Optional, List
 
 from databases import Database
-from sqlalchemy import select
+from sqlalchemy import select, and_
 
 from app.infrastructure.db.models.cross_chain_transactions import (
     CROSS_CHAIN_TRANSACTIONS,
@@ -12,7 +12,12 @@ from app.usecases.schemas.cross_chain_transaction import (
     CrossChainTransaction,
     UpdateCrossChainTransaction,
 )
-from app.usecases.schemas.evm_transaction import EvmTransaction, EvmTransactionInDb
+from app.usecases.schemas.evm_transaction import (
+    EvmTransaction,
+    EvmTransactionInDb,
+    UpdateEvmTransaction,
+    EvmTransactionStatus,
+)
 
 
 class TransactionsRepo(ITransactionsRepo):
@@ -30,7 +35,7 @@ class TransactionsRepo(ITransactionsRepo):
             status=evm_tx.status,
             gas_price=evm_tx.gas_price,
             gas_used=evm_tx.gas_used,
-            timestamp=evm_tx.timestamp,
+            error=evm_tx.error,
         )
 
         return await self.db.execute(chain_tx_insert_stmt)
@@ -87,3 +92,42 @@ class TransactionsRepo(ITransactionsRepo):
         result = await self.db.fetch_one(query)
 
         return EvmTransactionInDb(**result) if result else None
+
+    async def retrieve_pending(
+        self,
+        chain_id: int,
+    ) -> List[EvmTransactionInDb]:
+        """Retrieves pending evm transactions by chain ID."""
+
+        query = select([EVM_TRANSACTIONS]).where(
+            and_(
+                EVM_TRANSACTIONS.c.chain_id == chain_id,
+                EVM_TRANSACTIONS.c.status == EvmTransactionStatus.PENDING,
+            )
+        )
+
+        results = await self.db.fetch_all(query)
+
+        return [EvmTransactionInDb(**result) for result in results]
+
+    async def update_evm_tx(
+        self,
+        evm_tx_id: int,
+        update_values: UpdateEvmTransaction,
+    ) -> None:
+        """Updates evm transactions by chain ID."""
+
+        update_dict = {}
+        for key, value in update_values.model_dump().items():
+            if key == "error":
+                update_dict[key] = value
+            elif value is not None:
+                update_dict[key] = value
+
+        evm_tx_update_stmt = (
+            EVM_TRANSACTIONS.update()
+            .values(update_dict)
+            .where(EVM_TRANSACTIONS.c.id == evm_tx_id)
+        )
+
+        await self.db.execute(evm_tx_update_stmt)

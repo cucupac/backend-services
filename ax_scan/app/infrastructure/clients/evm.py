@@ -2,11 +2,11 @@ from logging import Logger
 from typing import List, Union
 
 from web3 import AsyncHTTPProvider, AsyncWeb3
-from web3.datastructures import AttributeDict
+from web3.exceptions import TransactionNotFound
 
 from app.settings import settings
 from app.usecases.interfaces.clients.evm import IEvmClient
-from app.usecases.schemas.blockchain import BlockchainClientError
+from app.usecases.schemas.blockchain import BlockchainClientError, TransactionReceipt
 from app.usecases.schemas.events import SendToChain, ReceiveFromChain
 
 
@@ -21,15 +21,21 @@ class EvmClient(IEvmClient):
         self.web3_client = AsyncWeb3(AsyncHTTPProvider(rpc_url))
         self.logger = logger
 
-    async def fetch_receipt(self, transaction_hash: str) -> AttributeDict:
+    async def fetch_receipt(self, transaction_hash: str) -> TransactionReceipt:
         """Fetches the transaction receipt for a given transaction hash."""
         try:
-            return await self.web3_client.eth.get_transaction_receipt(
+            receipt = await self.web3_client.eth.get_transaction_receipt(
                 transaction_hash=transaction_hash
             )
         except Exception as e:
             self.logger.error("[EvmClient]: Tx receipt retrieval failed. Error: %s", e)
             raise BlockchainClientError(detail=str(e)) from e
+        else:
+            return TransactionReceipt(
+                status=receipt.status,
+                gas_used=receipt.gasUsed,
+                gas_price=receipt.effectiveGasPrice,
+            )
 
     async def fetch_events(
         self, contract: str, from_block: int, to_block: int

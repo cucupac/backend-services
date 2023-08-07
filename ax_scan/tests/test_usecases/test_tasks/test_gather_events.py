@@ -49,8 +49,8 @@ async def test_task_insert(
     for evm_tx in retrieved_evm_txs:
         assert evm_tx["gas_price"] is None
         assert evm_tx["gas_used"] is None
-        assert evm_tx["timestamp"] is None
         assert evm_tx["status"] == EvmTransactionStatus.PENDING
+        assert evm_tx["error"] is None
         assert evm_tx["chain_id"] in tested_chains
         evm_tx_ids.append(evm_tx["id"])
 
