@@ -1,9 +1,17 @@
 from datetime import datetime
 from typing import Optional
+from enum import Enum
 
 from pydantic import BaseModel, Field
 
 from app.usecases.schemas.bridge import Bridges
+from app.usecases.schemas.evm_transaction import EvmTransactionStatus
+
+
+class Status(str, Enum):
+    SUCCESS = "success"
+    PENDING = "pending"
+    FAILED = "failed"
 
 
 class CrossChainTransaction(BaseModel):
@@ -69,6 +77,19 @@ class CrossChainTransactionInDB(CrossChainTransaction):
     )
 
 
+class CrossChainTxJoinEvmTx(CrossChainTransactionInDB):
+    source_chain_tx_status: EvmTransactionStatus = Field(
+        ...,
+        description="The status of the source-chain evm transaciton.",
+        example=EvmTransactionStatus.SUCCESS,
+    )
+    dest_chain_tx_status: EvmTransactionStatus = Field(
+        ...,
+        description="The status of the destination-chain evm transaciton.",
+        example=EvmTransactionStatus.SUCCESS,
+    )
+
+
 class UpdateCrossChainTransaction(BaseModel):
     from_address: Optional[str] = None
     to_address: Optional[str] = None
@@ -76,40 +97,14 @@ class UpdateCrossChainTransaction(BaseModel):
     dest_chain_tx_id: Optional[int] = None
 
 
-# TODO: come back to this...
-# class TransactionResponse(BaseModel):
-#     """
-#     The reponse model returned, via API endpoint, when a user queries for
-#     transaction by source chain ID and transaction hash.
-#     """
+class TransactionResponse(CrossChainTransaction):
+    """
+    The reponse model returned, via API endpoint, when a user queries for
+    transaction by source chain ID and transaction hash.
+    """
 
-#     source_chain_id: str = Field(
-#         ...,
-#         description="The source chain's bridge-protocol-assigned chain ID.",
-#         example=5,
-#     )
-#     dest_chain_id: int = Field(
-#         ...,
-#         description="The destination chain's bridging-protocol-assigned chain ID.",
-#         example=2,
-#     )
-#     transaction_hash: str = Field(
-#         ...,
-#         description="The hash of the submitted, source-chain transaction.",
-#         example="0xb5c8bd9430b6cc87a0e2fe110ece6bf527fa4f170a4bc8cd032f768fc5219838",
-#     )
-#     status: Status = Field(
-#         ...,
-#         description="The status of the cross-chain transaction.",
-#         example="success",
-#     )
-#     created_at: datetime = Field(
-#         ...,
-#         description="The time that the transaction object was created.",
-#         example="2020-02-11 17:47:44.170522",
-#     )
-#     updated_at: datetime = Field(
-#         ...,
-#         description="The time that the transaction object was updated.",
-#         example="2020-02-11 17:47:44.170522",
-#     )
+    status: Status = Field(
+        ...,
+        description="The status of the cross-chain USX transaction.",
+        example=Status.SUCCESS,
+    )

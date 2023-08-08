@@ -6,6 +6,7 @@ from app.usecases.interfaces.repos.transactions import ITransactionsRepo
 from app.usecases.schemas.cross_chain_transaction import (
     CrossChainTransaction,
     UpdateCrossChainTransaction,
+    CrossChainTxJoinEvmTx,
 )
 from app.usecases.schemas.evm_transaction import (
     EvmTransaction,
@@ -96,9 +97,28 @@ async def test_update_cross_chain_tx(
 
 
 @pytest.mark.asyncio
+async def test_retrieve_cross_chain_tx(
+    transactions_repo: ITransactionsRepo,
+    inserted_wh_cross_chain_tx: int,
+) -> None:
+    cross_chain_tx = await transactions_repo.retrieve_cross_chain_tx(
+        chain_id=constant.TEST_SOURCE_CHAIN_ID, src_tx_hash=constant.WH_SOURCE_TX_HASH
+    )
+
+    assert isinstance(cross_chain_tx, CrossChainTxJoinEvmTx)
+    assert cross_chain_tx.source_chain_id == constant.TEST_SOURCE_CHAIN_ID
+    assert cross_chain_tx.dest_chain_id == constant.TEST_DEST_CHAIN_ID
+    assert cross_chain_tx.from_address == constant.TEST_FROM_ADDRESS
+    assert cross_chain_tx.to_address is None
+    assert cross_chain_tx.amount == constant.TEST_AMOUNT
+    assert cross_chain_tx.source_chain_tx_status == EvmTransactionStatus.PENDING
+    assert cross_chain_tx.dest_chain_tx_status == EvmTransactionStatus.PENDING
+
+
+@pytest.mark.asyncio
 async def test_retrieve_last_transaction(
-    inserted_wh_evm_transaction: int,
-    inserted_lz_evm_transaction: int,
+    inserted_wh_source_evm_transaction: int,
+    inserted_lz_source_evm_transaction: int,
     test_db: Database,
     transactions_repo: ITransactionsRepo,
 ) -> None:
@@ -136,7 +156,7 @@ async def test_retrieve_pending(
 
 @pytest.mark.asyncio
 async def test_update_evm_tx(
-    inserted_wh_evm_transaction: int,
+    inserted_wh_source_evm_transaction: int,
     transactions_repo: ITransactionsRepo,
     test_db: Database,
 ) -> None:
@@ -146,7 +166,7 @@ async def test_update_evm_tx(
     retrieved_evm_tx = await test_db.fetch_one(
         """SELECT * FROM ax_scan.evm_transactions AS evm_txs WHERE evm_txs.id=:id""",
         {
-            "id": inserted_wh_evm_transaction,
+            "id": inserted_wh_source_evm_transaction,
         },
     )
 
@@ -157,7 +177,7 @@ async def test_update_evm_tx(
 
     # Act
     await transactions_repo.update_evm_tx(
-        evm_tx_id=inserted_wh_evm_transaction,
+        evm_tx_id=inserted_wh_source_evm_transaction,
         update_values=UpdateEvmTransaction(
             status=EvmTransactionStatus.SUCCESS,
             gas_price=constant.TEST_GAS_PRICE,
@@ -170,7 +190,7 @@ async def test_update_evm_tx(
     retrieved_evm_tx = await test_db.fetch_one(
         """SELECT * FROM ax_scan.evm_transactions AS evm_txs WHERE evm_txs.id=:id""",
         {
-            "id": inserted_wh_evm_transaction,
+            "id": inserted_wh_source_evm_transaction,
         },
     )
 

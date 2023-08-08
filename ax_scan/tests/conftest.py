@@ -10,7 +10,7 @@ from databases import Database
 from fastapi import FastAPI
 from httpx import AsyncClient
 
-from app.dependencies import CHAIN_DATA, logger
+from app.dependencies import CHAIN_DATA, logger, get_transactions_repo
 import tests.constants as constant
 from app.infrastructure.web.setup import setup_app
 
@@ -26,8 +26,15 @@ from app.usecases.interfaces.clients.evm import IEvmClient
 
 from app.usecases.schemas.bridge import Bridges
 from app.usecases.schemas.cross_chain_message import LzMessage, WhMessage
-from app.usecases.schemas.cross_chain_transaction import CrossChainTransaction
-from app.usecases.schemas.evm_transaction import EvmTransaction, EvmTransactionStatus
+from app.usecases.schemas.cross_chain_transaction import (
+    CrossChainTransaction,
+    UpdateCrossChainTransaction,
+)
+from app.usecases.schemas.evm_transaction import (
+    EvmTransaction,
+    EvmTransactionStatus,
+    UpdateEvmTransaction,
+)
 from app.usecases.schemas.tasks import TaskInDb, TaskName
 
 from app.usecases.tasks.gather_events import GatherEventsTask
@@ -382,7 +389,7 @@ async def test_wh_dest_evm_tx() -> EvmTransaction:
 
 @pytest_asyncio.fixture
 async def test_lz_cross_chain_tx(
-    inserted_lz_evm_transaction: int,
+    inserted_lz_source_evm_transaction: int,
 ) -> CrossChainTransaction:
     """Note: Source-chain tx id comes from evm tx insertion."""
 
@@ -393,14 +400,14 @@ async def test_lz_cross_chain_tx(
         source_chain_id=constant.TEST_SOURCE_CHAIN_ID,
         dest_chain_id=constant.TEST_DEST_CHAIN_ID,
         amount=constant.TEST_AMOUNT,
-        source_chain_tx_id=inserted_lz_evm_transaction,
+        source_chain_tx_id=inserted_lz_source_evm_transaction,
         dest_chain_tx_id=None,
     )
 
 
 @pytest_asyncio.fixture
 async def test_wh_cross_chain_tx(
-    inserted_wh_evm_transaction: int,
+    inserted_wh_source_evm_transaction: int,
 ) -> CrossChainTransaction:
     """Note: Source-chain tx id comes from evm tx insertion."""
 
@@ -411,14 +418,14 @@ async def test_wh_cross_chain_tx(
         source_chain_id=constant.TEST_SOURCE_CHAIN_ID,
         dest_chain_id=constant.TEST_DEST_CHAIN_ID,
         amount=constant.TEST_AMOUNT,
-        source_chain_tx_id=inserted_wh_evm_transaction,
+        source_chain_tx_id=inserted_wh_source_evm_transaction,
         dest_chain_tx_id=None,
     )
 
 
 # Database-inserted Objects
 @pytest_asyncio.fixture
-async def inserted_lz_evm_transaction(
+async def inserted_lz_source_evm_transaction(
     transactions_repo: ITransactionsRepo, test_lz_evm_tx: EvmTransaction
 ) -> int:
     """[LZ flow]: Insert #1"""
@@ -426,11 +433,18 @@ async def inserted_lz_evm_transaction(
 
 
 @pytest_asyncio.fixture
-async def inserted_wh_evm_transaction(
+async def inserted_wh_source_evm_transaction(
     transactions_repo: ITransactionsRepo, test_wh_evm_tx: EvmTransaction
 ) -> int:
     """[WH flow]: Insert #1"""
     return await transactions_repo.create_evm_tx(evm_tx=test_wh_evm_tx)
+
+
+@pytest_asyncio.fixture
+async def inserted_wh_dest_evm_transaction(
+    transactions_repo: ITransactionsRepo, test_wh_dest_evm_tx: EvmTransaction
+) -> int:
+    return await transactions_repo.create_evm_tx(evm_tx=test_wh_dest_evm_tx)
 
 
 @pytest_asyncio.fixture
@@ -449,13 +463,6 @@ async def mixed_status_evm_transactions(
         test_wh_evm_tx.transaction_hash += str(i)
 
         await transactions_repo.create_evm_tx(evm_tx=test_wh_evm_tx)
-
-
-@pytest_asyncio.fixture
-async def inserted_wh_dest_evm_transaction(
-    transactions_repo: ITransactionsRepo, test_wh_dest_evm_tx: EvmTransaction
-) -> int:
-    return await transactions_repo.create_evm_tx(evm_tx=test_wh_dest_evm_tx)
 
 
 @pytest_asyncio.fixture
@@ -505,6 +512,75 @@ async def inserted_layer_zero_message(
 
 
 @pytest_asyncio.fixture
+async def complete_successful_cross_chain_tx(
+    messages_repo: IMessagesRepo,
+    transactions_repo: ITransactionsRepo,
+    inserted_wh_cross_chain_tx: int,
+    inserted_wh_dest_evm_transaction: int,
+    test_wormhole_message: WhMessage,
+    test_db: Database,
+) -> None:
+    """Setup fixtures include a destination EVM transactions to complete the picture."""
+    # 1. Insert a wormhole message (one-to-one with cross_chain_tx)
+    await messages_repo.create_wormhole_message(
+        cross_chain_tx_id=inserted_wh_cross_chain_tx,
+        message=test_wormhole_message,
+    )
+
+    # 2. Update the cross-chain transaction
+    await transactions_repo.update_cross_chain_tx(
+        cross_chain_tx_id=inserted_wh_cross_chain_tx,
+        update_values=UpdateCrossChainTransaction(
+            to_address=constant.TEST_TO_ADDRESS,
+            dest_chain_tx_id=inserted_wh_dest_evm_transaction,
+        ),
+    )
+
+    # 3. Update evm transaction statuses
+    retrieved_cross_chain_tx = await test_db.fetch_one(
+        """SELECT * FROM ax_scan.cross_chain_transactions AS c_c_t WHERE c_c_t.id=:id""",
+        {
+            "id": inserted_wh_cross_chain_tx,
+        },
+    )
+    await transactions_repo.update_evm_tx(
+        evm_tx_id=retrieved_cross_chain_tx["source_chain_tx_id"],
+        update_values=UpdateEvmTransaction(status=EvmTransactionStatus.SUCCESS),
+    )
+    await transactions_repo.update_evm_tx(
+        evm_tx_id=inserted_wh_dest_evm_transaction,
+        update_values=UpdateEvmTransaction(status=EvmTransactionStatus.SUCCESS),
+    )
+
+
+@pytest_asyncio.fixture
+async def failed_cross_chain_tx(
+    messages_repo: IMessagesRepo,
+    transactions_repo: ITransactionsRepo,
+    inserted_wh_cross_chain_tx: int,
+    test_wormhole_message: WhMessage,
+    test_db: Database,
+) -> None:
+    # 1. Insert a wormhole message (one-to-one with cross_chain_tx)
+    await messages_repo.create_wormhole_message(
+        cross_chain_tx_id=inserted_wh_cross_chain_tx,
+        message=test_wormhole_message,
+    )
+
+    # 2. Update evm transaction status to failed
+    retrieved_cross_chain_tx = await test_db.fetch_one(
+        """SELECT * FROM ax_scan.cross_chain_transactions AS c_c_t WHERE c_c_t.id=:id""",
+        {
+            "id": inserted_wh_cross_chain_tx,
+        },
+    )
+    await transactions_repo.update_evm_tx(
+        evm_tx_id=retrieved_cross_chain_tx["source_chain_tx_id"],
+        update_values=UpdateEvmTransaction(status=EvmTransactionStatus.FAILED),
+    )
+
+
+@pytest_asyncio.fixture
 async def inserted_tasks(test_db: Database) -> None:
     for name in TaskName:
         query = """INSERT INTO ax_scan.tasks (name) VALUES (:name) RETURNING id"""
@@ -529,11 +605,9 @@ async def stale_locks(test_db: Database, tasks_repo: ITasksRepo, inserted_tasks:
 
 # App
 @pytest_asyncio.fixture
-def test_app(
-    # example_repo: IExample,
-) -> FastAPI:
+def test_app(transactions_repo: ITransactionsRepo) -> FastAPI:
     app = setup_app()
-    # app.dependency_overrides[get_example_repo] = lambda: example_repo
+    app.dependency_overrides[get_transactions_repo] = lambda: transactions_repo
     return app
 
 

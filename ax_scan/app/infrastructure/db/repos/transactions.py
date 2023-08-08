@@ -11,6 +11,8 @@ from app.usecases.interfaces.repos.transactions import ITransactionsRepo
 from app.usecases.schemas.cross_chain_transaction import (
     CrossChainTransaction,
     UpdateCrossChainTransaction,
+    CrossChainTxJoinEvmTx,
+    Status,
 )
 from app.usecases.schemas.evm_transaction import (
     EvmTransaction,
@@ -75,6 +77,53 @@ class TransactionsRepo(ITransactionsRepo):
         )
 
         await self.db.execute(cross_chain_tx_update_stmt)
+
+    async def retrieve_cross_chain_tx(
+        self,
+        chain_id: int,
+        src_tx_hash: str,
+    ) -> Optional[CrossChainTxJoinEvmTx]:
+        """Returns a cross-chain transaction by chain ID and source-chain transaction hash."""
+
+        j = CROSS_CHAIN_TRANSACTIONS.join(
+            EVM_TRANSACTIONS,
+            CROSS_CHAIN_TRANSACTIONS.c.source_chain_tx_id == EVM_TRANSACTIONS.c.id,
+        )
+
+        columns_to_select = [
+            CROSS_CHAIN_TRANSACTIONS,
+            EVM_TRANSACTIONS.c.status.label("source_chain_tx_status"),
+        ]
+
+        query = (
+            select(columns_to_select)
+            .select_from(j)
+            .where(
+                and_(
+                    EVM_TRANSACTIONS.c.chain_id == chain_id,
+                    EVM_TRANSACTIONS.c.transaction_hash == src_tx_hash,
+                )
+            )
+        )
+
+        async with self.db.transaction():
+            cross_chain_tx_record = await self.db.fetch_one(query)
+
+            if not cross_chain_tx_record:
+                return
+
+            if cross_chain_tx_record.dest_chain_tx_id:
+                query = select([EVM_TRANSACTIONS]).where(
+                    EVM_TRANSACTIONS.c.id == cross_chain_tx_record.dest_chain_tx_id
+                )
+                evm_tx = await self.db.fetch_one(query)
+                dest_chain_tx = EvmTransactionInDb(**evm_tx)
+                return CrossChainTxJoinEvmTx(
+                    **cross_chain_tx_record, dest_chain_tx_status=dest_chain_tx.status
+                )
+            return CrossChainTxJoinEvmTx(
+                **cross_chain_tx_record, dest_chain_tx_status=Status.PENDING
+            )
 
     async def retrieve_last_transaction(
         self,

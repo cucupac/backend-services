@@ -11,6 +11,8 @@ from app.usecases.schemas.evm_transaction import (
     UpdateEvmTransaction,
 )
 
+from app.usecases.schemas.cross_chain_transaction import CrossChainTxJoinEvmTx
+
 
 class ITransactionsRepo(ABC):
     @abstractmethod
@@ -28,6 +30,14 @@ class ITransactionsRepo(ABC):
         update_values: UpdateCrossChainTransaction,
     ) -> None:
         """Updates a cross-chain transaction."""
+
+    @abstractmethod
+    async def retrieve_cross_chain_tx(
+        self,
+        chain_id: int,
+        src_tx_hash: str,
+    ) -> Optional[CrossChainTxJoinEvmTx]:
+        """Returns a cross-chain transaction by chain ID and source-chain transaction hash."""
 
     @abstractmethod
     async def retrieve_last_transaction(
