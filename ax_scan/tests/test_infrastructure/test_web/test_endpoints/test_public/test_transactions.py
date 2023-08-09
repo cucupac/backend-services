@@ -11,12 +11,14 @@ from app.usecases.interfaces.repos.transactions import ITransactionsRepo
 async def test_get_transaction_pending(
     test_client: AsyncClient,
     transactions_repo: ITransactionsRepo,
-    inserted_wormhole_message: None,
+    inserted_wh_message_src_data: None,
 ) -> None:
-    endpoint = f"/public/transactions/{constant.TEST_SOURCE_CHAIN_ID}/{constant.WH_SOURCE_TX_HASH}"
+    endpoint = (
+        f"/public/transactions/{constant.TEST_SRC_CHAIN_ID}/{constant.WH_SRC_TX_HASH}"
+    )
 
     cross_chain_tx = await transactions_repo.retrieve_cross_chain_tx(
-        chain_id=constant.TEST_SOURCE_CHAIN_ID, src_tx_hash=constant.WH_SOURCE_TX_HASH
+        chain_id=constant.TEST_SRC_CHAIN_ID, src_tx_hash=constant.WH_SRC_TX_HASH
     )
 
     # Test successful user creation
@@ -37,10 +39,12 @@ async def test_get_transaction_success(
     transactions_repo: ITransactionsRepo,
     complete_successful_cross_chain_tx: None,
 ) -> None:
-    endpoint = f"/public/transactions/{constant.TEST_SOURCE_CHAIN_ID}/{constant.WH_SOURCE_TX_HASH}"
+    endpoint = (
+        f"/public/transactions/{constant.TEST_SRC_CHAIN_ID}/{constant.WH_SRC_TX_HASH}"
+    )
 
     cross_chain_tx = await transactions_repo.retrieve_cross_chain_tx(
-        chain_id=constant.TEST_SOURCE_CHAIN_ID, src_tx_hash=constant.WH_SOURCE_TX_HASH
+        chain_id=constant.TEST_SRC_CHAIN_ID, src_tx_hash=constant.WH_SRC_TX_HASH
     )
 
     # Test successful user creation
@@ -61,10 +65,12 @@ async def test_get_transaction_failed(
     transactions_repo: ITransactionsRepo,
     failed_cross_chain_tx: None,
 ) -> None:
-    endpoint = f"/public/transactions/{constant.TEST_SOURCE_CHAIN_ID}/{constant.WH_SOURCE_TX_HASH}"
+    endpoint = (
+        f"/public/transactions/{constant.TEST_SRC_CHAIN_ID}/{constant.WH_SRC_TX_HASH}"
+    )
 
     cross_chain_tx = await transactions_repo.retrieve_cross_chain_tx(
-        chain_id=constant.TEST_SOURCE_CHAIN_ID, src_tx_hash=constant.WH_SOURCE_TX_HASH
+        chain_id=constant.TEST_SRC_CHAIN_ID, src_tx_hash=constant.WH_SRC_TX_HASH
     )
 
     # Test successful user creation
@@ -83,9 +89,11 @@ async def test_get_transaction_failed(
 async def test_get_transaction_not_found(
     test_client: AsyncClient,
     transactions_repo: ITransactionsRepo,
-    inserted_wormhole_message: None,
+    inserted_wh_message_src_data: None,
 ) -> None:
-    endpoint = f"/public/transactions/{constant.TEST_SOURCE_CHAIN_ID}/{constant.LZ_SOURCE_TX_HASH}"
+    endpoint = (
+        f"/public/transactions/{constant.TEST_SRC_CHAIN_ID}/{constant.LZ_SRC_TX_HASH}"
+    )
 
     response = await test_client.get(endpoint)
 
@@ -97,10 +105,10 @@ async def test_get_transaction_not_found(
 async def test_get_transaction_faulty_input_data(
     test_client: AsyncClient,
     transactions_repo: ITransactionsRepo,
-    inserted_wormhole_message: None,
+    inserted_wh_message_src_data: None,
 ) -> None:
     endpoint_faulty_hash = (
-        f"/public/transactions/{constant.TEST_SOURCE_CHAIN_ID}/{constant.LZ_SOURCE_TX_HASH}"
+        f"/public/transactions/{constant.TEST_SRC_CHAIN_ID}/{constant.LZ_SRC_TX_HASH}"
         + "1"
     )
 
@@ -110,7 +118,7 @@ async def test_get_transaction_faulty_input_data(
     assert response.status_code == 422
 
     endpoint_faulty_chain_id = (
-        f"/public/transactions/1000/{constant.LZ_SOURCE_TX_HASH}" + "1"
+        f"/public/transactions/1000/{constant.LZ_SRC_TX_HASH}" + "1"
     )
 
     response = await test_client.get(endpoint_faulty_chain_id)

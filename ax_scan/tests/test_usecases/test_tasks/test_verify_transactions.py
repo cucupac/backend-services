@@ -12,7 +12,7 @@ from app.usecases.schemas.tasks import TaskName
 @pytest.mark.asyncio
 async def test_task_successful(
     verify_transactions_task_found_status_is_one: IVerifyTransactionsTask,
-    inserted_wh_source_evm_transaction: int,
+    inserted_wh_evm_tx_src: int,
     tasks_repo: ITasksRepo,
     test_db: Database,
 ) -> None:
@@ -22,7 +22,7 @@ async def test_task_successful(
     retrieved_evm_tx = await test_db.fetch_one(
         """SELECT * FROM ax_scan.evm_transactions AS evm_txs WHERE evm_txs.id=:id""",
         {
-            "id": inserted_wh_source_evm_transaction,
+            "id": inserted_wh_evm_tx_src,
         },
     )
 
@@ -39,7 +39,7 @@ async def test_task_successful(
     retrieved_evm_tx = await test_db.fetch_one(
         """SELECT * FROM ax_scan.evm_transactions AS evm_txs WHERE evm_txs.id=:id""",
         {
-            "id": inserted_wh_source_evm_transaction,
+            "id": inserted_wh_evm_tx_src,
         },
     )
 
@@ -52,7 +52,7 @@ async def test_task_successful(
 @pytest.mark.asyncio
 async def test_task_status_not_one(
     verify_transactions_task_found_status_not_one: IVerifyTransactionsTask,
-    inserted_wh_source_evm_transaction: int,
+    inserted_wh_evm_tx_src: int,
     tasks_repo: ITasksRepo,
     test_db: Database,
 ) -> None:
@@ -62,7 +62,7 @@ async def test_task_status_not_one(
     retrieved_evm_tx = await test_db.fetch_one(
         """SELECT * FROM ax_scan.evm_transactions AS evm_txs WHERE evm_txs.id=:id""",
         {
-            "id": inserted_wh_source_evm_transaction,
+            "id": inserted_wh_evm_tx_src,
         },
     )
 
@@ -79,7 +79,7 @@ async def test_task_status_not_one(
     retrieved_evm_tx = await test_db.fetch_one(
         """SELECT * FROM ax_scan.evm_transactions AS evm_txs WHERE evm_txs.id=:id""",
         {
-            "id": inserted_wh_source_evm_transaction,
+            "id": inserted_wh_evm_tx_src,
         },
     )
 
@@ -92,7 +92,7 @@ async def test_task_status_not_one(
 @pytest.mark.asyncio
 async def test_task_not_found(
     verify_transactions_task_not_found: IVerifyTransactionsTask,
-    inserted_wh_source_evm_transaction: int,
+    inserted_wh_evm_tx_src: int,
     tasks_repo: ITasksRepo,
     test_db: Database,
 ) -> None:
@@ -102,7 +102,7 @@ async def test_task_not_found(
     retrieved_evm_tx = await test_db.fetch_one(
         """SELECT * FROM ax_scan.evm_transactions AS evm_txs WHERE evm_txs.id=:id""",
         {
-            "id": inserted_wh_source_evm_transaction,
+            "id": inserted_wh_evm_tx_src,
         },
     )
 
@@ -119,7 +119,7 @@ async def test_task_not_found(
     retrieved_evm_tx = await test_db.fetch_one(
         """SELECT * FROM ax_scan.evm_transactions AS evm_txs WHERE evm_txs.id=:id""",
         {
-            "id": inserted_wh_source_evm_transaction,
+            "id": inserted_wh_evm_tx_src,
         },
     )
 
@@ -132,7 +132,7 @@ async def test_task_not_found(
 @pytest.mark.asyncio
 async def test_task_blockchain_client_error(
     verify_transactions_task_general_error: IVerifyTransactionsTask,
-    inserted_wh_source_evm_transaction: int,
+    inserted_wh_evm_tx_src: int,
     tasks_repo: ITasksRepo,
     test_db: Database,
 ) -> None:
@@ -142,7 +142,7 @@ async def test_task_blockchain_client_error(
     retrieved_evm_tx = await test_db.fetch_one(
         """SELECT * FROM ax_scan.evm_transactions AS evm_txs WHERE evm_txs.id=:id""",
         {
-            "id": inserted_wh_source_evm_transaction,
+            "id": inserted_wh_evm_tx_src,
         },
     )
 
@@ -159,7 +159,7 @@ async def test_task_blockchain_client_error(
     retrieved_evm_tx = await test_db.fetch_one(
         """SELECT * FROM ax_scan.evm_transactions AS evm_txs WHERE evm_txs.id=:id""",
         {
-            "id": inserted_wh_source_evm_transaction,
+            "id": inserted_wh_evm_tx_src,
         },
     )
 

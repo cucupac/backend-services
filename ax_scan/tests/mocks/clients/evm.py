@@ -77,9 +77,9 @@ class MockEvmClientInsertFlow(IEvmClient):
         send_to_chain_event = SendToChain(
             emitter_address=contract,
             block_number=from_block,
-            block_hash=constant.WH_SOURCE_BLOCK_HASH,
-            transaction_hash=constant.WH_SOURCE_TX_HASH,
-            source_chain_id=constant.WH_SOURCE_CHAIN_ID,
+            block_hash=constant.WH_SRC_BLOCK_HASH,
+            transaction_hash=constant.WH_SRC_TX_HASH,
+            source_chain_id=constant.WH_SRC_CHAIN_ID,
             dest_chain_id=constant.WH_DEST_CHAIN_ID,
             amount=constant.TEST_AMOUNT,
             message_id=constant.TEST_MESSAGE_ID,
@@ -91,20 +91,20 @@ class MockEvmClientInsertFlow(IEvmClient):
             block_number=from_block,
             block_hash=constant.WH_DEST_BLOCK_HASH,
             transaction_hash=constant.WH_DEST_TX_HASH,
-            source_chain_id=constant.WH_SOURCE_CHAIN_ID,
+            source_chain_id=constant.WH_SRC_CHAIN_ID,
             dest_chain_id=constant.WH_DEST_CHAIN_ID,
             amount=constant.TEST_AMOUNT,
             message_id=constant.TEST_MESSAGE_ID,
             to_address=constant.TEST_TO_ADDRESS,
         )
 
-        if self.chain_id == constant.TEST_SOURCE_CHAIN_ID:
+        if self.chain_id == constant.TEST_SRC_CHAIN_ID:
             """Source chain."""
             if contract == settings.evm_wormhole_bridge:
                 return [send_to_chain_event]
             elif contract == settings.evm_layerzero_bridge:
-                send_to_chain_event.transaction_hash = constant.LZ_SOURCE_TX_HASH
-                send_to_chain_event.source_chain_id = constant.LZ_SOURCE_CHAIN_ID
+                send_to_chain_event.transaction_hash = constant.LZ_SRC_TX_HASH
+                send_to_chain_event.source_chain_id = constant.LZ_SRC_CHAIN_ID
                 send_to_chain_event.dest_chain_id = constant.LZ_DEST_CHAIN_ID
                 return [send_to_chain_event]
 
@@ -114,7 +114,7 @@ class MockEvmClientInsertFlow(IEvmClient):
                 return [receive_from_chain_event]
             elif contract == settings.evm_layerzero_bridge:
                 receive_from_chain_event.transaction_hash = constant.LZ_DEST_TX_HASH
-                receive_from_chain_event.source_chain_id = constant.LZ_SOURCE_CHAIN_ID
+                receive_from_chain_event.source_chain_id = constant.LZ_SRC_CHAIN_ID
                 receive_from_chain_event.dest_chain_id = constant.LZ_DEST_CHAIN_ID
                 return [receive_from_chain_event]
         else:
@@ -126,7 +126,7 @@ class MockEvmClientInsertFlow(IEvmClient):
         return constant.TEST_BLOCK_NUMBER
 
 
-class MockEvmClientUpdateFlow(IEvmClient):
+class MockEvmClientDestOnly(IEvmClient):
     def __init__(self, result: EvmResult, chain_id: int) -> None:
         self.result = result
         self.chain_id = chain_id
@@ -141,15 +141,14 @@ class MockEvmClientUpdateFlow(IEvmClient):
         """Fetches events emitted from given contract, for a given block range."""
 
         if self.chain_id == constant.TEST_DEST_CHAIN_ID:
-            """Destination chain."""
-
+            """Mocking a destination chain."""
             if contract == settings.evm_wormhole_bridge:
                 receive_from_chain_event = ReceiveFromChain(
                     emitter_address=contract,
                     block_number=from_block,
                     block_hash=constant.WH_DEST_BLOCK_HASH,
                     transaction_hash=constant.WH_DEST_TX_HASH,
-                    source_chain_id=constant.WH_SOURCE_CHAIN_ID,
+                    source_chain_id=constant.WH_SRC_CHAIN_ID,
                     dest_chain_id=constant.WH_DEST_CHAIN_ID,
                     amount=constant.TEST_AMOUNT,
                     message_id=constant.TEST_MESSAGE_ID,
@@ -161,13 +160,63 @@ class MockEvmClientUpdateFlow(IEvmClient):
                     block_number=from_block,
                     block_hash=constant.LZ_DEST_BLOCK_HASH,
                     transaction_hash=constant.LZ_DEST_TX_HASH,
-                    source_chain_id=constant.LZ_SOURCE_CHAIN_ID,
+                    source_chain_id=constant.LZ_SRC_CHAIN_ID,
                     dest_chain_id=constant.LZ_DEST_CHAIN_ID,
                     amount=constant.TEST_AMOUNT,
                     message_id=constant.TEST_MESSAGE_ID,
                     to_address=constant.TEST_TO_ADDRESS,
                 )
             return [receive_from_chain_event]
+        else:
+            return []
+
+    async def fetch_latest_block_number(self) -> int:
+        """Fetches the latest block number."""
+
+        return constant.TEST_BLOCK_NUMBER
+
+
+class MockEvmClientSrcOnly(IEvmClient):
+    def __init__(self, result: EvmResult, chain_id: int) -> None:
+        self.result = result
+        self.chain_id = chain_id
+
+    async def fetch_receipt(self, transaction_hash: str) -> AttributeDict:
+        """Fetches the transaction receipt for a given transaction hash."""
+        return
+
+    async def fetch_events(
+        self, contract: str, from_block: int, to_block: int
+    ) -> List[Union[SendToChain, ReceiveFromChain]]:
+        """Fetches events emitted from given contract, for a given block range."""
+
+        if self.chain_id == constant.TEST_SRC_CHAIN_ID:
+            """Mocking a source chain."""
+            if contract == settings.evm_wormhole_bridge:
+                send_to_chain_event = SendToChain(
+                    emitter_address=contract,
+                    block_number=from_block,
+                    block_hash=constant.WH_SRC_BLOCK_HASH,
+                    transaction_hash=constant.WH_SRC_TX_HASH,
+                    source_chain_id=constant.WH_SRC_CHAIN_ID,
+                    dest_chain_id=constant.WH_DEST_CHAIN_ID,
+                    amount=constant.TEST_AMOUNT,
+                    message_id=constant.TEST_MESSAGE_ID,
+                    from_address=constant.TEST_FROM_ADDRESS,
+                )
+            else:
+                send_to_chain_event = SendToChain(
+                    emitter_address=contract,
+                    block_number=from_block,
+                    block_hash=constant.LZ_SRC_BLOCK_HASH,
+                    transaction_hash=constant.LZ_SRC_TX_HASH,
+                    source_chain_id=constant.LZ_SRC_CHAIN_ID,
+                    dest_chain_id=constant.LZ_DEST_CHAIN_ID,
+                    amount=constant.TEST_AMOUNT,
+                    message_id=constant.TEST_MESSAGE_ID,
+                    from_address=constant.TEST_FROM_ADDRESS,
+                )
+            return [send_to_chain_event]
         else:
             return []
 
@@ -199,7 +248,7 @@ class MockEvmClientBlockRange(IEvmClient):
     async def fetch_latest_block_number(self) -> int:
         """Fetches the latest block number."""
 
-        last_stored = constant.WH_SOURCE_BLOCK_NUMBER
+        last_stored = constant.WH_SRC_BLOCK_NUMBER
 
         if self.greater_than_max_range:
             """We should assert that to_block is max_possible_to_block."""
