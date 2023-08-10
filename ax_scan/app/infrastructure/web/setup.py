@@ -8,6 +8,7 @@ from app.infrastructure.db.core import get_or_create_database
 from app.usecases.tasks.events.startup import (
     start_gather_events_task,
     start_verify_transactions_task,
+    start_manage_locks_task,
 )
 from app.infrastructure.web.endpoints.metrics import health
 from app.infrastructure.web.endpoints.public import transactions
@@ -48,6 +49,7 @@ async def startup_event():
     # Tasks
     await start_gather_events_task()
     await start_verify_transactions_task()
+    await start_manage_locks_task()
 
 
 @app.on_event("shutdown")

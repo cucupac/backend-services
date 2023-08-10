@@ -35,7 +35,7 @@ class VerifyTransactionsTask(IVerifyTransactionsTask):
         self.transactions_repo = transactions_repo
         self.tasks_repo = tasks_repo
         self.logger = logger
-        self.name = TaskName.GATHER_EVENTS
+        self.name = TaskName.VERIFY_TRANSACTIONS
 
     async def start_task(self) -> None:
         while True:

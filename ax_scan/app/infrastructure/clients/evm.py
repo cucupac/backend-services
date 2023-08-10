@@ -2,12 +2,12 @@ from logging import Logger
 from typing import List, Union
 
 from web3 import AsyncHTTPProvider, AsyncWeb3
-from web3.exceptions import TransactionNotFound
 
 from app.settings import settings
+from app.dependencies import CHAIN_DATA
 from app.usecases.interfaces.clients.evm import IEvmClient
 from app.usecases.schemas.blockchain import BlockchainClientError, TransactionReceipt
-from app.usecases.schemas.events import SendToChain, ReceiveFromChain
+from app.usecases.schemas.events import SendToChain, ReceiveFromChain, EmitterAddress
 
 
 class EvmClient(IEvmClient):
@@ -61,35 +61,45 @@ class EvmClient(IEvmClient):
             for event in events_raw:
                 if event.topics[0].hex() == settings.send_to_chain_topic:
                     """SendToChain"""
+                    if contract == EmitterAddress.WORMHOLE_BRIDGE:
+                        source_chain_id = CHAIN_DATA[self.chain_id]["wh_chain_id"]
+                    elif contract == EmitterAddress.LAYER_ZERO_BRIDGE:
+                        source_chain_id = CHAIN_DATA[self.chain_id]["lz_chain_id"]
+
                     events.append(
                         SendToChain(
                             emitter_address=event.address,
                             block_number=event.blockNumber,
-                            block_hash=event.blockHash,
-                            transaction_hash=event.transactionsHash,
-                            source_chain_id=self.chain_id,
-                            dest_chain_id=int(event.topics[1], 16),
-                            amount=int(event.data[2:66], 16),
-                            message_id=int(event.data[66:130], 16),
+                            block_hash=event.blockHash.hex(),
+                            transaction_hash=event.transactionHash.hex(),
+                            source_chain_id=source_chain_id,
+                            dest_chain_id=int(event.topics[1].hex(), 16),
+                            amount=int(event.data.hex()[2:66], 16),
+                            message_id=int(event.data.hex()[66:130], 16),
                             from_address=AsyncWeb3.to_checksum_address(
-                                event.topics[2][2:].lstrip("0")
+                                event.topics[2].hex()[2:].lstrip("0")
                             ),
                         )
                     )
                 else:
                     """ReceiveFromChain"""
+                    if contract == EmitterAddress.WORMHOLE_BRIDGE:
+                        dest_chain_id = CHAIN_DATA[self.chain_id]["wh_chain_id"]
+                    elif contract == EmitterAddress.LAYER_ZERO_BRIDGE:
+                        dest_chain_id = CHAIN_DATA[self.chain_id]["lz_chain_id"]
+
                     events.append(
                         ReceiveFromChain(
                             emitter_address=event.address,
                             block_number=event.blockNumber,
-                            block_hash=event.blockHash,
-                            transaction_hash=event.transactionsHash,
-                            source_chain_id=int(event.topics[1], 16),
-                            dest_chain_id=self.chain_id,
-                            amount=int(event.data[2:66], 16),
-                            message_id=int(event.data[66:130], 16),
+                            block_hash=event.blockHash.hex(),
+                            transaction_hash=event.transactionHash.hex(),
+                            source_chain_id=int(event.topics[1].hex(), 16),
+                            dest_chain_id=dest_chain_id,
+                            amount=int(event.data.hex()[2:66], 16),
+                            message_id=int(event.data.hex()[66:130], 16),
                             to_address=AsyncWeb3.to_checksum_address(
-                                event.topics[3][2:].lstrip("0")
+                                event.topics[3].hex()[2:].lstrip("0")
                             ),
                         )
                     )

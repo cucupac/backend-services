@@ -50,6 +50,7 @@ class GatherEventsTask(IGatherEventsTask):
         self.messages_repo = messages_repo
         self.tasks_repo = tasks_repo
         self.supported_evm_clients = supported_evm_clients
+        self.last_block_range: Mapping[int, BlockRange] = {}
         self.logger = logger
 
     async def start_task(self) -> None:
@@ -62,7 +63,7 @@ class GatherEventsTask(IGatherEventsTask):
                     await self.task(task_id=task.id)
                 else:
                     self.logger.info(
-                        "[GatherPendingVaasTask]: Encountered lock; not performing task."
+                        "[GatherEventsTask]: Encountered lock; not performing task."
                     )
             except asyncio.CancelledError:  # pylint: disable = try-except-raise
                 raise
@@ -83,6 +84,8 @@ class GatherEventsTask(IGatherEventsTask):
             evm_client = self.supported_evm_clients[ax_chain_id]
 
             block_range = await self.get_block_range(ax_chain_id=ax_chain_id)
+
+            self.last_block_range[ax_chain_id] = block_range
 
             # Process WormholeBridge events
             if chain_data.get("wh_chain_id"):
@@ -130,7 +133,12 @@ class GatherEventsTask(IGatherEventsTask):
         max_upper_bound = latest_chain_blk_num - 1
 
         if last_stored_block is None:
-            from_block = to_block = max_upper_bound
+            last_in_mem_block_range: BlockRange = self.last_block_range.get(ax_chain_id)
+            if last_in_mem_block_range:
+                from_block = last_in_mem_block_range.to_block + 1
+                to_block = max_upper_bound
+            else:
+                from_block = to_block = max_upper_bound
         else:
             from_block = last_stored_block.block_number + 1
 
@@ -267,7 +275,7 @@ class GatherEventsTask(IGatherEventsTask):
                     # 2. Insert cross-chain tx
                     if isinstance(event, SendToChain):
                         insert_values = CrossChainTransaction(
-                            bridge=Bridges.WORMHOLE,
+                            bridge=Bridges.LAYER_ZERO,
                             from_address=event.from_address,
                             source_chain_id=ax_source_chain_id,
                             dest_chain_id=ax_dest_chain_id,
@@ -276,7 +284,7 @@ class GatherEventsTask(IGatherEventsTask):
                         )
                     else:
                         insert_values = CrossChainTransaction(
-                            bridge=Bridges.WORMHOLE,
+                            bridge=Bridges.LAYER_ZERO,
                             to_address=event.to_address,
                             source_chain_id=ax_source_chain_id,
                             dest_chain_id=ax_dest_chain_id,

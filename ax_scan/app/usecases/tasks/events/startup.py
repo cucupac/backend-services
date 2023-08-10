@@ -12,6 +12,7 @@ from app.infrastructure.db.core import get_or_create_database
 
 from app.usecases.tasks.gather_events import GatherEventsTask
 from app.usecases.tasks.verify_transactions import VerifyTransactionsTask
+from app.usecases.tasks.manage_locks import ManageLocksTask
 
 
 async def start_gather_events_task() -> None:
@@ -25,7 +26,7 @@ async def start_gather_events_task() -> None:
 
     supported_evm_clients = {}
     for ax_chain_id in CHAIN_DATA:
-        evm_client = await get_evm_client(chain_id=ax_chain_id)
+        evm_client = await get_evm_client(ax_chain_id=ax_chain_id)
         supported_evm_clients[ax_chain_id] = evm_client
 
     gather_events_task = GatherEventsTask(
@@ -49,7 +50,7 @@ async def start_verify_transactions_task() -> None:
 
     supported_evm_clients = {}
     for ax_chain_id in CHAIN_DATA:
-        evm_client = await get_evm_client(chain_id=ax_chain_id)
+        evm_client = await get_evm_client(ax_chain_id=ax_chain_id)
         supported_evm_clients[ax_chain_id] = evm_client
 
     verify_transactions_task = VerifyTransactionsTask(
@@ -60,3 +61,12 @@ async def start_verify_transactions_task() -> None:
     )
 
     loop.create_task(verify_transactions_task.start_task())
+
+
+async def start_manage_locks_task() -> None:
+    loop = await get_event_loop()
+    tasks_repo = await get_tasks_repo()
+
+    manage_locks_task = ManageLocksTask(tasks_repo=tasks_repo, logger=logger)
+
+    loop.create_task(manage_locks_task.start_task())

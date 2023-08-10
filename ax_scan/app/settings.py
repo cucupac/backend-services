@@ -35,8 +35,9 @@ class Settings(BaseSettings):
     evm_layerzero_bridge: str
 
     # Tasks
-    gather_txs_frequency: int = 60
-    verify_txs_frequency: int = 60
+    gather_txs_frequency: int = 20
+    verify_txs_frequency: int = 20
+    manage_locks_frequency: int = 60 * 5
 
     # RPC Urls
     ethereum_rpc: str
