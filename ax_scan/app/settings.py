@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     server_host: str = "0.0.0.0"
     server_prefix: str = ""
     openapi_url: str = "/openapi.json"
-    server_port: int
+    server_port: int = 11000
 
     # Database Settings
     db_url: str
