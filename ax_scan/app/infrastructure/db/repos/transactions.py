@@ -125,23 +125,6 @@ class TransactionsRepo(ITransactionsRepo):
                 **cross_chain_tx_record, dest_chain_tx_status=Status.PENDING
             )
 
-    async def retrieve_last_transaction(
-        self,
-        chain_id: int,
-    ) -> Optional[EvmTransactionInDb]:
-        """Retrieves last-stored transaction by chain_id."""
-
-        query = (
-            select([EVM_TRANSACTIONS])
-            .where(EVM_TRANSACTIONS.c.chain_id == chain_id)
-            .order_by(EVM_TRANSACTIONS.c.block_number.desc())
-            .limit(1)
-        )
-
-        result = await self.db.fetch_one(query)
-
-        return EvmTransactionInDb(**result) if result else None
-
     async def retrieve_pending(
         self,
         chain_id: int,

@@ -5,6 +5,7 @@ from app.dependencies import (
     get_transactions_repo,
     get_messages_repo,
     get_tasks_repo,
+    get_block_records_repo,
     logger,
 )
 
@@ -22,6 +23,7 @@ async def start_gather_events_task() -> None:
     db = await get_or_create_database()
     transaction_repo = await get_transactions_repo()
     messages_repo = await get_messages_repo()
+    block_record_repo = await get_block_records_repo()
     tasks_repo = await get_tasks_repo()
 
     supported_evm_clients = {}
@@ -33,6 +35,7 @@ async def start_gather_events_task() -> None:
         supported_evm_clients=supported_evm_clients,
         transactions_repo=transaction_repo,
         messages_repo=messages_repo,
+        block_record_repo=block_record_repo,
         tasks_repo=tasks_repo,
         db=db,
         logger=logger,

@@ -2,7 +2,7 @@
 import asyncio
 import time
 from logging import Logger
-from typing import Mapping, Union
+from typing import Mapping, Union, List
 
 from databases import Database
 
@@ -12,8 +12,10 @@ from app.usecases.interfaces.clients.evm import IEvmClient
 from app.usecases.interfaces.repos.transactions import ITransactionsRepo
 from app.usecases.interfaces.repos.messages import IMessagesRepo
 from app.usecases.interfaces.repos.tasks import ITasksRepo
+from app.usecases.interfaces.repos.block_record import IBlockRecordRepo
 from app.usecases.interfaces.tasks.gather_events import IGatherEventsTask
 from app.usecases.schemas.tasks import TaskName
+from app.usecases.schemas.block_record import BlockRecord
 from app.usecases.schemas.evm_transaction import EvmTransaction, EvmTransactionStatus
 from app.usecases.schemas.cross_chain_message import (
     WhCompositeIndex,
@@ -41,6 +43,7 @@ class GatherEventsTask(IGatherEventsTask):
         supported_evm_clients: Mapping[int, IEvmClient],
         transactions_repo: ITransactionsRepo,
         messages_repo: IMessagesRepo,
+        block_record_repo: IBlockRecordRepo,
         tasks_repo: ITasksRepo,
         logger: Logger,
     ):
@@ -48,9 +51,9 @@ class GatherEventsTask(IGatherEventsTask):
         self.name = TaskName.GATHER_EVENTS
         self.transactions_repo = transactions_repo
         self.messages_repo = messages_repo
+        self.block_recoreds_repo = block_record_repo
         self.tasks_repo = tasks_repo
         self.supported_evm_clients = supported_evm_clients
-        self.last_block_range: Mapping[int, BlockRange] = {}
         self.logger = logger
 
     async def start_task(self) -> None:
@@ -83,33 +86,43 @@ class GatherEventsTask(IGatherEventsTask):
         for ax_chain_id, chain_data in CHAIN_DATA.items():
             evm_client = self.supported_evm_clients[ax_chain_id]
 
-            block_range = await self.get_block_range(ax_chain_id=ax_chain_id)
+            block_ranges = await self.get_block_range(ax_chain_id=ax_chain_id)
 
-            self.last_block_range[ax_chain_id] = block_range
+            for range in block_ranges:
+                # Process WormholeBridge events
+                if chain_data.get("wh_chain_id"):
+                    events = await evm_client.fetch_events(
+                        contract=settings.evm_wormhole_bridge,
+                        from_block=range.from_block,
+                        to_block=range.to_block,
+                    )
 
-            # Process WormholeBridge events
-            if chain_data.get("wh_chain_id"):
-                events = await evm_client.fetch_events(
-                    contract=settings.evm_wormhole_bridge,
-                    from_block=block_range.from_block,
-                    to_block=block_range.to_block,
+                    for event in events:
+                        await self.__store_event_data(
+                            ax_chain_id=ax_chain_id, event=event
+                        )
+                        event_count += 1
+
+                # Process LayerZeroBridge events
+                if chain_data.get("lz_chain_id"):
+                    events = await evm_client.fetch_events(
+                        contract=settings.evm_layerzero_bridge,
+                        from_block=range.from_block,
+                        to_block=range.to_block,
+                    )
+
+                    for event in events:
+                        await self.__store_event_data(
+                            ax_chain_id=ax_chain_id, event=event
+                        )
+                        event_count += 1
+
+                # Update block record
+                await self.block_recoreds_repo.upsert(
+                    block_record=BlockRecord(
+                        chain_id=ax_chain_id, last_scanned_block_number=range.to_block
+                    )
                 )
-
-                for event in events:
-                    await self.__store_event_data(ax_chain_id=ax_chain_id, event=event)
-                    event_count += 1
-
-            # Process LayerZeroBridge events
-            if chain_data.get("lz_chain_id"):
-                events = await evm_client.fetch_events(
-                    contract=settings.evm_layerzero_bridge,
-                    from_block=block_range.from_block,
-                    to_block=block_range.to_block,
-                )
-
-                for event in events:
-                    await self.__store_event_data(ax_chain_id=ax_chain_id, event=event)
-                    event_count += 1
 
         await self.tasks_repo.delete_lock(task_id=task_id)
 
@@ -119,36 +132,40 @@ class GatherEventsTask(IGatherEventsTask):
             round(time.time() - task_start_time, 4),
         )
 
-    async def get_block_range(self, ax_chain_id: int) -> BlockRange:
-        """Returns starting block and end block for a given chain's data query."""
+    async def get_block_range(self, ax_chain_id: int) -> List[BlockRange]:
+        """Returns a list of starting and ending blocks for a given chain's data query."""
 
-        evm_client = self.supported_evm_clients[ax_chain_id]
-
-        last_stored_block = await self.transactions_repo.retrieve_last_transaction(
+        # Obtain upper and lower bounds
+        last_scanned_block = await self.block_recoreds_repo.retrieve(
             chain_id=ax_chain_id
         )
 
+        evm_client = self.supported_evm_clients[ax_chain_id]
         latest_chain_blk_num = await evm_client.fetch_latest_block_number()
 
-        max_upper_bound = latest_chain_blk_num - 1
+        upper_bound = latest_chain_blk_num - 1
 
-        if last_stored_block is None:
-            last_in_mem_block_range: BlockRange = self.last_block_range.get(ax_chain_id)
-            if last_in_mem_block_range:
-                from_block = last_in_mem_block_range.to_block + 1
-                to_block = max_upper_bound
-            else:
-                from_block = to_block = max_upper_bound
-        else:
-            from_block = last_stored_block.block_number + 1
-
-            max_possible_to_block = (
-                from_block + CHAIN_DATA[ax_chain_id]["max_block_range"]
+        # Construct block range
+        block_ranges = []
+        if not last_scanned_block:
+            block_ranges.append(
+                BlockRange(from_block=upper_bound, to_block=upper_bound)
             )
+        else:
+            from_block = last_scanned_block.last_scanned_block_number + 1
+            max_to_block = from_block + CHAIN_DATA[ax_chain_id]["max_block_range"]
+            while max_to_block < upper_bound:
+                block_ranges.append(
+                    BlockRange(from_block=from_block, to_block=max_to_block)
+                )
+                from_block = max_to_block + 1
+                max_to_block = from_block + CHAIN_DATA[ax_chain_id]["max_block_range"]
+            else:
+                block_ranges.append(
+                    BlockRange(from_block=from_block, to_block=upper_bound)
+                )
 
-            to_block = min(max_possible_to_block, max_upper_bound)
-
-        return BlockRange(from_block=from_block, to_block=to_block)
+        return block_ranges
 
     async def __store_event_data(
         self, ax_chain_id: int, event: Union[SendToChain, ReceiveFromChain]

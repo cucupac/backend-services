@@ -40,13 +40,6 @@ class ITransactionsRepo(ABC):
         """Returns a cross-chain transaction by chain ID and source-chain transaction hash."""
 
     @abstractmethod
-    async def retrieve_last_transaction(
-        self,
-        chain_id: int,
-    ) -> Optional[EvmTransactionInDb]:
-        """Retrieves last-stored transactions by chain_id."""
-
-    @abstractmethod
     async def retrieve_pending(
         self,
         chain_id: int,

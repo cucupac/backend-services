@@ -19,7 +19,9 @@ from app.infrastructure.db.models.cross_chain_transactions import (
 )
 from app.infrastructure.db.models.layer_zero_messages import LAYER_ZERO_MESSAGES
 from app.infrastructure.db.models.wormhole_messages import WORMHOLE_MESSAGES
+from app.infrastructure.db.models.block_record import BLOCK_RECORD
 from app.infrastructure.db.models.tasks import TASKS, TASK_LOCKS
+
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -48,8 +50,8 @@ postgres_database = getenv("POSTGRES_DB", default="ax_services_dev")
 
 
 # NOTE: Use the test URL when migrating to the test database. Use the dev URL when migrating to the dev database.
-# url = f"postgresql://{postgres_user}:{postgres_password}@{postgres_host}:{postgres_port}/{postgres_database}"  # DEV
-url = f"postgresql://{postgres_user}:{postgres_password}@{postgres_host}:5444/ax_services_dev_test"  # TEST
+url = f"postgresql://{postgres_user}:{postgres_password}@{postgres_host}:{postgres_port}/{postgres_database}"  # DEV
+# url = f"postgresql://{postgres_user}:{postgres_password}@{postgres_host}:5444/ax_services_dev_test"  # TEST
 config.set_main_option("sqlalchemy.url", url)
 
 

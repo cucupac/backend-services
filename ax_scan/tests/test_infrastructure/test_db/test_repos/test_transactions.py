@@ -116,30 +116,6 @@ async def test_retrieve_cross_chain_tx(
 
 
 @pytest.mark.asyncio
-async def test_retrieve_last_transaction(
-    inserted_wh_evm_tx_src: int,
-    inserted_lz_evm_tx_src: int,
-    test_db: Database,
-    transactions_repo: ITransactionsRepo,
-) -> None:
-    retrieved_evm_txs = await test_db.fetch_all(
-        """SELECT * FROM ax_scan.evm_transactions AS evm_txs WHERE evm_txs.chain_id=:chain_id""",
-        {
-            "chain_id": constant.TEST_SRC_CHAIN_ID,
-        },
-    )
-
-    retrieved_evm_tx = await transactions_repo.retrieve_last_transaction(
-        chain_id=constant.TEST_SRC_CHAIN_ID
-    )
-
-    # Sort the retrieved transactions in descending order of block_number
-    retrieved_evm_txs.sort(key=lambda tx: tx.block_number, reverse=True)
-
-    assert retrieved_evm_tx == EvmTransactionInDb(**retrieved_evm_txs[0])
-
-
-@pytest.mark.asyncio
 async def test_retrieve_pending(
     mixed_status_evm_txs: None,
     transactions_repo: ITransactionsRepo,

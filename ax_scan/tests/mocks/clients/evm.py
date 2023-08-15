@@ -248,17 +248,19 @@ class MockEvmClientBlockRange(IEvmClient):
     async def fetch_latest_block_number(self) -> int:
         """Fetches the latest block number."""
 
-        last_stored = constant.WH_SRC_BLOCK_NUMBER
+        last_stored = constant.TEST_BLOCK_NUMBER
+
+        from_block = last_stored + 1
 
         if self.greater_than_max_range:
             """We should assert that to_block is max_possible_to_block."""
             latest_block = (
-                last_stored + CHAIN_DATA[self.chain_id]["max_block_range"] + 2
+                from_block
+                + CHAIN_DATA[self.chain_id]["max_block_range"]
+                * constant.TEST_MAX_RANGE_MULTIPLIER
             )
             return latest_block
         else:
-            """We should assert that to_block is latest minus 1."""
-            latest_block = (
-                last_stored + CHAIN_DATA[self.chain_id]["max_block_range"] + 1
-            )
+            """We should assert that to_block is latest_block minus 1."""
+            latest_block = from_block + CHAIN_DATA[self.chain_id]["max_block_range"]
             return latest_block

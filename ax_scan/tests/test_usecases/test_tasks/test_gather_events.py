@@ -5,7 +5,7 @@ import tests.constants as constant
 from app.dependencies import CHAIN_DATA
 from app.usecases.interfaces.tasks.gather_events import IGatherEventsTask
 from app.usecases.interfaces.repos.tasks import ITasksRepo
-from app.usecases.interfaces.repos.transactions import ITransactionsRepo
+from app.usecases.interfaces.repos.block_record import IBlockRecordRepo
 from app.usecases.schemas.tasks import TaskName
 from app.usecases.schemas.evm_transaction import EvmTransactionStatus
 from app.usecases.schemas.bridge import Bridges
@@ -422,68 +422,74 @@ async def test_task_lz_dest_data_first_update(
 @pytest.mark.asyncio
 async def test_get_block_range_gt(
     gather_events_task_block_range_gt: IGatherEventsTask,
-    transactions_repo: ITransactionsRepo,
-    inserted_wh_message_src_data: None,
+    block_record_repo: IBlockRecordRepo,
+    inserted_block_record: None,
 ) -> None:
     """Tests the case where the on-chain block number exceeds the maximum, evm-allowed block range.
     This test uses the Wormhole source transaction block number as its last database-stored block number.
     """
 
     # Setup
-    last_stored_tx = await transactions_repo.retrieve_last_transaction(
-        chain_id=constant.TEST_SRC_CHAIN_ID
+    block_record = await block_record_repo.retrieve(chain_id=constant.TEST_SRC_CHAIN_ID)
+
+    assert block_record.last_scanned_block_number == constant.TEST_BLOCK_NUMBER
+
+    from_block = block_record.last_scanned_block_number + 1
+
+    latest_onchain_block = (
+        from_block
+        + CHAIN_DATA[constant.TEST_SRC_CHAIN_ID]["max_block_range"]
+        * constant.TEST_MAX_RANGE_MULTIPLIER
     )
 
-    assert last_stored_tx.block_number == constant.WH_SRC_BLOCK_NUMBER
-
-    test_from_block = last_stored_tx.block_number + 1
-
-    max_possible_to_block = (
-        test_from_block + CHAIN_DATA[constant.TEST_SRC_CHAIN_ID]["max_block_range"]
-    )
+    upper_bound = latest_onchain_block - 1
 
     # Act
-    block_range = await gather_events_task_block_range_gt.get_block_range(
+    block_ranges = await gather_events_task_block_range_gt.get_block_range(
         ax_chain_id=constant.TEST_SRC_CHAIN_ID
     )
 
-    # Assertions
-    assert block_range.from_block == test_from_block
-    assert block_range.to_block == max_possible_to_block
+    last_range = block_ranges.pop()
+    assert last_range.to_block == upper_bound
+
+    for range in block_ranges:
+        assert (
+            range.to_block - range.from_block
+            == CHAIN_DATA[constant.TEST_SRC_CHAIN_ID]["max_block_range"]
+        )
 
 
 @pytest.mark.asyncio
 async def test_get_block_range_lt(
     gather_events_task_block_range_lt: IGatherEventsTask,
-    transactions_repo: ITransactionsRepo,
-    inserted_wh_message_src_data: None,
+    block_record_repo: IBlockRecordRepo,
+    inserted_block_record: None,
 ) -> None:
     """Tests the case where the on-chain block number is less than the maximum, evm-allowed upper bound.
     This test uses the Wormhole source transaction block number as its last database-stored block number.
     """
 
     # Setup
-    last_stored_tx = await transactions_repo.retrieve_last_transaction(
-        chain_id=constant.TEST_SRC_CHAIN_ID
-    )
+    block_record = await block_record_repo.retrieve(chain_id=constant.TEST_SRC_CHAIN_ID)
 
-    assert last_stored_tx.block_number == constant.WH_SRC_BLOCK_NUMBER
+    assert block_record.last_scanned_block_number == constant.TEST_BLOCK_NUMBER
 
-    test_from_block = last_stored_tx.block_number + 1
+    test_from_block = block_record.last_scanned_block_number + 1
 
     on_chain_latest = (
-        last_stored_tx.block_number
+        block_record.last_scanned_block_number
         + CHAIN_DATA[constant.TEST_SRC_CHAIN_ID]["max_block_range"]
         + 1
     )
 
-    max_uppoer_bound = on_chain_latest - 1
+    upper_bound = on_chain_latest - 1
 
     # Act
-    block_range = await gather_events_task_block_range_lt.get_block_range(
+    block_ranges = await gather_events_task_block_range_lt.get_block_range(
         ax_chain_id=constant.TEST_SRC_CHAIN_ID
     )
 
     # Assertions
-    assert block_range.from_block == test_from_block
-    assert block_range.to_block == max_uppoer_bound
+    assert len(block_ranges) == 1
+    assert block_ranges[0].from_block == test_from_block
+    assert block_ranges[0].to_block == upper_bound
