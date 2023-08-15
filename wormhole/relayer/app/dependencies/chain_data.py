@@ -56,6 +56,6 @@ CHAIN_DATA = {
         "rpc": settings.optimism_rpc,
         "native": "ETH",
         "post_london_upgrade": True,
-        "has_fee_history": False,
+        "has_fee_history": True,
     },
 }
