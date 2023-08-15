@@ -9,6 +9,7 @@ WH_LOOKUP = {
     10: AxChains.FANTOM.value,
     23: AxChains.ARBITRUM.value,
     14: AxChains.CELO.value,
+    24: AxChains.OPTIMISM.value,
 }
 
 LZ_LOOKUP = {

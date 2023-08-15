@@ -8,4 +8,5 @@ CHAIN_ID_LOOKUP = {
     10: Chains.FANTOM.value,
     23: Chains.ARBITRUM.value,
     14: Chains.CELO.value,
+    24: Chains.OPTIMISM.value,
 }

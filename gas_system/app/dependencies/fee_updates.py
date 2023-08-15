@@ -9,4 +9,5 @@ UPDATE_FEES_FREQUENCIES = {
     AxChains.FANTOM.value: settings.fantom_update_frequency,
     AxChains.ARBITRUM.value: settings.arbitrum_update_frequency,
     AxChains.CELO.value: settings.celo_update_frequency,
+    AxChains.OPTIMISM.value: settings.optimism_update_frequency,
 }

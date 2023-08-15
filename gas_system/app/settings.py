@@ -42,6 +42,7 @@ class Settings(BaseSettings):
     fantom_update_frequency: int = 60 * 30
     arbitrum_update_frequency: int = 60 * 60
     celo_update_frequency: int = 60 * 30
+    optimism_update_frequency: int = 60 * 60
 
     # RPC Urls
     ethereum_rpc: str
@@ -51,6 +52,7 @@ class Settings(BaseSettings):
     fantom_rpc: str
     arbitrum_rpc: str
     celo_rpc: str
+    optimism_rpc: str
 
     # Price Client
     price_client_base_url: str

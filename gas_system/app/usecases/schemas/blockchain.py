@@ -13,7 +13,7 @@ class Ecosystem(str, Enum):
 
 class AxChains(int, Enum):
     ETHEREUM = 1
-    # OPTIMISM = 2
+    OPTIMISM = 2
     ARBITRUM = 3
     POLYGON = 4
     # GNOSIS = 5

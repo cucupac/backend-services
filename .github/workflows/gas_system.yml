@@ -43,6 +43,7 @@ env:
   FANTOM_RPC: ${{ secrets.FANTOM_RPC }}
   ARBITRUM_RPC: ${{ secrets.ARBITRUM_RPC }}
   CELO_RPC: ${{ secrets.CELO_RPC }}
+  OPTIMISM_RPC: ${{ secrets.OPTIMISM_RPC }}
 
 jobs:
   run-ci:
