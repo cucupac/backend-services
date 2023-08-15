@@ -12,6 +12,7 @@ CHAIN_DATA = {
         "post_london_upgrade": True,
         "has_fee_history": True,
         "max_block_range": 100_000,
+        "query_size": 10_000,
     },
     AxChains.BSC.value: {
         "name": "BNB Smart Chain",
@@ -23,6 +24,7 @@ CHAIN_DATA = {
         "post_london_upgrade": False,
         "has_fee_history": True,
         "max_block_range": 3_000,
+        "query_size": 3_000,
     },
     AxChains.POLYGON.value: {
         "name": "Polygon",
@@ -34,6 +36,7 @@ CHAIN_DATA = {
         "post_london_upgrade": True,
         "has_fee_history": True,
         "max_block_range": 100_000,
+        "query_size": 10_000,
     },
     AxChains.AVALANCHE.value: {
         "name": "Avalanche C-Chain",
@@ -45,6 +48,7 @@ CHAIN_DATA = {
         "post_london_upgrade": True,
         "has_fee_history": True,
         "max_block_range": 100_000,
+        "query_size": 10_000,
     },
     AxChains.FANTOM.value: {
         "name": "Fantom Opera",
@@ -56,6 +60,7 @@ CHAIN_DATA = {
         "post_london_upgrade": True,
         "has_fee_history": True,
         "max_block_range": 100_000,
+        "query_size": 10_000,
     },
     AxChains.ARBITRUM.value: {
         "name": "Arbitrum One",
@@ -67,6 +72,7 @@ CHAIN_DATA = {
         "post_london_upgrade": True,
         "has_fee_history": True,
         "max_block_range": 100_000,
+        "query_size": 10_000,
     },
     AxChains.CELO.value: {
         "name": "Celo",
@@ -78,6 +84,7 @@ CHAIN_DATA = {
         "post_london_upgrade": True,
         "has_fee_history": False,
         "max_block_range": 100_000,
+        "query_size": 10_000,
     },
     AxChains.GNOSIS.value: {
         "name": "Gnosis",
@@ -89,6 +96,7 @@ CHAIN_DATA = {
         "post_london_upgrade": True,
         "has_fee_history": True,
         "max_block_range": 100_000,
+        "query_size": 10_000,
     },
     AxChains.OPTIMISM.value: {
         "name": "Optimism",
@@ -100,5 +108,6 @@ CHAIN_DATA = {
         "post_london_upgrade": True,
         "has_fee_history": True,
         "max_block_range": 3_000,
+        "query_size": 3_000,
     },
 }

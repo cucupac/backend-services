@@ -2,6 +2,7 @@ from typing import Optional, List
 
 from databases import Database
 from sqlalchemy import select, and_
+from sqlalchemy.dialects.postgresql import insert
 
 from app.infrastructure.db.models.cross_chain_transactions import (
     CROSS_CHAIN_TRANSACTIONS,
@@ -26,10 +27,10 @@ class TransactionsRepo(ITransactionsRepo):
     def __init__(self, db: Database):
         self.db = db
 
-    async def create_evm_tx(self, evm_tx: EvmTransaction) -> int:
+    async def create_evm_tx(self, evm_tx: EvmTransaction) -> Optional[int]:
         """Inserts an evm transaction; returns evm_transaction id."""
 
-        chain_tx_insert_stmt = EVM_TRANSACTIONS.insert().values(
+        chain_tx_insert_stmt = insert(EVM_TRANSACTIONS).values(
             chain_id=evm_tx.chain_id,
             transaction_hash=evm_tx.transaction_hash,
             block_hash=evm_tx.block_hash,
@@ -38,6 +39,13 @@ class TransactionsRepo(ITransactionsRepo):
             gas_price=evm_tx.gas_price,
             gas_used=evm_tx.gas_used,
             error=evm_tx.error,
+        )
+
+        chain_tx_insert_stmt = chain_tx_insert_stmt.on_conflict_do_nothing(
+            index_elements=[
+                EVM_TRANSACTIONS.c.transaction_hash,
+                EVM_TRANSACTIONS.c.chain_id,
+            ]
         )
 
         return await self.db.execute(chain_tx_insert_stmt)

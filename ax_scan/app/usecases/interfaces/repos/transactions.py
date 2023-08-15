@@ -16,7 +16,7 @@ from app.usecases.schemas.cross_chain_transaction import CrossChainTxJoinEvmTx
 
 class ITransactionsRepo(ABC):
     @abstractmethod
-    async def create_evm_tx(self, evm_tx: EvmTransaction) -> int:
+    async def create_evm_tx(self, evm_tx: EvmTransaction) -> Optional[int]:
         """Inserts an evm transaction; returns evm_transaction id."""
 
     @abstractmethod

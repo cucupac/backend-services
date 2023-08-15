@@ -256,11 +256,11 @@ class MockEvmClientBlockRange(IEvmClient):
             """We should assert that to_block is max_possible_to_block."""
             latest_block = (
                 from_block
-                + CHAIN_DATA[self.chain_id]["max_block_range"]
+                + CHAIN_DATA[self.chain_id]["query_size"]
                 * constant.TEST_MAX_RANGE_MULTIPLIER
             )
             return latest_block
         else:
             """We should assert that to_block is latest_block minus 1."""
-            latest_block = from_block + CHAIN_DATA[self.chain_id]["max_block_range"]
+            latest_block = from_block + CHAIN_DATA[self.chain_id]["query_size"]
             return latest_block

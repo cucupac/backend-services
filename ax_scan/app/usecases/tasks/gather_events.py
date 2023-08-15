@@ -153,14 +153,15 @@ class GatherEventsTask(IGatherEventsTask):
             )
         else:
             from_block = last_scanned_block.last_scanned_block_number + 1
-            max_to_block = from_block + CHAIN_DATA[ax_chain_id]["max_block_range"]
+            max_to_block = from_block + CHAIN_DATA[ax_chain_id]["query_size"]
             while max_to_block < upper_bound:
                 block_ranges.append(
                     BlockRange(from_block=from_block, to_block=max_to_block)
                 )
                 from_block = max_to_block + 1
-                max_to_block = from_block + CHAIN_DATA[ax_chain_id]["max_block_range"]
+                max_to_block = from_block + CHAIN_DATA[ax_chain_id]["query_size"]
             else:
+                from_block = upper_bound if from_block > upper_bound else from_block
                 block_ranges.append(
                     BlockRange(from_block=from_block, to_block=upper_bound)
                 )
@@ -194,59 +195,59 @@ class GatherEventsTask(IGatherEventsTask):
                         status=EvmTransactionStatus.PENDING,
                     )
                 )
+                if evm_tx_id:
+                    if existing_wh_message:
+                        # 2. Update cross-chain tx
+                        if isinstance(event, SendToChain):
+                            update_values = UpdateCrossChainTransaction(
+                                from_address=event.from_address,
+                                source_chain_tx_id=evm_tx_id,
+                            )
+                        else:
+                            update_values = UpdateCrossChainTransaction(
+                                to_address=event.to_address, dest_chain_tx_id=evm_tx_id
+                            )
 
-                if existing_wh_message:
-                    # 2. Update cross-chain tx
-                    if isinstance(event, SendToChain):
-                        update_values = UpdateCrossChainTransaction(
-                            from_address=event.from_address,
-                            source_chain_tx_id=evm_tx_id,
-                        )
-                    else:
-                        update_values = UpdateCrossChainTransaction(
-                            to_address=event.to_address, dest_chain_tx_id=evm_tx_id
-                        )
-
-                    await self.transactions_repo.update_cross_chain_tx(
-                        cross_chain_tx_id=existing_wh_message.cross_chain_tx_id,
-                        update_values=update_values,
-                    ),
-                else:
-                    # 2. Insert cross-chain tx
-                    if isinstance(event, SendToChain):
-                        insert_values = CrossChainTransaction(
-                            bridge=Bridges.WORMHOLE,
-                            from_address=event.from_address,
-                            source_chain_id=ax_source_chain_id,
-                            dest_chain_id=ax_dest_chain_id,
-                            amount=event.amount,
-                            source_chain_tx_id=evm_tx_id,
-                        )
-                    else:
-                        insert_values = CrossChainTransaction(
-                            bridge=Bridges.WORMHOLE,
-                            to_address=event.to_address,
-                            source_chain_id=ax_source_chain_id,
-                            dest_chain_id=ax_dest_chain_id,
-                            amount=event.amount,
-                            dest_chain_tx_id=evm_tx_id,
-                        )
-
-                    cross_chain_tx_id = (
-                        await self.transactions_repo.create_cross_chain_tx(
-                            cross_chain_tx=insert_values
-                        )
-                    )
-
-                    # 3. Insert wormhole message
-                    await self.messages_repo.create_wormhole_message(
-                        cross_chain_tx_id=cross_chain_tx_id,
-                        message=WhMessage(
-                            emitter_address=event.emitter_address,
-                            source_chain_id=event.source_chain_id,
-                            sequence=event.message_id,
+                        await self.transactions_repo.update_cross_chain_tx(
+                            cross_chain_tx_id=existing_wh_message.cross_chain_tx_id,
+                            update_values=update_values,
                         ),
-                    )
+                    else:
+                        # 2. Insert cross-chain tx
+                        if isinstance(event, SendToChain):
+                            insert_values = CrossChainTransaction(
+                                bridge=Bridges.WORMHOLE,
+                                from_address=event.from_address,
+                                source_chain_id=ax_source_chain_id,
+                                dest_chain_id=ax_dest_chain_id,
+                                amount=event.amount,
+                                source_chain_tx_id=evm_tx_id,
+                            )
+                        else:
+                            insert_values = CrossChainTransaction(
+                                bridge=Bridges.WORMHOLE,
+                                to_address=event.to_address,
+                                source_chain_id=ax_source_chain_id,
+                                dest_chain_id=ax_dest_chain_id,
+                                amount=event.amount,
+                                dest_chain_tx_id=evm_tx_id,
+                            )
+
+                        cross_chain_tx_id = (
+                            await self.transactions_repo.create_cross_chain_tx(
+                                cross_chain_tx=insert_values
+                            )
+                        )
+
+                        # 3. Insert wormhole message
+                        await self.messages_repo.create_wormhole_message(
+                            cross_chain_tx_id=cross_chain_tx_id,
+                            message=WhMessage(
+                                emitter_address=event.emitter_address,
+                                source_chain_id=event.source_chain_id,
+                                sequence=event.message_id,
+                            ),
+                        )
         else:
             ax_source_chain_id = LZ_LOOKUP[event.source_chain_id]
             ax_dest_chain_id = LZ_LOOKUP[event.dest_chain_id]
@@ -271,57 +272,57 @@ class GatherEventsTask(IGatherEventsTask):
                         status=EvmTransactionStatus.PENDING,
                     )
                 )
+                if evm_tx_id:
+                    if existing_lz_message:
+                        # 2. Update cross-chain tx
+                        if isinstance(event, SendToChain):
+                            update_values = UpdateCrossChainTransaction(
+                                from_address=event.from_address,
+                                source_chain_tx_id=evm_tx_id,
+                            )
+                        else:
+                            update_values = UpdateCrossChainTransaction(
+                                to_address=event.to_address, dest_chain_tx_id=evm_tx_id
+                            )
 
-                if existing_lz_message:
-                    # 2. Update cross-chain tx
-                    if isinstance(event, SendToChain):
-                        update_values = UpdateCrossChainTransaction(
-                            from_address=event.from_address,
-                            source_chain_tx_id=evm_tx_id,
-                        )
-                    else:
-                        update_values = UpdateCrossChainTransaction(
-                            to_address=event.to_address, dest_chain_tx_id=evm_tx_id
-                        )
-
-                    await self.transactions_repo.update_cross_chain_tx(
-                        cross_chain_tx_id=existing_lz_message.cross_chain_tx_id,
-                        update_values=update_values,
-                    ),
-                else:
-                    # 2. Insert cross-chain tx
-                    if isinstance(event, SendToChain):
-                        insert_values = CrossChainTransaction(
-                            bridge=Bridges.LAYER_ZERO,
-                            from_address=event.from_address,
-                            source_chain_id=ax_source_chain_id,
-                            dest_chain_id=ax_dest_chain_id,
-                            amount=event.amount,
-                            source_chain_tx_id=evm_tx_id,
-                        )
-                    else:
-                        insert_values = CrossChainTransaction(
-                            bridge=Bridges.LAYER_ZERO,
-                            to_address=event.to_address,
-                            source_chain_id=ax_source_chain_id,
-                            dest_chain_id=ax_dest_chain_id,
-                            amount=event.amount,
-                            dest_chain_tx_id=evm_tx_id,
-                        )
-
-                    cross_chain_tx_id = (
-                        await self.transactions_repo.create_cross_chain_tx(
-                            cross_chain_tx=insert_values
-                        )
-                    )
-
-                    # 3. Insert layer zero message
-                    await self.messages_repo.create_layer_zero_message(
-                        cross_chain_tx_id=cross_chain_tx_id,
-                        message=LzMessage(
-                            emitter_address=event.emitter_address,
-                            source_chain_id=event.source_chain_id,
-                            dest_chain_id=event.dest_chain_id,
-                            nonce=event.message_id,
+                        await self.transactions_repo.update_cross_chain_tx(
+                            cross_chain_tx_id=existing_lz_message.cross_chain_tx_id,
+                            update_values=update_values,
                         ),
-                    )
+                    else:
+                        # 2. Insert cross-chain tx
+                        if isinstance(event, SendToChain):
+                            insert_values = CrossChainTransaction(
+                                bridge=Bridges.LAYER_ZERO,
+                                from_address=event.from_address,
+                                source_chain_id=ax_source_chain_id,
+                                dest_chain_id=ax_dest_chain_id,
+                                amount=event.amount,
+                                source_chain_tx_id=evm_tx_id,
+                            )
+                        else:
+                            insert_values = CrossChainTransaction(
+                                bridge=Bridges.LAYER_ZERO,
+                                to_address=event.to_address,
+                                source_chain_id=ax_source_chain_id,
+                                dest_chain_id=ax_dest_chain_id,
+                                amount=event.amount,
+                                dest_chain_tx_id=evm_tx_id,
+                            )
+
+                        cross_chain_tx_id = (
+                            await self.transactions_repo.create_cross_chain_tx(
+                                cross_chain_tx=insert_values
+                            )
+                        )
+
+                        # 3. Insert layer zero message
+                        await self.messages_repo.create_layer_zero_message(
+                            cross_chain_tx_id=cross_chain_tx_id,
+                            message=LzMessage(
+                                emitter_address=event.emitter_address,
+                                source_chain_id=event.source_chain_id,
+                                dest_chain_id=event.dest_chain_id,
+                                nonce=event.message_id,
+                            ),
+                        )

@@ -438,7 +438,7 @@ async def test_get_block_range_gt(
 
     latest_onchain_block = (
         from_block
-        + CHAIN_DATA[constant.TEST_SRC_CHAIN_ID]["max_block_range"]
+        + CHAIN_DATA[constant.TEST_SRC_CHAIN_ID]["query_size"]
         * constant.TEST_MAX_RANGE_MULTIPLIER
     )
 
@@ -455,7 +455,7 @@ async def test_get_block_range_gt(
     for range in block_ranges:
         assert (
             range.to_block - range.from_block
-            == CHAIN_DATA[constant.TEST_SRC_CHAIN_ID]["max_block_range"]
+            == CHAIN_DATA[constant.TEST_SRC_CHAIN_ID]["query_size"]
         )
 
 
@@ -478,7 +478,7 @@ async def test_get_block_range_lt(
 
     on_chain_latest = (
         block_record.last_scanned_block_number
-        + CHAIN_DATA[constant.TEST_SRC_CHAIN_ID]["max_block_range"]
+        + CHAIN_DATA[constant.TEST_SRC_CHAIN_ID]["query_size"]
         + 1
     )
 
