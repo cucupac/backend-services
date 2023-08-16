@@ -15,7 +15,6 @@ load_dotenv()
 from app.infrastructure.db.metadata import METADATA
 from app.infrastructure.db.models.mock_transactions import MOCK_TRANSACTIONS
 from app.infrastructure.db.models.fee_updates import FEE_UPDATES
-from app.infrastructure.db.models.tasks import TASKS, TASK_LOCKS
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

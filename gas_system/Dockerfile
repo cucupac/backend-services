@@ -41,6 +41,7 @@ ENV AVALANCHE_RPC=inject_at_deployment
 ENV FANTOM_RPC=inject_at_deployment
 ENV ARBITRUM_RPC=inject_at_deployment
 ENV CELO_RPC=inject_at_deployment
+ENV OPTIMISM_RPC=inject_at_deployment
 
 EXPOSE $SERVER_PORT
 

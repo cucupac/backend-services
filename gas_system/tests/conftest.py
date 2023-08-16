@@ -47,8 +47,6 @@ async def test_db(test_db_url) -> Database:
     yield test_db
     await test_db.execute("TRUNCATE gas_system.fee_updates CASCADE")
     await test_db.execute("TRUNCATE gas_system.mock_transactions CASCADE")
-    await test_db.execute("TRUNCATE gas_system.tasks CASCADE")
-    await test_db.execute("TRUNCATE gas_system.task_locks CASCADE")
     await test_db.disconnect()
 
 

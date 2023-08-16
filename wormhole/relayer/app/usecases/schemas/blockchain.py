@@ -19,6 +19,7 @@ class Chains(int, Enum):
     FANTOM = 250
     ARBITRUM = 42161
     CELO = 42220
+    OPTIMISM = 10
 
 
 class BlockchainErrors(str, Enum):

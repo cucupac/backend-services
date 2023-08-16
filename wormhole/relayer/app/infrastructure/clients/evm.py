@@ -1,4 +1,5 @@
 from logging import Logger
+from math import ceil
 from statistics import median
 from typing import Any, List, Mapping, Optional
 
@@ -95,7 +96,7 @@ class EvmClient(IEvmClient):
                 base_fee_per_gas = max(
                     fee_history.baseFeePerGas[-1], fee_history.baseFeePerGas[-2]
                 )
-                max_priority_fee = median(max_priority_fee_list)
+                max_priority_fee = ceil(median(max_priority_fee_list))
             else:
                 base_fee_per_gas = await self.web3_client.eth.gas_price
                 max_priority_fee = await self.web3_client.eth.max_priority_fee

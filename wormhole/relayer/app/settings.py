@@ -37,6 +37,7 @@ class Settings(BaseSettings):
     fantom_rpc: str
     arbitrum_rpc: str
     celo_rpc: str
+    optimism_rpc: str
 
     # EVM
     relayer_private_key: str

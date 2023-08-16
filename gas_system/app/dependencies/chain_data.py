@@ -72,4 +72,14 @@ CHAIN_DATA = {
         "post_london_upgrade": True,
         "has_fee_history": False,
     },
+    AxChains.OPTIMISM.value: {
+        "name": "Optimism",
+        "chain_id": 10,
+        "wh_chain_id": 24,
+        "lz_chain_id": 111,
+        "rpc": settings.optimism_rpc,
+        "native": "ETH",
+        "post_london_upgrade": True,
+        "has_fee_history": True,
+    },
 }

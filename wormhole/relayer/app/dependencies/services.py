@@ -1,9 +1,4 @@
-from app.dependencies import (
-    CHAIN_DATA,
-    get_evm_client,
-    get_relays_repo,
-    logger,
-)
+from app.dependencies import CHAIN_DATA, get_evm_client, get_relays_repo, logger
 from app.usecases.interfaces.services.message_processor import IVaaProcessor
 from app.usecases.interfaces.services.vaa_delivery import IVaaDelivery
 from app.usecases.services.message_processor import MessageProcessor
