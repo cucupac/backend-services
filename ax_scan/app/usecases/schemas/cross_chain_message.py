@@ -13,7 +13,7 @@ class LzCompositeIndex(BaseModel):
 
 
 class WhCompositeIndex(BaseModel):
-    """A composite index in the layer_zero_messages database table."""
+    """A composite index in the wormhole_messages database table."""
 
     emitter_address: str
     source_chain_id: int

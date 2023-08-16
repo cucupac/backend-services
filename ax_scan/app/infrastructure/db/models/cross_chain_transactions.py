@@ -21,7 +21,7 @@ CROSS_CHAIN_TRANSACTIONS = sa.Table(
     ),
     sa.Column("source_chain_id", sa.Integer, nullable=False),
     sa.Column("dest_chain_id", sa.Integer, nullable=False),
-    sa.Column("amount", sa.BigInteger, nullable=True),
+    sa.Column("amount", sa.BigInteger, nullable=False),
     sa.Column(
         "source_chain_tx_id",
         sa.BigInteger,

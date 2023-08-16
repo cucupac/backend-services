@@ -1,3 +1,3 @@
 # Repos Directory
 
-The repos directory provides the infrastructure necessary to obtain from data storage mechanisms, such as databases.
+The repos directory provides the infrastructure necessary to obtain data from storage mechanisms, such as databases.

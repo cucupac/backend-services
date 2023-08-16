@@ -36,7 +36,7 @@ class TaskInDb(BaseModel):
 class TaskLockInDb(BaseModel):
     id: int = Field(
         ...,
-        description="The database-assigned uinque identifier for a given lock.",
+        description="The database-assigned unique identifier for a given lock.",
         example=1,
     )
     task_id: int = Field(

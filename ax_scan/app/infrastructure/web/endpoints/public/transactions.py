@@ -17,7 +17,7 @@ async def get_transaction(
     source_chain_id: AxChains = Path(..., title="The actual ID of the source chain."),
     transaction_hash: str = Path(
         ...,
-        title="The source-chain transaction's transaction hash.",
+        title="The source-chain transaction hash.",
         min_length=66,
         max_length=66,
     ),

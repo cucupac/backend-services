@@ -74,8 +74,6 @@ class WormholeBridgeEvmClient(IBlockchainClient):
     async def estimate_fees(self) -> ComputeCosts:
         """Estimates a transaction's gas information."""
 
-        print("\n\n\nCHAIN:", self.chain_id)
-
         gas_info = await self.__get_gas_prices()
 
         transaction_dict = await self.__construct_estimation_transaction(
