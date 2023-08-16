@@ -1,12 +1,9 @@
-from fastapi import APIRouter
-
-from fastapi import APIRouter, Depends, Path, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Path
 
 from app.dependencies import get_transactions_repo
 from app.usecases.interfaces.repos.transactions import ITransactionsRepo
-from app.usecases.schemas.cross_chain_transaction import TransactionResponse, Status
 from app.usecases.schemas.blockchain import AxChains
-
+from app.usecases.schemas.cross_chain_transaction import Status, TransactionResponse
 
 router = APIRouter(tags=["Transactions"])
 
@@ -40,9 +37,9 @@ async def get_transaction(
         and cross_chain_tx.dest_chain_tx_status == Status.SUCCESS
     ):
         cross_chain_tx_status = Status.SUCCESS
-    elif (
-        cross_chain_tx.source_chain_tx_status == Status.FAILED
-        or cross_chain_tx.dest_chain_tx_status == Status.FAILED
+    elif Status.FAILED in (
+        cross_chain_tx.source_chain_tx_status,
+        cross_chain_tx.dest_chain_tx_status,
     ):
         cross_chain_tx_status = Status.FAILED
     else:

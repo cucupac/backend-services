@@ -1,12 +1,12 @@
 from app.infrastructure.db.core import get_or_create_database
+from app.infrastructure.db.repos.block_record import BlockRecordRepo
 from app.infrastructure.db.repos.messages import MessagesRepo
 from app.infrastructure.db.repos.tasks import TasksRepo
 from app.infrastructure.db.repos.transactions import TransactionsRepo
-from app.infrastructure.db.repos.block_record import BlockRecordRepo
+from app.usecases.interfaces.repos.block_record import IBlockRecordRepo
 from app.usecases.interfaces.repos.messages import IMessagesRepo
 from app.usecases.interfaces.repos.tasks import ITasksRepo
 from app.usecases.interfaces.repos.transactions import ITransactionsRepo
-from app.usecases.interfaces.repos.block_record import IBlockRecordRepo
 
 
 async def get_transactions_repo() -> ITransactionsRepo:

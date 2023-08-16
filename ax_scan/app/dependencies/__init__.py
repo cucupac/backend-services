@@ -12,5 +12,4 @@ from .repos import (
     get_tasks_repo,
     get_block_records_repo,
 )
-from .services import get_example_service
 from .clients import get_evm_client

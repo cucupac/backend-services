@@ -1,10 +1,10 @@
+# pylint: disable=unused-argument
 import pytest
 from httpx import AsyncClient
-from fastapi import HTTPException
 
 import tests.constants as constant
-from app.usecases.schemas.cross_chain_transaction import Status
 from app.usecases.interfaces.repos.transactions import ITransactionsRepo
+from app.usecases.schemas.cross_chain_transaction import Status
 
 
 @pytest.mark.asyncio

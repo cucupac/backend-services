@@ -2,10 +2,9 @@
 import pytest
 from databases import Database
 
-
 from app.dependencies import CHAIN_DATA
 from app.usecases.interfaces.repos.block_record import IBlockRecordRepo
-from app.usecases.schemas.block_record import BlockRecordInDb, BlockRecord
+from app.usecases.schemas.block_record import BlockRecord, BlockRecordInDb
 from app.usecases.schemas.blockchain import AxChains
 
 

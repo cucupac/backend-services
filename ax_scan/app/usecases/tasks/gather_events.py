@@ -1,39 +1,39 @@
-# pylint: disable=duplicate-code
+# pylint: disable=duplicate-code,too-many-instance-attributes,too-many-arguments,too-many-branches
 import asyncio
 import time
 from logging import Logger
-from typing import Mapping, Union, List
+from typing import List, Mapping, Union
 
 from databases import Database
 
 from app.dependencies import CHAIN_DATA, LZ_LOOKUP, WH_LOOKUP
 from app.settings import settings
 from app.usecases.interfaces.clients.evm import IEvmClient
-from app.usecases.interfaces.repos.transactions import ITransactionsRepo
+from app.usecases.interfaces.repos.block_record import IBlockRecordRepo
 from app.usecases.interfaces.repos.messages import IMessagesRepo
 from app.usecases.interfaces.repos.tasks import ITasksRepo
-from app.usecases.interfaces.repos.block_record import IBlockRecordRepo
+from app.usecases.interfaces.repos.transactions import ITransactionsRepo
 from app.usecases.interfaces.tasks.gather_events import IGatherEventsTask
-from app.usecases.schemas.tasks import TaskName
 from app.usecases.schemas.block_record import BlockRecord
-from app.usecases.schemas.evm_transaction import EvmTransaction, EvmTransactionStatus
+from app.usecases.schemas.bridge import Bridges
 from app.usecases.schemas.cross_chain_message import (
-    WhCompositeIndex,
     LzCompositeIndex,
-    WhMessage,
     LzMessage,
+    WhCompositeIndex,
+    WhMessage,
 )
 from app.usecases.schemas.cross_chain_transaction import (
-    UpdateCrossChainTransaction,
     CrossChainTransaction,
+    UpdateCrossChainTransaction,
 )
 from app.usecases.schemas.events import (
-    SendToChain,
-    ReceiveFromChain,
     BlockRange,
     EmitterAddress,
+    ReceiveFromChain,
+    SendToChain,
 )
-from app.usecases.schemas.bridge import Bridges
+from app.usecases.schemas.evm_transaction import EvmTransaction, EvmTransactionStatus
+from app.usecases.schemas.tasks import TaskName
 
 
 class GatherEventsTask(IGatherEventsTask):
@@ -88,13 +88,13 @@ class GatherEventsTask(IGatherEventsTask):
 
             block_ranges = await self.get_block_range(ax_chain_id=ax_chain_id)
 
-            for range in block_ranges:
+            for block_range in block_ranges:
                 # Process WormholeBridge events
                 if chain_data.get("wh_chain_id"):
                     events = await evm_client.fetch_events(
                         contract=settings.evm_wormhole_bridge,
-                        from_block=range.from_block,
-                        to_block=range.to_block,
+                        from_block=block_range.from_block,
+                        to_block=block_range.to_block,
                     )
 
                     for event in events:
@@ -107,8 +107,8 @@ class GatherEventsTask(IGatherEventsTask):
                 if chain_data.get("lz_chain_id"):
                     events = await evm_client.fetch_events(
                         contract=settings.evm_layerzero_bridge,
-                        from_block=range.from_block,
-                        to_block=range.to_block,
+                        from_block=block_range.from_block,
+                        to_block=block_range.to_block,
                     )
 
                     for event in events:
@@ -120,7 +120,8 @@ class GatherEventsTask(IGatherEventsTask):
                 # Update block record
                 await self.block_recoreds_repo.upsert(
                     block_record=BlockRecord(
-                        chain_id=ax_chain_id, last_scanned_block_number=range.to_block
+                        chain_id=ax_chain_id,
+                        last_scanned_block_number=block_range.to_block,
                     )
                 )
 
@@ -160,11 +161,8 @@ class GatherEventsTask(IGatherEventsTask):
                 )
                 from_block = max_to_block + 1
                 max_to_block = from_block + CHAIN_DATA[ax_chain_id]["query_size"]
-            else:
-                from_block = upper_bound if from_block > upper_bound else from_block
-                block_ranges.append(
-                    BlockRange(from_block=from_block, to_block=upper_bound)
-                )
+            from_block = upper_bound if from_block > upper_bound else from_block
+            block_ranges.append(BlockRange(from_block=from_block, to_block=upper_bound))
 
         return block_ranges
 
@@ -211,7 +209,7 @@ class GatherEventsTask(IGatherEventsTask):
                         await self.transactions_repo.update_cross_chain_tx(
                             cross_chain_tx_id=existing_wh_message.cross_chain_tx_id,
                             update_values=update_values,
-                        ),
+                        )
                     else:
                         # 2. Insert cross-chain tx
                         if isinstance(event, SendToChain):
@@ -288,7 +286,7 @@ class GatherEventsTask(IGatherEventsTask):
                         await self.transactions_repo.update_cross_chain_tx(
                             cross_chain_tx_id=existing_lz_message.cross_chain_tx_id,
                             update_values=update_values,
-                        ),
+                        )
                     else:
                         # 2. Insert cross-chain tx
                         if isinstance(event, SendToChain):

@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Optional
 
-from app.usecases.schemas.block_record import BlockRecordInDb, BlockRecord
+from app.usecases.schemas.block_record import BlockRecord, BlockRecordInDb
 
 
 class IBlockRecordRepo(ABC):

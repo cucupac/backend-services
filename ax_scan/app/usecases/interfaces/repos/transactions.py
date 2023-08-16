@@ -1,8 +1,9 @@
 from abc import ABC, abstractmethod
-from typing import Optional, List
+from typing import List, Optional
 
 from app.usecases.schemas.cross_chain_transaction import (
     CrossChainTransaction,
+    CrossChainTxJoinEvmTx,
     UpdateCrossChainTransaction,
 )
 from app.usecases.schemas.evm_transaction import (
@@ -10,8 +11,6 @@ from app.usecases.schemas.evm_transaction import (
     EvmTransactionInDb,
     UpdateEvmTransaction,
 )
-
-from app.usecases.schemas.cross_chain_transaction import CrossChainTxJoinEvmTx
 
 
 class ITransactionsRepo(ABC):

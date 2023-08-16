@@ -1,19 +1,17 @@
 from app.dependencies import (
     CHAIN_DATA,
+    get_block_records_repo,
     get_event_loop,
     get_evm_client,
-    get_transactions_repo,
     get_messages_repo,
     get_tasks_repo,
-    get_block_records_repo,
+    get_transactions_repo,
     logger,
 )
-
 from app.infrastructure.db.core import get_or_create_database
-
 from app.usecases.tasks.gather_events import GatherEventsTask
-from app.usecases.tasks.verify_transactions import VerifyTransactionsTask
 from app.usecases.tasks.manage_locks import ManageLocksTask
+from app.usecases.tasks.verify_transactions import VerifyTransactionsTask
 
 
 async def start_gather_events_task() -> None:

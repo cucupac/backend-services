@@ -1,14 +1,14 @@
 from enum import Enum
-from typing import Union, List
+from typing import List, Union
 
 from web3.datastructures import AttributeDict
 
-from app.dependencies import CHAIN_DATA
-from app.usecases.interfaces.clients.evm import IEvmClient
-from app.usecases.schemas.events import SendToChain, ReceiveFromChain
-from app.usecases.schemas.blockchain import TransactionReceipt, BlockchainClientError
 import tests.constants as constant
+from app.dependencies import CHAIN_DATA
 from app.settings import settings
+from app.usecases.interfaces.clients.evm import IEvmClient
+from app.usecases.schemas.blockchain import BlockchainClientError, TransactionReceipt
+from app.usecases.schemas.events import ReceiveFromChain, SendToChain
 
 
 class EvmResult(str, Enum):
@@ -34,17 +34,14 @@ class MockEvmClientTxReciept(IEvmClient):
                     gas_used=constant.TEST_GAS_USED,
                     gas_price=constant.TEST_GAS_PRICE,
                 )
-            else:
-                return TransactionReceipt(
-                    status=0,
-                    gas_used=constant.TEST_GAS_USED,
-                    gas_price=constant.TEST_GAS_PRICE,
-                )
-        else:
-            if not self.tx_exists:
-                raise BlockchainClientError(detail=constant.NOT_FOUND_ERROR)
-            else:
-                raise BlockchainClientError(detail="Some general error.")
+            return TransactionReceipt(
+                status=0,
+                gas_used=constant.TEST_GAS_USED,
+                gas_price=constant.TEST_GAS_PRICE,
+            )
+        if not self.tx_exists:
+            raise BlockchainClientError(detail=constant.NOT_FOUND_ERROR)
+        raise BlockchainClientError(detail="Some general error.")
 
     async def fetch_events(
         self, contract: str, from_block: int, to_block: int
@@ -99,26 +96,21 @@ class MockEvmClientInsertFlow(IEvmClient):
         )
 
         if self.chain_id == constant.TEST_SRC_CHAIN_ID:
-            """Source chain."""
             if contract == settings.evm_wormhole_bridge:
                 return [send_to_chain_event]
-            elif contract == settings.evm_layerzero_bridge:
-                send_to_chain_event.transaction_hash = constant.LZ_SRC_TX_HASH
-                send_to_chain_event.source_chain_id = constant.LZ_SRC_CHAIN_ID
-                send_to_chain_event.dest_chain_id = constant.LZ_DEST_CHAIN_ID
-                return [send_to_chain_event]
+            send_to_chain_event.transaction_hash = constant.LZ_SRC_TX_HASH
+            send_to_chain_event.source_chain_id = constant.LZ_SRC_CHAIN_ID
+            send_to_chain_event.dest_chain_id = constant.LZ_DEST_CHAIN_ID
+            return [send_to_chain_event]
 
-        elif self.chain_id == constant.TEST_DEST_CHAIN_ID:
-            """Destination chain."""
+        if self.chain_id == constant.TEST_DEST_CHAIN_ID:
             if contract == settings.evm_wormhole_bridge:
                 return [receive_from_chain_event]
-            elif contract == settings.evm_layerzero_bridge:
-                receive_from_chain_event.transaction_hash = constant.LZ_DEST_TX_HASH
-                receive_from_chain_event.source_chain_id = constant.LZ_SRC_CHAIN_ID
-                receive_from_chain_event.dest_chain_id = constant.LZ_DEST_CHAIN_ID
-                return [receive_from_chain_event]
-        else:
-            return []
+            receive_from_chain_event.transaction_hash = constant.LZ_DEST_TX_HASH
+            receive_from_chain_event.source_chain_id = constant.LZ_SRC_CHAIN_ID
+            receive_from_chain_event.dest_chain_id = constant.LZ_DEST_CHAIN_ID
+            return [receive_from_chain_event]
+        return []
 
     async def fetch_latest_block_number(self) -> int:
         """Fetches the latest block number."""
@@ -141,7 +133,7 @@ class MockEvmClientDestOnly(IEvmClient):
         """Fetches events emitted from given contract, for a given block range."""
 
         if self.chain_id == constant.TEST_DEST_CHAIN_ID:
-            """Mocking a destination chain."""
+            # Mocking a destination chain
             if contract == settings.evm_wormhole_bridge:
                 receive_from_chain_event = ReceiveFromChain(
                     emitter_address=contract,
@@ -167,8 +159,7 @@ class MockEvmClientDestOnly(IEvmClient):
                     to_address=constant.TEST_TO_ADDRESS,
                 )
             return [receive_from_chain_event]
-        else:
-            return []
+        return []
 
     async def fetch_latest_block_number(self) -> int:
         """Fetches the latest block number."""
@@ -191,7 +182,7 @@ class MockEvmClientSrcOnly(IEvmClient):
         """Fetches events emitted from given contract, for a given block range."""
 
         if self.chain_id == constant.TEST_SRC_CHAIN_ID:
-            """Mocking a source chain."""
+            # Mocking a source chain
             if contract == settings.evm_wormhole_bridge:
                 send_to_chain_event = SendToChain(
                     emitter_address=contract,
@@ -217,8 +208,7 @@ class MockEvmClientSrcOnly(IEvmClient):
                     from_address=constant.TEST_FROM_ADDRESS,
                 )
             return [send_to_chain_event]
-        else:
-            return []
+        return []
 
     async def fetch_latest_block_number(self) -> int:
         """Fetches the latest block number."""
@@ -253,14 +243,13 @@ class MockEvmClientBlockRange(IEvmClient):
         from_block = last_stored + 1
 
         if self.greater_than_max_range:
-            """We should assert that to_block is max_possible_to_block."""
+            # We should assert that to_block is max_possible_to_block
             latest_block = (
                 from_block
                 + CHAIN_DATA[self.chain_id]["query_size"]
                 * constant.TEST_MAX_RANGE_MULTIPLIER
             )
             return latest_block
-        else:
-            """We should assert that to_block is latest_block minus 1."""
-            latest_block = from_block + CHAIN_DATA[self.chain_id]["query_size"]
-            return latest_block
+        # We should assert that to_block is latest_block minus 1
+        latest_block = from_block + CHAIN_DATA[self.chain_id]["query_size"]
+        return latest_block

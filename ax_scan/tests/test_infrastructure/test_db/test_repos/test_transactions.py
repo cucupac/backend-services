@@ -2,19 +2,18 @@
 import pytest
 from databases import Database
 
+import tests.constants as constant
 from app.usecases.interfaces.repos.transactions import ITransactionsRepo
 from app.usecases.schemas.cross_chain_transaction import (
     CrossChainTransaction,
-    UpdateCrossChainTransaction,
     CrossChainTxJoinEvmTx,
+    UpdateCrossChainTransaction,
 )
 from app.usecases.schemas.evm_transaction import (
     EvmTransaction,
-    EvmTransactionInDb,
     EvmTransactionStatus,
     UpdateEvmTransaction,
 )
-import tests.constants as constant
 
 
 @pytest.mark.asyncio

@@ -5,14 +5,14 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.dependencies import get_client_session, get_event_loop
 from app.infrastructure.db.core import get_or_create_database
-from app.usecases.tasks.events.startup import (
-    start_gather_events_task,
-    start_verify_transactions_task,
-    start_manage_locks_task,
-)
 from app.infrastructure.web.endpoints.metrics import health
 from app.infrastructure.web.endpoints.public import transactions
 from app.settings import settings
+from app.usecases.tasks.events.startup import (
+    start_gather_events_task,
+    start_manage_locks_task,
+    start_verify_transactions_task,
+)
 
 
 def setup_app():

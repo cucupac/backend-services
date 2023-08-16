@@ -1,13 +1,12 @@
 from typing import Optional
-from databases import Database
 
+from databases import Database
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
 
 from app.infrastructure.db.models.block_record import BLOCK_RECORD
 from app.usecases.interfaces.repos.block_record import IBlockRecordRepo
-
-from app.usecases.schemas.block_record import BlockRecordInDb, BlockRecord
+from app.usecases.schemas.block_record import BlockRecord, BlockRecordInDb
 
 
 class BlockRecordRepo(IBlockRecordRepo):
@@ -24,7 +23,7 @@ class BlockRecordRepo(IBlockRecordRepo):
 
         on_conflict_stmt = insert_stmt.on_conflict_do_update(
             index_elements=["chain_id"],
-            set_=dict(last_scanned_block_number=block_record.last_scanned_block_number),
+            set_={"last_scanned_block_number": block_record.last_scanned_block_number},
         )
 
         await self.db.execute(on_conflict_stmt)

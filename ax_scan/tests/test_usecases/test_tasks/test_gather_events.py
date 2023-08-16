@@ -1,15 +1,16 @@
+# pylint: disable=unused-argument
 import pytest
 from databases import Database
 
 import tests.constants as constant
 from app.dependencies import CHAIN_DATA
-from app.usecases.interfaces.tasks.gather_events import IGatherEventsTask
-from app.usecases.interfaces.repos.tasks import ITasksRepo
 from app.usecases.interfaces.repos.block_record import IBlockRecordRepo
-from app.usecases.schemas.tasks import TaskName
-from app.usecases.schemas.evm_transaction import EvmTransactionStatus
+from app.usecases.interfaces.repos.tasks import ITasksRepo
+from app.usecases.interfaces.tasks.gather_events import IGatherEventsTask
 from app.usecases.schemas.bridge import Bridges
 from app.usecases.schemas.events import EmitterAddress
+from app.usecases.schemas.evm_transaction import EvmTransactionStatus
+from app.usecases.schemas.tasks import TaskName
 
 
 @pytest.mark.asyncio
@@ -120,7 +121,7 @@ async def test_task_wh_src_data_first_update(
     assert len(retrieved_cross_chain_txs) == 1
     for cross_chain_tx in retrieved_cross_chain_txs:
         for key, value in dict(cross_chain_tx).items():
-            if key == "to_address" or key == "dest_chain_tx_id":
+            if key in ("to_address", "dest_chain_tx_id"):
                 assert value is None
             else:
                 assert value is not None
@@ -203,7 +204,7 @@ async def test_task_lz_src_data_first_update(
     assert len(retrieved_cross_chain_txs) == 1
     for cross_chain_tx in retrieved_cross_chain_txs:
         for key, value in dict(cross_chain_tx).items():
-            if key == "to_address" or key == "dest_chain_tx_id":
+            if key in ("to_address", "dest_chain_tx_id"):
                 assert value is None
             else:
                 assert value is not None
@@ -289,7 +290,7 @@ async def test_task_wh_dest_data_first_update(
     assert len(retrieved_cross_chain_txs) == 1
     for cross_chain_tx in retrieved_cross_chain_txs:
         for key, value in dict(cross_chain_tx).items():
-            if key == "from_address" or key == "source_chain_tx_id":
+            if key in ("from_address", "source_chain_tx_id"):
                 assert value is None
             else:
                 assert value is not None
@@ -371,7 +372,7 @@ async def test_task_lz_dest_data_first_update(
     assert len(retrieved_cross_chain_txs) == 1
     for cross_chain_tx in retrieved_cross_chain_txs:
         for key, value in dict(cross_chain_tx).items():
-            if key == "from_address" or key == "source_chain_tx_id":
+            if key in ("from_address", "source_chain_tx_id"):
                 assert value is None
             else:
                 assert value is not None
@@ -452,9 +453,9 @@ async def test_get_block_range_gt(
     last_range = block_ranges.pop()
     assert last_range.to_block == upper_bound
 
-    for range in block_ranges:
+    for block_range in block_ranges:
         assert (
-            range.to_block - range.from_block
+            block_range.to_block - block_range.from_block
             == CHAIN_DATA[constant.TEST_SRC_CHAIN_ID]["query_size"]
         )
 

@@ -1,6 +1,6 @@
 from logging import Logger
-from statistics import median
 from math import ceil
+from statistics import median
 from typing import Any, List, Mapping, Optional
 
 from eth_account.datastructures import SignedTransaction

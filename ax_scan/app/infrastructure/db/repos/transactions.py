@@ -1,7 +1,7 @@
-from typing import Optional, List
+from typing import List, Optional
 
 from databases import Database
-from sqlalchemy import select, and_
+from sqlalchemy import and_, select
 from sqlalchemy.dialects.postgresql import insert
 
 from app.infrastructure.db.models.cross_chain_transactions import (
@@ -11,15 +11,15 @@ from app.infrastructure.db.models.evm_transactions import EVM_TRANSACTIONS
 from app.usecases.interfaces.repos.transactions import ITransactionsRepo
 from app.usecases.schemas.cross_chain_transaction import (
     CrossChainTransaction,
-    UpdateCrossChainTransaction,
     CrossChainTxJoinEvmTx,
     Status,
+    UpdateCrossChainTransaction,
 )
 from app.usecases.schemas.evm_transaction import (
     EvmTransaction,
     EvmTransactionInDb,
-    UpdateEvmTransaction,
     EvmTransactionStatus,
+    UpdateEvmTransaction,
 )
 
 

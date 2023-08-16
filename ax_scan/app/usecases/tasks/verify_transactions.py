@@ -1,26 +1,25 @@
 # pylint: disable=duplicate-code
-from typing import Mapping, List
+import asyncio
 import time
 from logging import Logger
+from typing import List, Mapping
 
-import asyncio
-
-from app.settings import settings
 from app.dependencies import CHAIN_DATA
-from app.usecases.interfaces.tasks.verify_transactions import IVerifyTransactionsTask
-from app.usecases.interfaces.repos.transactions import ITransactionsRepo
+from app.settings import settings
 from app.usecases.interfaces.clients.evm import IEvmClient
 from app.usecases.interfaces.repos.tasks import ITasksRepo
-from app.usecases.schemas.tasks import TaskName
+from app.usecases.interfaces.repos.transactions import ITransactionsRepo
+from app.usecases.interfaces.tasks.verify_transactions import IVerifyTransactionsTask
 from app.usecases.schemas.blockchain import (
-    TransactionReceiptResponse,
     BlockchainClientError,
     BlockchainErrors,
+    TransactionReceiptResponse,
 )
 from app.usecases.schemas.evm_transaction import (
     EvmTransactionStatus,
     UpdateEvmTransaction,
 )
+from app.usecases.schemas.tasks import TaskName
 
 
 class VerifyTransactionsTask(IVerifyTransactionsTask):

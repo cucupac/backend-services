@@ -1,6 +1,6 @@
 from app.dependencies import CHAIN_DATA, logger
-from app.usecases.interfaces.clients.evm import IEvmClient
 from app.infrastructure.clients.evm import EvmClient
+from app.usecases.interfaces.clients.evm import IEvmClient
 
 
 async def get_evm_client(ax_chain_id: int) -> IEvmClient:

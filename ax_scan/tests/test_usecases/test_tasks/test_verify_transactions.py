@@ -2,11 +2,11 @@ import pytest
 from databases import Database
 
 import tests.constants as constant
-from app.usecases.tasks.verify_transactions import IVerifyTransactionsTask
 from app.usecases.interfaces.repos.tasks import ITasksRepo
-from app.usecases.schemas.evm_transaction import EvmTransactionStatus
 from app.usecases.schemas.blockchain import BlockchainErrors
+from app.usecases.schemas.evm_transaction import EvmTransactionStatus
 from app.usecases.schemas.tasks import TaskName
+from app.usecases.tasks.verify_transactions import IVerifyTransactionsTask
 
 
 @pytest.mark.asyncio

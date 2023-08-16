@@ -1,9 +1,8 @@
 from abc import ABC, abstractmethod
 from typing import List, Union
 
-
-from app.usecases.schemas.events import SendToChain, ReceiveFromChain
 from app.usecases.schemas.blockchain import TransactionReceipt
+from app.usecases.schemas.events import ReceiveFromChain, SendToChain
 
 
 class IEvmClient(ABC):

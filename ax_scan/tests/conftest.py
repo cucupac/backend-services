@@ -1,4 +1,4 @@
-# pylint: disable=redefined-outer-name, unused-argument
+# pylint: disable=redefined-outer-name, unused-argument, too-many-arguments
 import os
 import random
 from datetime import datetime, timedelta
@@ -10,22 +10,19 @@ from databases import Database
 from fastapi import FastAPI
 from httpx import AsyncClient
 
-from app.dependencies import CHAIN_DATA, logger, get_transactions_repo
 import tests.constants as constant
-from app.infrastructure.web.setup import setup_app
-
+from app.dependencies import CHAIN_DATA, get_transactions_repo, logger
+from app.infrastructure.db.repos.block_record import BlockRecordRepo
 from app.infrastructure.db.repos.messages import MessagesRepo
 from app.infrastructure.db.repos.tasks import TasksRepo
-from app.infrastructure.db.repos.block_record import BlockRecordRepo
 from app.infrastructure.db.repos.transactions import TransactionsRepo
-
+from app.infrastructure.web.setup import setup_app
+from app.usecases.interfaces.clients.evm import IEvmClient
+from app.usecases.interfaces.repos.block_record import IBlockRecordRepo
 from app.usecases.interfaces.repos.messages import IMessagesRepo
 from app.usecases.interfaces.repos.tasks import ITasksRepo
-from app.usecases.interfaces.repos.block_record import IBlockRecordRepo
 from app.usecases.interfaces.repos.transactions import ITransactionsRepo
 from app.usecases.interfaces.tasks.gather_events import IGatherEventsTask
-from app.usecases.interfaces.clients.evm import IEvmClient
-
 from app.usecases.schemas.bridge import Bridges
 from app.usecases.schemas.cross_chain_message import LzMessage, WhMessage
 from app.usecases.schemas.cross_chain_transaction import (
@@ -38,18 +35,17 @@ from app.usecases.schemas.evm_transaction import (
     UpdateEvmTransaction,
 )
 from app.usecases.schemas.tasks import TaskInDb, TaskName
-
 from app.usecases.tasks.gather_events import GatherEventsTask
 from app.usecases.tasks.verify_transactions import VerifyTransactionsTask
 
 # Mocks
 from tests.mocks.clients.evm import (
-    MockEvmClientInsertFlow,
-    MockEvmClientDestOnly,
-    MockEvmClientSrcOnly,
-    MockEvmClientBlockRange,
-    MockEvmClientTxReciept,
     EvmResult,
+    MockEvmClientBlockRange,
+    MockEvmClientDestOnly,
+    MockEvmClientInsertFlow,
+    MockEvmClientSrcOnly,
+    MockEvmClientTxReciept,
 )
 
 
