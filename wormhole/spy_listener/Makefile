@@ -29,13 +29,23 @@ lint:
 run:
 	python -m app --reload
 
-make run-container:
+check-dockerignore:
+	@if [ ! -f .dockerignore ]; then \
+		echo "Error: .dockerignore file not found. Please add a .dockerignore file before proceeding."; \
+		exit 1; \
+	fi
+	@if ! grep -q '^[[:space:]]*\.env' .dockerignore; then \
+		echo "Error: .env was not found in .dockerignore. Please add it before proceeding."; \
+		exit 1; \
+	fi
+
+run-container: check-dockerignore
 	docker-compose up -d
 
-build:
+build: check-dockerignore
 	docker build -t $(docker_username)/$(docker_image):latest .
 
-push:
+push: check-dockerignore
 	docker push $(docker_username)/$(docker_image):latest
 
 test:

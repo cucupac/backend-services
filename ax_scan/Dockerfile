@@ -36,5 +36,4 @@ ENV CELO_RPC=inject_at_deployment
 ENV OPTIMISM_RPC=inject_at_deployment
 ENV GNOSIS_RPC=inject_at_deployment
 
-
 CMD ["python", "-m", "app"]

@@ -52,6 +52,25 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
+      - name: Validate .gitignore and .dockerignore
+        run: |
+          if [ ! -f .gitignore ]; then
+            echo "Error: .gitignore file not found.";
+            exit 1;
+          fi
+          if [ ! -f gas_system/.dockerignore ]; then
+            echo "Error: .dockerignore file not found in gas_system directory.";
+            exit 1;
+          fi
+          if ! grep -q '^[[:space:]]*\.env' .gitignore; then
+            echo "Error: .env is either not in .gitignore or it's commented out.";
+            exit 1;
+          fi
+          if ! grep -q '^[[:space:]]*\.env' gas_system/.dockerignore; then
+            echo "Error: .env is either not in .dockerignore in gas_system directory or it's commented out.";
+            exit 1;
+          fi
+
       - name: Set up python
         id: setup-python
         uses: actions/setup-python@v2

@@ -62,7 +62,6 @@ class EvmClient(IEvmClient):
                     source_chain_id = CHAIN_DATA[self.chain_id]["wh_chain_id"]
                 elif contract == EmitterAddress.LAYER_ZERO_BRIDGE:
                     source_chain_id = CHAIN_DATA[self.chain_id]["lz_chain_id"]
-
                 events.append(
                     SendToChain(
                         emitter_address=event.address,
@@ -100,7 +99,7 @@ class EvmClient(IEvmClient):
                     )
                 )
 
-            return events
+        return events
 
     async def fetch_latest_block_number(self) -> int:
         """Fetches the latest block number."""
