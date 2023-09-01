@@ -1,22 +1,34 @@
-FROM python:3.8
+FROM python:3.9
 
-WORKDIR /app
+# Create a non-root user and set permissions
+RUN useradd -ms /bin/bash dockeruser && \
+    mkdir -p /gas_system && \
+    chown -R dockeruser:dockeruser /gas_system
 
-COPY ./requirements.txt /app/requirements.txt
+# Switch to non-root user
+USER dockeruser
 
-RUN pip install --no-cache-dir --upgrade -r /app/requirements.txt
+WORKDIR /gas_system
 
-COPY . /app
+
+# Copy only the requirements.txt first to leverage Docker cache
+COPY --chown=dockeruser:dockeruser ./requirements.txt /gas_system/requirements.txt
+
+# Install Python dependencies and switch to non-root user
+RUN pip install --no-cache-dir --upgrade -r /gas_system/requirements.txt
+
+COPY --chown=dockeruser:dockeruser ./app /gas_system/app
+
 
 # Environment Variables
 
 # Server
-ENV OPENAPI_URL="/openapi.json"
 ENV SERVER_PORT=10000
+ENV OPENAPI_URL=inject_at_deployment
 ENV ENVIRONMENT=development
 
 # Database 
-ENV DB_URL=postgres://postgres:postgres@localhost:5432/ax_services_dev
+ENV DB_URL=inject_at_deployment
 
 # Price Client
 ENV PRICE_CLIENT_BASE_URL=inject_at_deployment

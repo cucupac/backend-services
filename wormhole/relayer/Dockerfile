@@ -1,22 +1,33 @@
-FROM python:3.8
+FROM python:3.9
 
-WORKDIR /app
+# Create a non-root user and set permissions
+RUN useradd -ms /bin/bash dockeruser && \
+    mkdir -p /wh_relayer && \
+    chown -R dockeruser:dockeruser /wh_relayer
 
-COPY ./requirements.txt /app/requirements.txt
+# Switch to non-root user
+USER dockeruser
 
-RUN pip install --no-cache-dir --upgrade -r /app/requirements.txt
+WORKDIR /wh_relayer
 
-COPY . /app
+# Copy only the requirements.txt first to leverage Docker cache
+COPY --chown=dockeruser:dockeruser ./requirements.txt /wh_relayer/requirements.txt
+
+# Install Python dependencies and switch to non-root user
+RUN pip install --no-cache-dir --upgrade -r /wh_relayer/requirements.txt
+
+COPY --chown=dockeruser:dockeruser ./app /wh_relayer/app
 
 # Environment Variables
 
 # Server
-ENV ENVIRONMENT=development
-ENV OPENAPI_URL="/openapi.json"
 ENV SERVER_PORT=9000
+ENV OPENAPI_URL=inject_at_deployment
+ENV ENVIRONMENT=development
+
 
 # Database 
-ENV DB_URL=postgres://postgres:postgres@localhost:5432/ax_services_dev
+ENV DB_URL=inject_at_deployment
 
 # RPC Urls
 ENV ETHEREUM_RPC=inject_at_deployment
@@ -35,7 +46,7 @@ ENV REDIS_URL=inject_at_deployment
 # EVM
 ENV RELAYER_PRIVATE_KEY=inject_at_deployment
 ENV RELAYER_ADDRESS=inject_at_deployment
-ENV EVM_WORMHOLE_BRIDGE=0x4800c8d6Ba7176F084004c0294320B634e3476f8
+ENV EVM_WORMHOLE_BRIDGE=inject_at_deployment
 
 EXPOSE $SERVER_PORT
 

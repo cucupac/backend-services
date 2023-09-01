@@ -1,25 +1,33 @@
-FROM python:3.8
+FROM python:3.9
 
-WORKDIR /app
+# Create a non-root user and set permissions
+RUN useradd -ms /bin/bash dockeruser && \
+    mkdir -p /ax_scan && \
+    chown -R dockeruser:dockeruser /ax_scan
 
-COPY ./requirements.txt /app/requirements.txt
+# Switch to non-root user
+USER dockeruser
 
-RUN pip install --no-cache-dir --upgrade -r /app/requirements.txt
+WORKDIR /ax_scan
 
-COPY . /app
+# Copy only the requirements.txt first to leverage Docker cache
+COPY --chown=dockeruser:dockeruser ./requirements.txt /ax_scan/requirements.txt
+
+# Install Python dependencies and switch to non-root user
+RUN pip install --no-cache-dir --upgrade -r /ax_scan/requirements.txt
+
+COPY --chown=dockeruser:dockeruser ./app /ax_scan/app
 
 # Environment Variables
 
 # Server
-ENV OPENAPI_URL="/openapi.json"
 ENV SERVER_PORT=11000
+ENV OPENAPI_URL=inject_at_deployment
 ENV ENVIRONMENT=development
 
 # Database 
-ENV DB_URL=postgres://postgres:postgres@localhost:5432/ax_services_dev
+ENV DB_URL=inject_at_deployment
 ENV DB_SCHEMA=ax_scan
-
-EXPOSE $SERVER_PORT
 
 # Ax Protocol
 ENV EVM_WORMHOLE_BRIDGE=inject_at_deployment
@@ -35,5 +43,7 @@ ENV ARBITRUM_RPC=inject_at_deployment
 ENV CELO_RPC=inject_at_deployment
 ENV OPTIMISM_RPC=inject_at_deployment
 ENV GNOSIS_RPC=inject_at_deployment
+
+EXPOSE $SERVER_PORT
 
 CMD ["python", "-m", "app"]
