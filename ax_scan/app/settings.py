@@ -29,15 +29,20 @@ class Settings(BaseSettings):
     receive_from_chain_topic: str = (
         "0x64e10c37f404d128982dce114f5d233c14c5c7f6d8db93099e3d99dacb9e27ba"
     )
+    mint_topic: str = (
+        "0x0f6798a560793a54c3bcfe86a93cde1e73087d944c0ea20544137d4121396885"
+    )
 
     # Ax Protocol
     evm_wormhole_bridge: str
     evm_layerzero_bridge: str
+    treasury: str
 
     # Tasks
     gather_txs_frequency: int = 20
     verify_txs_frequency: int = 20
     manage_locks_frequency: int = 60 * 5
+    award_points_frequency: int = 60 * 60 * 24
 
     # RPC Urls
     ethereum_rpc: str

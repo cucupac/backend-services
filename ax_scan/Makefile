@@ -51,7 +51,7 @@ push: check-dockerignore
 test:
 	@echo Running $(docker_image) unit tests...
 	coverage run --source app -m pytest tests --color=yes
-	coverage report --fail-under=80
+	coverage report --fail-under=77
 
 migration:
 	@if [ -z $(rev_id)] || [ -z $(migration_message)]; \

@@ -11,5 +11,7 @@ from .repos import (
     get_messages_repo,
     get_tasks_repo,
     get_block_records_repo,
+    get_mints_repo,
+    get_points_repo,
 )
 from .clients import get_evm_client

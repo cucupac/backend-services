@@ -20,6 +20,8 @@ from app.infrastructure.db.models.cross_chain_transactions import (
 from app.infrastructure.db.models.layer_zero_messages import LAYER_ZERO_MESSAGES
 from app.infrastructure.db.models.wormhole_messages import WORMHOLE_MESSAGES
 from app.infrastructure.db.models.block_record import BLOCK_RECORD
+from app.infrastructure.db.models.mints import MINTS
+from app.infrastructure.db.models.points import POINTS
 from app.infrastructure.db.models.tasks import TASKS, TASK_LOCKS
 
 
