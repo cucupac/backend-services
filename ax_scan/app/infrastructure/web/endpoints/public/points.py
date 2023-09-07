@@ -1,4 +1,4 @@
-from eth_utils import is_checksum_address
+from eth_utils import is_hex
 from fastapi import APIRouter, Depends, HTTPException, Path
 
 from app.dependencies import get_points_repo
@@ -24,7 +24,7 @@ async def get_points(
 ) -> PointsResponse:
     """This endpiont returns a user's current points."""
 
-    if not is_checksum_address(account):
+    if not is_hex(account):
         raise HTTPException(status_code=400, detail="Invalid account.")
 
     points = await points_repo.retrieve(account=account)

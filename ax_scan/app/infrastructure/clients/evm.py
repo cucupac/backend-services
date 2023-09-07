@@ -114,7 +114,7 @@ class EvmClient(IEvmClient):
         """Fetches mint events emitted from given contract, for a given block range."""
 
         event_filter = {
-            "address": contract,
+            "address": AsyncWeb3.to_checksum_address(contract),
             "fromBlock": from_block,
             "toBlock": to_block,
             "topics": [[settings.mint_topic]],
