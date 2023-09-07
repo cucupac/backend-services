@@ -16,7 +16,7 @@ class PointsRepo(IPointsRepo):
         """Upserts account's points."""
 
         insert_stmt = POINTS.insert().values(
-            account=account,
+            account=account.lower(),
             points=points,
         )
 
@@ -30,7 +30,7 @@ class PointsRepo(IPointsRepo):
             .values(
                 points=points,
             )
-            .where(POINTS.c.account == account)
+            .where(POINTS.c.account == account.lower())
         )
 
         await self.db.execute(update_stmt)
@@ -39,7 +39,7 @@ class PointsRepo(IPointsRepo):
         """Retrieves account's points; returns database object."""
 
         query = select([POINTS]).where(
-            POINTS.c.account == account,
+            POINTS.c.account == account.lower(),
         )
 
         result = await self.db.fetch_one(query)
