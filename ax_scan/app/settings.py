@@ -39,8 +39,8 @@ class Settings(BaseSettings):
     treasury: str
 
     # Tasks
-    gather_txs_frequency: int = 20
-    verify_txs_frequency: int = 20
+    gather_txs_frequency: int = 120
+    verify_txs_frequency: int = 120
     manage_locks_frequency: int = 60 * 5
     award_points_frequency: int = 60 * 60 * 24
 
