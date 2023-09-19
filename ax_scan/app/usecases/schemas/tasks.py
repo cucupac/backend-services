@@ -6,8 +6,10 @@ from pydantic import BaseModel, Field
 
 
 class TaskName(str, Enum):
-    GATHER_EVENTS = "gather_events"
+    GATHER_TRANSFER_EVENTS = "gather_transfer_events"
+    GATHER_MINT_EVENTS = "gather_mint_events"
     VERIFY_TRANSACTIONS = "verify_transactions"
+    AWARD_POINTS = "award_points"
 
 
 class TaskInDb(BaseModel):

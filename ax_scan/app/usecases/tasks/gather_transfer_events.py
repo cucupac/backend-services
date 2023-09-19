@@ -13,7 +13,9 @@ from app.usecases.interfaces.repos.block_record import IBlockRecordRepo
 from app.usecases.interfaces.repos.messages import IMessagesRepo
 from app.usecases.interfaces.repos.tasks import ITasksRepo
 from app.usecases.interfaces.repos.transactions import ITransactionsRepo
-from app.usecases.interfaces.tasks.gather_events import IGatherEventsTask
+from app.usecases.interfaces.tasks.gather_transfer_events import (
+    IGatherTransferEventsTask,
+)
 from app.usecases.schemas.block_record import BlockRecord
 from app.usecases.schemas.bridge import Bridges
 from app.usecases.schemas.cross_chain_message import (
@@ -36,7 +38,7 @@ from app.usecases.schemas.evm_transaction import EvmTransaction, EvmTransactionS
 from app.usecases.schemas.tasks import TaskName
 
 
-class GatherEventsTask(IGatherEventsTask):
+class GatherTransferEventsTask(IGatherTransferEventsTask):
     def __init__(
         self,
         db: Database,
@@ -48,7 +50,7 @@ class GatherEventsTask(IGatherEventsTask):
         logger: Logger,
     ):
         self.db = db
-        self.name = TaskName.GATHER_EVENTS
+        self.name = TaskName.GATHER_TRANSFER_EVENTS
         self.transactions_repo = transactions_repo
         self.messages_repo = messages_repo
         self.block_recoreds_repo = block_record_repo
@@ -66,7 +68,7 @@ class GatherEventsTask(IGatherEventsTask):
                     await self.task(task_id=task.id)
                 else:
                     self.logger.info(
-                        "[GatherEventsTask]: Encountered lock; not performing task."
+                        "[GatherTransferEventsTask]: Encountered lock; not performing task."
                     )
             except asyncio.CancelledError:  # pylint: disable = try-except-raise
                 raise
@@ -78,7 +80,7 @@ class GatherEventsTask(IGatherEventsTask):
     async def task(self, task_id: int) -> None:
         """Gathers new transactions from blockchains."""
 
-        self.logger.info("[GatherEventsTask]: Started.")
+        self.logger.info("[GatherTransferEventsTask]: Started.")
         task_start_time = time.time()
 
         event_count = 0
@@ -86,12 +88,14 @@ class GatherEventsTask(IGatherEventsTask):
         for ax_chain_id, chain_data in CHAIN_DATA.items():
             evm_client = self.supported_evm_clients[ax_chain_id]
 
-            block_ranges = await self.get_block_range(ax_chain_id=ax_chain_id)
+            block_ranges = await self.get_block_range(
+                task_id=task_id, ax_chain_id=ax_chain_id
+            )
 
             for block_range in block_ranges:
                 # Process WormholeBridge events
                 if chain_data.get("wh_chain_id"):
-                    events = await evm_client.fetch_events(
+                    events = await evm_client.fetch_transfer_events(
                         contract=settings.evm_wormhole_bridge,
                         from_block=block_range.from_block,
                         to_block=block_range.to_block,
@@ -105,7 +109,7 @@ class GatherEventsTask(IGatherEventsTask):
 
                 # Process LayerZeroBridge events
                 if chain_data.get("lz_chain_id"):
-                    events = await evm_client.fetch_events(
+                    events = await evm_client.fetch_transfer_events(
                         contract=settings.evm_layerzero_bridge,
                         from_block=block_range.from_block,
                         to_block=block_range.to_block,
@@ -120,25 +124,26 @@ class GatherEventsTask(IGatherEventsTask):
                 # Update block record
                 await self.block_recoreds_repo.upsert(
                     block_record=BlockRecord(
+                        task_id=task_id,
                         chain_id=ax_chain_id,
                         last_scanned_block_number=block_range.to_block,
-                    )
+                    ),
                 )
 
         await self.tasks_repo.delete_lock(task_id=task_id)
 
         self.logger.info(
-            "[GatherEventsTask]: Finished; processed %s events in %s seconds.",
+            "[GatherTransferEventsTask]: Finished; processed %s events in %s seconds.",
             event_count,
             round(time.time() - task_start_time, 4),
         )
 
-    async def get_block_range(self, ax_chain_id: int) -> List[BlockRange]:
+    async def get_block_range(self, task_id: int, ax_chain_id: int) -> List[BlockRange]:
         """Returns a list of starting and ending blocks for a given chain's data query."""
 
         # Obtain upper and lower bounds
         last_scanned_block = await self.block_recoreds_repo.retrieve(
-            chain_id=ax_chain_id
+            task_id=task_id, chain_id=ax_chain_id
         )
 
         evm_client = self.supported_evm_clients[ax_chain_id]

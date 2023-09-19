@@ -8,7 +8,7 @@ from app.dependencies import CHAIN_DATA
 from app.settings import settings
 from app.usecases.interfaces.clients.evm import IEvmClient
 from app.usecases.schemas.blockchain import BlockchainClientError, TransactionReceipt
-from app.usecases.schemas.events import ReceiveFromChain, SendToChain
+from app.usecases.schemas.events import Mint, ReceiveFromChain, SendToChain
 
 
 class EvmResult(str, Enum):
@@ -43,9 +43,15 @@ class MockEvmClientTxReciept(IEvmClient):
             raise BlockchainClientError(detail=constant.NOT_FOUND_ERROR)
         raise BlockchainClientError(detail="Some general error.")
 
-    async def fetch_events(
+    async def fetch_transfer_events(
         self, contract: str, from_block: int, to_block: int
     ) -> List[Union[SendToChain, ReceiveFromChain]]:
+        return []
+
+    async def fetch_mint_events(
+        self, contract: str, from_block: int, to_block: int
+    ) -> List[Mint]:
+        """Fetches mint events emitted from given contract, for a given block range."""
         return []
 
     async def fetch_latest_block_number(self) -> int:
@@ -63,10 +69,10 @@ class MockEvmClientInsertFlow(IEvmClient):
         """Fetches the transaction receipt for a given transaction hash."""
         return
 
-    async def fetch_events(
+    async def fetch_transfer_events(
         self, contract: str, from_block: int, to_block: int
     ) -> List[Union[SendToChain, ReceiveFromChain]]:
-        """Fetches events emitted from given contract, for a given block range.
+        """Fetches cross-chain transfer events emitted from given contract, for a given block range.
 
         This mock function mimics a cross-chain message from celo to polygon for both
         Layer Zero and Wormhole."""
@@ -112,6 +118,12 @@ class MockEvmClientInsertFlow(IEvmClient):
             return [receive_from_chain_event]
         return []
 
+    async def fetch_mint_events(
+        self, contract: str, from_block: int, to_block: int
+    ) -> List[Mint]:
+        """Fetches mint events emitted from given contract, for a given block range."""
+        return []
+
     async def fetch_latest_block_number(self) -> int:
         """Fetches the latest block number."""
 
@@ -127,10 +139,10 @@ class MockEvmClientDestOnly(IEvmClient):
         """Fetches the transaction receipt for a given transaction hash."""
         return
 
-    async def fetch_events(
+    async def fetch_transfer_events(
         self, contract: str, from_block: int, to_block: int
     ) -> List[Union[SendToChain, ReceiveFromChain]]:
-        """Fetches events emitted from given contract, for a given block range."""
+        """Fetches cross-chain transfer events emitted from given contract, for a given block range."""
 
         if self.chain_id == constant.TEST_DEST_CHAIN_ID:
             # Mocking a destination chain
@@ -161,6 +173,12 @@ class MockEvmClientDestOnly(IEvmClient):
             return [receive_from_chain_event]
         return []
 
+    async def fetch_mint_events(
+        self, contract: str, from_block: int, to_block: int
+    ) -> List[Mint]:
+        """Fetches mint events emitted from given contract, for a given block range."""
+        return []
+
     async def fetch_latest_block_number(self) -> int:
         """Fetches the latest block number."""
 
@@ -176,10 +194,10 @@ class MockEvmClientSrcOnly(IEvmClient):
         """Fetches the transaction receipt for a given transaction hash."""
         return
 
-    async def fetch_events(
+    async def fetch_transfer_events(
         self, contract: str, from_block: int, to_block: int
     ) -> List[Union[SendToChain, ReceiveFromChain]]:
-        """Fetches events emitted from given contract, for a given block range."""
+        """Fetches cross-chain transfer events emitted from given contract, for a given block range."""
 
         if self.chain_id == constant.TEST_SRC_CHAIN_ID:
             # Mocking a source chain
@@ -210,6 +228,12 @@ class MockEvmClientSrcOnly(IEvmClient):
             return [send_to_chain_event]
         return []
 
+    async def fetch_mint_events(
+        self, contract: str, from_block: int, to_block: int
+    ) -> List[Mint]:
+        """Fetches mint events emitted from given contract, for a given block range."""
+        return []
+
     async def fetch_latest_block_number(self) -> int:
         """Fetches the latest block number."""
 
@@ -228,11 +252,17 @@ class MockEvmClientBlockRange(IEvmClient):
         """Fetches the transaction receipt for a given transaction hash."""
         return
 
-    async def fetch_events(
+    async def fetch_transfer_events(
         self, contract: str, from_block: int, to_block: int
     ) -> List[Union[SendToChain, ReceiveFromChain]]:
-        """Fetches events emitted from given contract, for a given block range."""
+        """Fetches cross-chain transfer events emitted from given contract, for a given block range."""
 
+        return []
+
+    async def fetch_mint_events(
+        self, contract: str, from_block: int, to_block: int
+    ) -> List[Mint]:
+        """Fetches mint events emitted from given contract, for a given block range."""
         return []
 
     async def fetch_latest_block_number(self) -> int:

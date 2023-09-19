@@ -14,6 +14,13 @@ async def test_upsert(block_record_repo: IBlockRecordRepo, test_db: Database) ->
 
     block_records = await test_db.fetch_all("""SELECT * FROM ax_scan.block_record""")
 
+    await test_db.execute(
+        "INSERT INTO ax_scan.tasks (name) VALUES ('gather_mint_events');"
+    )
+    task = await test_db.fetch_one(
+        """SELECT * FROM ax_scan.tasks AS t WHERE t.name = 'gather_mint_events'"""
+    )
+
     assert len(block_records) == 0
 
     # Create
@@ -22,8 +29,10 @@ async def test_upsert(block_record_repo: IBlockRecordRepo, test_db: Database) ->
         initial_data[ax_chain_id] = index
         await block_record_repo.upsert(
             block_record=BlockRecord(
-                chain_id=ax_chain_id, last_scanned_block_number=index
-            )
+                task_id=task["id"],
+                chain_id=ax_chain_id,
+                last_scanned_block_number=index,
+            ),
         )
 
     block_records = await test_db.fetch_all("""SELECT * FROM ax_scan.block_record""")
@@ -38,7 +47,7 @@ async def test_upsert(block_record_repo: IBlockRecordRepo, test_db: Database) ->
             block_record["last_scanned_block_number"]
             == initial_data[block_record["chain_id"]]
         )
-        checked_chain_ids.append(checked_chain_ids)
+        checked_chain_ids.append(block_record["chain_id"])
 
     # Update
     post_update_data = {}
@@ -47,8 +56,10 @@ async def test_upsert(block_record_repo: IBlockRecordRepo, test_db: Database) ->
         post_update_data[ax_chain_id] = block_num
         await block_record_repo.upsert(
             block_record=BlockRecord(
-                chain_id=ax_chain_id, last_scanned_block_number=block_num
-            )
+                task_id=task["id"],
+                chain_id=ax_chain_id,
+                last_scanned_block_number=block_num,
+            ),
         )
 
     block_records = await test_db.fetch_all("""SELECT * FROM ax_scan.block_record""")
@@ -62,17 +73,23 @@ async def test_upsert(block_record_repo: IBlockRecordRepo, test_db: Database) ->
             block_record["last_scanned_block_number"]
             == post_update_data[block_record["chain_id"]]
         )
-        checked_chain_ids.append(checked_chain_ids)
+        checked_chain_ids.append(block_record["chain_id"])
 
 
 @pytest.mark.asyncio
 async def test_retrieve(
-    block_record_repo: IBlockRecordRepo, inserted_block_records: None
+    block_record_repo: IBlockRecordRepo, inserted_block_records: None, test_db: Database
 ) -> None:
     """Tests that a block record can be retrieved by chain ID."""
 
+    task = await test_db.fetch_one(
+        """SELECT * FROM ax_scan.tasks AS t WHERE t.name = 'gather_mint_events'"""
+    )
+
     # Act
     for ax_chain_id in CHAIN_DATA:
-        block_record = await block_record_repo.retrieve(chain_id=ax_chain_id)
+        block_record = await block_record_repo.retrieve(
+            task_id=task["id"], chain_id=ax_chain_id
+        )
         assert isinstance(block_record, BlockRecordInDb)
         assert block_record.chain_id == ax_chain_id

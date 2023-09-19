@@ -7,7 +7,12 @@ from app.dependencies import CHAIN_DATA
 from app.settings import settings
 from app.usecases.interfaces.clients.evm import IEvmClient
 from app.usecases.schemas.blockchain import BlockchainClientError, TransactionReceipt
-from app.usecases.schemas.events import EmitterAddress, ReceiveFromChain, SendToChain
+from app.usecases.schemas.events import (
+    EmitterAddress,
+    Mint,
+    ReceiveFromChain,
+    SendToChain,
+)
 
 
 class EvmClient(IEvmClient):
@@ -36,10 +41,10 @@ class EvmClient(IEvmClient):
             gas_price=receipt.effectiveGasPrice,
         )
 
-    async def fetch_events(
+    async def fetch_transfer_events(
         self, contract: str, from_block: int, to_block: int
     ) -> List[Union[SendToChain, ReceiveFromChain]]:
-        """Fetches events emitted from given contract, for a given block range."""
+        """Fetches cross-chain transfer events emitted from given contract, for a given block range."""
 
         event_filter = {
             "address": contract,
@@ -53,7 +58,9 @@ class EvmClient(IEvmClient):
         try:
             events_raw = await self.web3_client.eth.get_logs(event_filter)
         except Exception as e:
-            self.logger.error("[EvmClient]: Event retrieval failed. Error: %s", e)
+            self.logger.error(
+                "[EvmClient]: Transfer event retrieval failed. Error: %s", e
+            )
             raise BlockchainClientError(detail=str(e)) from e
         events = []
         for event in events_raw:
@@ -99,6 +106,40 @@ class EvmClient(IEvmClient):
                     )
                 )
 
+        return events
+
+    async def fetch_mint_events(
+        self, contract: str, from_block: int, to_block: int
+    ) -> List[Mint]:
+        """Fetches mint events emitted from given contract, for a given block range."""
+
+        event_filter = {
+            "address": AsyncWeb3.to_checksum_address(contract),
+            "fromBlock": from_block,
+            "toBlock": to_block,
+            "topics": [[settings.mint_topic]],
+        }
+
+        try:
+            events_raw = await self.web3_client.eth.get_logs(event_filter)
+        except Exception as e:
+            self.logger.error("[EvmClient]: Mint event retrieval failed. Error: %s", e)
+            raise BlockchainClientError(detail=str(e)) from e
+
+        events = []
+        for event in events_raw:
+            events.append(
+                Mint(
+                    emitter_address=event.address,
+                    block_number=event.blockNumber,
+                    block_hash=event.blockHash.hex(),
+                    transaction_hash=event.transactionHash.hex(),
+                    account=AsyncWeb3.to_checksum_address(
+                        event.topics[1].hex()[2:].lstrip("0")
+                    ),
+                    amount=int(event.data.hex()[2:], 16),
+                )
+            )
         return events
 
     async def fetch_latest_block_number(self) -> int:

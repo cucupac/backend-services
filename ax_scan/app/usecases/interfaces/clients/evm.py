@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import List, Union
 
 from app.usecases.schemas.blockchain import TransactionReceipt
-from app.usecases.schemas.events import ReceiveFromChain, SendToChain
+from app.usecases.schemas.events import Mint, ReceiveFromChain, SendToChain
 
 
 class IEvmClient(ABC):
@@ -11,10 +11,16 @@ class IEvmClient(ABC):
         """Fetches the transaction receipt for a given transaction hash."""
 
     @abstractmethod
-    async def fetch_events(
+    async def fetch_transfer_events(
         self, contract: str, from_block: int, to_block: int
     ) -> List[Union[SendToChain, ReceiveFromChain]]:
-        """Fetches events emitted from given contract, for a given block range."""
+        """Fetches cross-chain transfer events emitted from given contract, for a given block range."""
+
+    @abstractmethod
+    async def fetch_mint_events(
+        self, contract: str, from_block: int, to_block: int
+    ) -> List[Mint]:
+        """Fetches mint events emitted from given contract, for a given block range."""
 
     @abstractmethod
     async def fetch_latest_block_number(self) -> int:

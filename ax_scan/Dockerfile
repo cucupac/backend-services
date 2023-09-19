@@ -32,6 +32,7 @@ ENV DB_SCHEMA=ax_scan
 # Ax Protocol
 ENV EVM_WORMHOLE_BRIDGE=inject_at_deployment
 ENV EVM_LAYERZERO_BRIDGE=inject_at_deployment
+ENV TREASURY=inject_at_deployment
 
 # RPC URLS
 ENV ETHEREUM_RPC=inject_at_deployment

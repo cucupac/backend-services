@@ -6,10 +6,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.dependencies import get_client_session, get_event_loop
 from app.infrastructure.db.core import get_or_create_database
 from app.infrastructure.web.endpoints.metrics import health
-from app.infrastructure.web.endpoints.public import transactions
+from app.infrastructure.web.endpoints.public import points, transactions
 from app.settings import settings
 from app.usecases.tasks.events.startup import (
-    start_gather_events_task,
+    start_award_points_task,
+    start_gather_mint_events_task,
+    start_gather_transfer_events_task,
     start_manage_locks_task,
     start_verify_transactions_task,
 )
@@ -23,6 +25,7 @@ def setup_app():
     )
     fastapi_app.include_router(health.router, prefix="/metrics/health")
     fastapi_app.include_router(transactions.router, prefix="/public/transactions")
+    fastapi_app.include_router(points.router, prefix="/public/points")
 
     # CORS (Cross-Origin Resource Sharing)
     origins = ["*"]
@@ -47,8 +50,10 @@ async def startup_event():
     await get_or_create_database()
 
     # Tasks
-    await start_gather_events_task()
+    await start_gather_transfer_events_task()
+    await start_gather_mint_events_task()
     await start_verify_transactions_task()
+    await start_award_points_task()
     await start_manage_locks_task()
 
 

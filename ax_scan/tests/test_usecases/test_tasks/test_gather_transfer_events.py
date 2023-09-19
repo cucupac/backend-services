@@ -6,7 +6,9 @@ import tests.constants as constant
 from app.dependencies import CHAIN_DATA
 from app.usecases.interfaces.repos.block_record import IBlockRecordRepo
 from app.usecases.interfaces.repos.tasks import ITasksRepo
-from app.usecases.interfaces.tasks.gather_events import IGatherEventsTask
+from app.usecases.interfaces.tasks.gather_transfer_events import (
+    IGatherTransferEventsTask,
+)
 from app.usecases.schemas.bridge import Bridges
 from app.usecases.schemas.events import EmitterAddress
 from app.usecases.schemas.evm_transaction import EvmTransactionStatus
@@ -15,7 +17,7 @@ from app.usecases.schemas.tasks import TaskName
 
 @pytest.mark.asyncio
 async def test_task_insert(
-    gather_events_task_insert: IGatherEventsTask,
+    gather_events_task_insert: IGatherTransferEventsTask,
     tasks_repo: ITasksRepo,
     test_db: Database,
 ) -> None:
@@ -26,7 +28,7 @@ async def test_task_insert(
     cross_chain_tx_ids = []
 
     # Act
-    task = await tasks_repo.retrieve(task_name=TaskName.GATHER_EVENTS)
+    task = await tasks_repo.retrieve(task_name=TaskName.GATHER_TRANSFER_EVENTS)
     await gather_events_task_insert.task(task_id=task.id)
 
     retrieved_evm_txs = await test_db.fetch_all(
@@ -88,7 +90,7 @@ async def test_task_insert(
 
 @pytest.mark.asyncio
 async def test_task_wh_src_data_first_update(
-    gather_events_task_src_data_first_update: IGatherEventsTask,
+    gather_events_task_src_data_first_update: IGatherTransferEventsTask,
     tasks_repo: ITasksRepo,
     test_db: Database,
     inserted_wh_message_src_data: None,
@@ -136,7 +138,7 @@ async def test_task_wh_src_data_first_update(
         assert wh_message["sequence"] == constant.TEST_MESSAGE_ID
 
     # Act
-    task = await tasks_repo.retrieve(task_name=TaskName.GATHER_EVENTS)
+    task = await tasks_repo.retrieve(task_name=TaskName.GATHER_TRANSFER_EVENTS)
     await gather_events_task_src_data_first_update.task(task_id=task.id)
 
     updated_cross_chain_tx = await test_db.fetch_one(
@@ -171,7 +173,7 @@ async def test_task_wh_src_data_first_update(
 
 @pytest.mark.asyncio
 async def test_task_lz_src_data_first_update(
-    gather_events_task_src_data_first_update: IGatherEventsTask,
+    gather_events_task_src_data_first_update: IGatherTransferEventsTask,
     tasks_repo: ITasksRepo,
     test_db: Database,
     inserted_lz_message_src_data: None,
@@ -220,7 +222,7 @@ async def test_task_lz_src_data_first_update(
         assert lz_message["nonce"] == constant.TEST_MESSAGE_ID
 
     # Act
-    task = await tasks_repo.retrieve(task_name=TaskName.GATHER_EVENTS)
+    task = await tasks_repo.retrieve(task_name=TaskName.GATHER_TRANSFER_EVENTS)
     await gather_events_task_src_data_first_update.task(task_id=task.id)
 
     updated_cross_chain_tx = await test_db.fetch_one(
@@ -256,7 +258,7 @@ async def test_task_lz_src_data_first_update(
 
 @pytest.mark.asyncio
 async def test_task_wh_dest_data_first_update(
-    gather_events_task_dest_data_first_update: IGatherEventsTask,
+    gather_events_task_dest_data_first_update: IGatherTransferEventsTask,
     tasks_repo: ITasksRepo,
     test_db: Database,
     inserted_wh_message_dest_data: None,
@@ -305,7 +307,7 @@ async def test_task_wh_dest_data_first_update(
         assert wh_message["sequence"] == constant.TEST_MESSAGE_ID
 
     # Act
-    task = await tasks_repo.retrieve(task_name=TaskName.GATHER_EVENTS)
+    task = await tasks_repo.retrieve(task_name=TaskName.GATHER_TRANSFER_EVENTS)
     await gather_events_task_dest_data_first_update.task(task_id=task.id)
 
     updated_cross_chain_tx = await test_db.fetch_one(
@@ -338,7 +340,7 @@ async def test_task_wh_dest_data_first_update(
 
 @pytest.mark.asyncio
 async def test_task_lz_dest_data_first_update(
-    gather_events_task_dest_data_first_update: IGatherEventsTask,
+    gather_events_task_dest_data_first_update: IGatherTransferEventsTask,
     tasks_repo: ITasksRepo,
     test_db: Database,
     inserted_lz_message_dest_data: None,
@@ -388,7 +390,7 @@ async def test_task_lz_dest_data_first_update(
         assert lz_message["nonce"] == constant.TEST_MESSAGE_ID
 
     # Act
-    task = await tasks_repo.retrieve(task_name=TaskName.GATHER_EVENTS)
+    task = await tasks_repo.retrieve(task_name=TaskName.GATHER_TRANSFER_EVENTS)
     await gather_events_task_dest_data_first_update.task(task_id=task.id)
 
     updated_cross_chain_tx = await test_db.fetch_one(
@@ -422,16 +424,23 @@ async def test_task_lz_dest_data_first_update(
 
 @pytest.mark.asyncio
 async def test_get_block_range_gt(
-    gather_events_task_block_range_gt: IGatherEventsTask,
+    gather_events_task_block_range_gt: IGatherTransferEventsTask,
     block_record_repo: IBlockRecordRepo,
+    test_db: Database,
     inserted_block_record: None,
 ) -> None:
     """Tests the case where the on-chain block number exceeds the maximum, evm-allowed block range.
     This test uses the Wormhole source transaction block number as its last database-stored block number.
     """
 
+    task = await test_db.fetch_one(
+        """SELECT * FROM ax_scan.tasks AS t WHERE t.name = 'test_task'"""
+    )
+
     # Setup
-    block_record = await block_record_repo.retrieve(chain_id=constant.TEST_SRC_CHAIN_ID)
+    block_record = await block_record_repo.retrieve(
+        task_id=task["id"], chain_id=constant.TEST_SRC_CHAIN_ID
+    )
 
     assert block_record.last_scanned_block_number == constant.TEST_BLOCK_NUMBER
 
@@ -447,7 +456,7 @@ async def test_get_block_range_gt(
 
     # Act
     block_ranges = await gather_events_task_block_range_gt.get_block_range(
-        ax_chain_id=constant.TEST_SRC_CHAIN_ID
+        task_id=task["id"], ax_chain_id=constant.TEST_SRC_CHAIN_ID
     )
 
     last_range = block_ranges.pop()
@@ -462,16 +471,22 @@ async def test_get_block_range_gt(
 
 @pytest.mark.asyncio
 async def test_get_block_range_lt(
-    gather_events_task_block_range_lt: IGatherEventsTask,
+    gather_events_task_block_range_lt: IGatherTransferEventsTask,
     block_record_repo: IBlockRecordRepo,
+    test_db: Database,
     inserted_block_record: None,
 ) -> None:
     """Tests the case where the on-chain block number is less than the maximum, evm-allowed upper bound.
     This test uses the Wormhole source transaction block number as its last database-stored block number.
     """
+    task = await test_db.fetch_one(
+        """SELECT * FROM ax_scan.tasks AS t WHERE t.name = 'test_task'"""
+    )
 
     # Setup
-    block_record = await block_record_repo.retrieve(chain_id=constant.TEST_SRC_CHAIN_ID)
+    block_record = await block_record_repo.retrieve(
+        task_id=task["id"], chain_id=constant.TEST_SRC_CHAIN_ID
+    )
 
     assert block_record.last_scanned_block_number == constant.TEST_BLOCK_NUMBER
 
@@ -487,7 +502,7 @@ async def test_get_block_range_lt(
 
     # Act
     block_ranges = await gather_events_task_block_range_lt.get_block_range(
-        ax_chain_id=constant.TEST_SRC_CHAIN_ID
+        task_id=task["id"], ax_chain_id=constant.TEST_SRC_CHAIN_ID
     )
 
     # Assertions

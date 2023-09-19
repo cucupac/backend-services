@@ -14,15 +14,21 @@ import tests.constants as constant
 from app.dependencies import CHAIN_DATA, get_transactions_repo, logger
 from app.infrastructure.db.repos.block_record import BlockRecordRepo
 from app.infrastructure.db.repos.messages import MessagesRepo
+from app.infrastructure.db.repos.mints import MintsRepo
+from app.infrastructure.db.repos.points import PointsRepo
 from app.infrastructure.db.repos.tasks import TasksRepo
 from app.infrastructure.db.repos.transactions import TransactionsRepo
 from app.infrastructure.web.setup import setup_app
 from app.usecases.interfaces.clients.evm import IEvmClient
 from app.usecases.interfaces.repos.block_record import IBlockRecordRepo
 from app.usecases.interfaces.repos.messages import IMessagesRepo
+from app.usecases.interfaces.repos.mints import IMintsRepo
+from app.usecases.interfaces.repos.points import IPointsRepo
 from app.usecases.interfaces.repos.tasks import ITasksRepo
 from app.usecases.interfaces.repos.transactions import ITransactionsRepo
-from app.usecases.interfaces.tasks.gather_events import IGatherEventsTask
+from app.usecases.interfaces.tasks.gather_transfer_events import (
+    IGatherTransferEventsTask,
+)
 from app.usecases.schemas.bridge import Bridges
 from app.usecases.schemas.cross_chain_message import LzMessage, WhMessage
 from app.usecases.schemas.cross_chain_transaction import (
@@ -35,7 +41,7 @@ from app.usecases.schemas.evm_transaction import (
     UpdateEvmTransaction,
 )
 from app.usecases.schemas.tasks import TaskInDb, TaskName
-from app.usecases.tasks.gather_events import GatherEventsTask
+from app.usecases.tasks.gather_transfer_events import GatherTransferEventsTask
 from app.usecases.tasks.verify_transactions import VerifyTransactionsTask
 
 # Mocks
@@ -71,6 +77,8 @@ async def test_db(test_db_url) -> Database:
     await test_db.execute("TRUNCATE ax_scan.cross_chain_transactions CASCADE")
     await test_db.execute("TRUNCATE ax_scan.evm_transactions CASCADE")
     await test_db.execute("TRUNCATE ax_scan.block_record CASCADE")
+    await test_db.execute("TRUNCATE ax_scan.mints CASCADE")
+    await test_db.execute("TRUNCATE ax_scan.points CASCADE")
     await test_db.execute("TRUNCATE ax_scan.task_locks CASCADE")
     await test_db.execute("TRUNCATE ax_scan.tasks CASCADE")
     await test_db.disconnect()
@@ -95,6 +103,16 @@ async def tasks_repo(test_db: Database, inserted_tasks: None) -> ITasksRepo:
 @pytest_asyncio.fixture
 async def block_record_repo(test_db: Database) -> IBlockRecordRepo:
     return BlockRecordRepo(db=test_db)
+
+
+@pytest_asyncio.fixture
+async def mints_repo(test_db: Database) -> IMintsRepo:
+    return MintsRepo(db=test_db)
+
+
+@pytest_asyncio.fixture
+async def points_repo(test_db: Database) -> IPointsRepo:
+    return PointsRepo(db=test_db)
 
 
 # Clients
@@ -215,8 +233,8 @@ async def gather_events_task_insert(
     messages_repo: IMessagesRepo,
     block_record_repo: IBlockRecordRepo,
     tasks_repo: ITasksRepo,
-) -> IGatherEventsTask:
-    return GatherEventsTask(
+) -> IGatherTransferEventsTask:
+    return GatherTransferEventsTask(
         db=test_db,
         supported_evm_clients=evm_clients_success_insert,
         transactions_repo=transactions_repo,
@@ -235,8 +253,8 @@ async def gather_events_task_src_data_first_update(
     messages_repo: IMessagesRepo,
     block_record_repo: IBlockRecordRepo,
     tasks_repo: ITasksRepo,
-) -> IGatherEventsTask:
-    return GatherEventsTask(
+) -> IGatherTransferEventsTask:
+    return GatherTransferEventsTask(
         db=test_db,
         supported_evm_clients=evm_clients_dest_only,
         transactions_repo=transactions_repo,
@@ -255,8 +273,8 @@ async def gather_events_task_dest_data_first_update(
     messages_repo: IMessagesRepo,
     block_record_repo: IBlockRecordRepo,
     tasks_repo: ITasksRepo,
-) -> IGatherEventsTask:
-    return GatherEventsTask(
+) -> IGatherTransferEventsTask:
+    return GatherTransferEventsTask(
         db=test_db,
         supported_evm_clients=evm_clients_src_only,
         transactions_repo=transactions_repo,
@@ -275,8 +293,8 @@ async def gather_events_task_block_range_gt(
     messages_repo: IMessagesRepo,
     block_record_repo: IBlockRecordRepo,
     tasks_repo: ITasksRepo,
-) -> IGatherEventsTask:
-    return GatherEventsTask(
+) -> IGatherTransferEventsTask:
+    return GatherTransferEventsTask(
         db=test_db,
         supported_evm_clients=evm_clients_block_range_gt,
         transactions_repo=transactions_repo,
@@ -295,8 +313,8 @@ async def gather_events_task_block_range_lt(
     messages_repo: IMessagesRepo,
     block_record_repo: IBlockRecordRepo,
     tasks_repo: ITasksRepo,
-) -> IGatherEventsTask:
-    return GatherEventsTask(
+) -> IGatherTransferEventsTask:
+    return GatherTransferEventsTask(
         db=test_db,
         supported_evm_clients=evm_clients_block_range_lt,
         transactions_repo=transactions_repo,
@@ -312,7 +330,7 @@ async def verify_transactions_task_found_status_is_one(
     evm_clients_tx_receipt_found_status_is_one: Mapping[int, IEvmClient],
     transactions_repo: ITransactionsRepo,
     tasks_repo: ITasksRepo,
-) -> IGatherEventsTask:
+) -> IGatherTransferEventsTask:
     return VerifyTransactionsTask(
         supported_evm_clients=evm_clients_tx_receipt_found_status_is_one,
         transactions_repo=transactions_repo,
@@ -326,7 +344,7 @@ async def verify_transactions_task_found_status_not_one(
     evm_clients_tx_receipt_found_status_not_one: Mapping[int, IEvmClient],
     transactions_repo: ITransactionsRepo,
     tasks_repo: ITasksRepo,
-) -> IGatherEventsTask:
+) -> IGatherTransferEventsTask:
     return VerifyTransactionsTask(
         supported_evm_clients=evm_clients_tx_receipt_found_status_not_one,
         transactions_repo=transactions_repo,
@@ -340,7 +358,7 @@ async def verify_transactions_task_not_found(
     evm_clients_tx_receipt_not_found: Mapping[int, IEvmClient],
     transactions_repo: ITransactionsRepo,
     tasks_repo: ITasksRepo,
-) -> IGatherEventsTask:
+) -> IGatherTransferEventsTask:
     return VerifyTransactionsTask(
         supported_evm_clients=evm_clients_tx_receipt_not_found,
         transactions_repo=transactions_repo,
@@ -354,7 +372,7 @@ async def verify_transactions_task_general_error(
     evm_clients_tx_receipt_general_error: Mapping[int, IEvmClient],
     transactions_repo: ITransactionsRepo,
     tasks_repo: ITasksRepo,
-) -> IGatherEventsTask:
+) -> IGatherTransferEventsTask:
     return VerifyTransactionsTask(
         supported_evm_clients=evm_clients_tx_receipt_general_error,
         transactions_repo=transactions_repo,
@@ -432,6 +450,20 @@ async def test_lz_evm_tx_dest() -> EvmTransaction:
         transaction_hash=constant.LZ_DEST_TX_HASH,
         block_hash=constant.LZ_DEST_BLOCK_HASH,
         block_number=constant.LZ_DEST_BLOCK_NUMBER,
+        status=EvmTransactionStatus.PENDING,
+        gas_price=None,
+        gas_used=None,
+        error=None,
+    )
+
+
+@pytest_asyncio.fixture
+async def test_mint_evm_tx() -> EvmTransaction:
+    return EvmTransaction(
+        chain_id=constant.TEST_MINT_CHAIN_ID,
+        transaction_hash=constant.TEST_MINT_TX_HASH,
+        block_hash=constant.TEST_MINT_BLOCK_HASH,
+        block_number=constant.TEST_MINT_BLOCK_NUMBER,
         status=EvmTransactionStatus.PENDING,
         gas_price=None,
         gas_used=None,
@@ -554,6 +586,14 @@ async def inserted_lz_evm_tx_dest(
 ) -> int:
     """[LZ flow - #1]: Inserts src evm tx."""
     return await transactions_repo.create_evm_tx(evm_tx=test_lz_evm_tx_dest)
+
+
+@pytest_asyncio.fixture
+async def inserted_mint_tx(
+    transactions_repo: ITransactionsRepo, test_mint_evm_tx: EvmTransaction
+) -> int:
+    """[LZ flow - #1]: Inserts src evm tx."""
+    return await transactions_repo.create_evm_tx(evm_tx=test_mint_evm_tx)
 
 
 @pytest_asyncio.fixture
@@ -741,16 +781,28 @@ async def failed_cross_chain_tx(
 
 @pytest_asyncio.fixture
 async def inserted_block_records(test_db: Database) -> None:
+    await test_db.execute(
+        "INSERT INTO ax_scan.tasks (name) VALUES ('gather_mint_events');"
+    )
+    task = await test_db.fetch_one(
+        """SELECT * FROM ax_scan.tasks AS t WHERE t.name = 'gather_mint_events'"""
+    )
     for index, ax_chain_id in enumerate(CHAIN_DATA):
-        query = """INSERT INTO ax_scan.block_record (chain_id, last_scanned_block_number) VALUES (:chain_id, :block_number) RETURNING id"""
-        values = {"chain_id": ax_chain_id, "block_number": index}
+        query = """INSERT INTO ax_scan.block_record (task_id, chain_id, last_scanned_block_number) VALUES (:task_id, :chain_id, :block_number) RETURNING id"""
+        values = {"task_id": task["id"], "chain_id": ax_chain_id, "block_number": index}
         await test_db.execute(query, values)
 
 
 @pytest_asyncio.fixture
 async def inserted_block_record(test_db: Database) -> None:
-    query = """INSERT INTO ax_scan.block_record (chain_id, last_scanned_block_number) VALUES (:chain_id, :block_number) RETURNING id"""
+    await test_db.execute("INSERT INTO ax_scan.tasks (name) VALUES ('test_task');")
+    task = await test_db.fetch_one(
+        """SELECT * FROM ax_scan.tasks AS t WHERE t.name = 'test_task'"""
+    )
+
+    query = """INSERT INTO ax_scan.block_record (task_id, chain_id, last_scanned_block_number) VALUES (:task_id, :chain_id, :block_number) RETURNING id"""
     values = {
+        "task_id": task["id"],
         "chain_id": constant.TEST_SRC_CHAIN_ID,
         "block_number": constant.TEST_BLOCK_NUMBER,
     }

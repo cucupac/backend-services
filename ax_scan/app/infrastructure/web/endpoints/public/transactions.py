@@ -1,3 +1,4 @@
+from eth_utils import is_hex
 from fastapi import APIRouter, Depends, HTTPException, Path
 
 from app.dependencies import get_transactions_repo
@@ -24,6 +25,9 @@ async def get_transaction(
     transaction_repo: ITransactionsRepo = Depends(get_transactions_repo),
 ) -> TransactionResponse:
     """This endpiont returns a cross-chain transaction object, which includes the status of the transaction."""
+
+    if not is_hex(transaction_hash):
+        raise HTTPException(status_code=400, detail="Invalid tx hash.")
 
     cross_chain_tx = await transaction_repo.retrieve_cross_chain_tx(
         chain_id=source_chain_id, src_tx_hash=transaction_hash

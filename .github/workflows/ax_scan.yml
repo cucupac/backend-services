@@ -23,6 +23,7 @@ env:
   # EVM
   EVM_WORMHOLE_BRIDGE: ""
   EVM_LAYERZERO_BRIDGE: ""
+  TREASURY: ""
 
   # RPCs
   ETHEREUM_RPC: ${{ secrets.ETHEREUM_RPC }}
