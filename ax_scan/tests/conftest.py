@@ -781,9 +781,15 @@ async def failed_cross_chain_tx(
 
 @pytest_asyncio.fixture
 async def inserted_block_records(test_db: Database) -> None:
+    await test_db.execute(
+        "INSERT INTO ax_scan.tasks (name) VALUES ('gather_mint_events');"
+    )
+    task = await test_db.fetch_one(
+        """SELECT * FROM ax_scan.tasks AS t WHERE t.name = 'gather_mint_events'"""
+    )
     for index, ax_chain_id in enumerate(CHAIN_DATA):
-        query = """INSERT INTO ax_scan.block_record (chain_id, last_scanned_block_number) VALUES (:chain_id, :block_number) RETURNING id"""
-        values = {"chain_id": ax_chain_id, "block_number": index}
+        query = """INSERT INTO ax_scan.block_record (task_id, chain_id, last_scanned_block_number) VALUES (:task_id, :chain_id, :block_number) RETURNING id"""
+        values = {"task_id": task["id"], "chain_id": ax_chain_id, "block_number": index}
         await test_db.execute(query, values)
 
 

@@ -10,5 +10,5 @@ class IBlockRecordRepo(ABC):
         """Upserts a block_record."""
 
     @abstractmethod
-    async def retrieve(self, chain_id: int) -> Optional[BlockRecordInDb]:
+    async def retrieve(self, task_id: int, chain_id: int) -> Optional[BlockRecordInDb]:
         """Retrieves block record by chain ID."""

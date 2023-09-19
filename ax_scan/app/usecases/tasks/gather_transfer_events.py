@@ -88,7 +88,9 @@ class GatherTransferEventsTask(IGatherTransferEventsTask):
         for ax_chain_id, chain_data in CHAIN_DATA.items():
             evm_client = self.supported_evm_clients[ax_chain_id]
 
-            block_ranges = await self.get_block_range(ax_chain_id=ax_chain_id)
+            block_ranges = await self.get_block_range(
+                task_id=task_id, ax_chain_id=ax_chain_id
+            )
 
             for block_range in block_ranges:
                 # Process WormholeBridge events
@@ -122,9 +124,10 @@ class GatherTransferEventsTask(IGatherTransferEventsTask):
                 # Update block record
                 await self.block_recoreds_repo.upsert(
                     block_record=BlockRecord(
+                        task_id=task_id,
                         chain_id=ax_chain_id,
                         last_scanned_block_number=block_range.to_block,
-                    )
+                    ),
                 )
 
         await self.tasks_repo.delete_lock(task_id=task_id)
@@ -135,12 +138,12 @@ class GatherTransferEventsTask(IGatherTransferEventsTask):
             round(time.time() - task_start_time, 4),
         )
 
-    async def get_block_range(self, ax_chain_id: int) -> List[BlockRange]:
+    async def get_block_range(self, task_id: int, ax_chain_id: int) -> List[BlockRange]:
         """Returns a list of starting and ending blocks for a given chain's data query."""
 
         # Obtain upper and lower bounds
         last_scanned_block = await self.block_recoreds_repo.retrieve(
-            chain_id=ax_chain_id
+            task_id=task_id, chain_id=ax_chain_id
         )
 
         evm_client = self.supported_evm_clients[ax_chain_id]

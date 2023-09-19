@@ -29,6 +29,9 @@ async def get_transaction(
     if not is_hex(transaction_hash):
         raise HTTPException(status_code=400, detail="Invalid tx hash.")
 
+    print("chain_id:", source_chain_id)
+    print("src_tx_hash:", transaction_hash)
+
     cross_chain_tx = await transaction_repo.retrieve_cross_chain_tx(
         chain_id=source_chain_id, src_tx_hash=transaction_hash
     )

@@ -69,7 +69,9 @@ class GatherMintEventsTask(IGatherMintEventsTask):
 
         event_count = 0
 
-        block_ranges = await self.get_block_range(ax_chain_id=AxChains.ETHEREUM)
+        block_ranges = await self.get_block_range(
+            task_id=task_id, ax_chain_id=AxChains.ETHEREUM
+        )
 
         for block_range in block_ranges:
             events = await self.evm_client.fetch_mint_events(
@@ -85,9 +87,10 @@ class GatherMintEventsTask(IGatherMintEventsTask):
             # Update block record
             await self.block_recoreds_repo.upsert(
                 block_record=BlockRecord(
+                    task_id=task_id,
                     chain_id=AxChains.ETHEREUM,
                     last_scanned_block_number=block_range.to_block,
-                )
+                ),
             )
 
         await self.tasks_repo.delete_lock(task_id=task_id)
@@ -98,12 +101,12 @@ class GatherMintEventsTask(IGatherMintEventsTask):
             round(time.time() - task_start_time, 4),
         )
 
-    async def get_block_range(self, ax_chain_id: int) -> List[BlockRange]:
+    async def get_block_range(self, task_id: int, ax_chain_id: int) -> List[BlockRange]:
         """Returns a list of starting and ending blocks for a given chain's data query."""
 
         # Obtain upper and lower bounds
         last_scanned_block = await self.block_recoreds_repo.retrieve(
-            chain_id=ax_chain_id
+            task_id=task_id, chain_id=ax_chain_id
         )
 
         latest_chain_blk_num = await self.evm_client.fetch_latest_block_number()

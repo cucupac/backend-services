@@ -4,6 +4,7 @@ from pydantic import BaseModel
 
 
 class BlockRecord(BaseModel):
+    task_id: int
     chain_id: int
     last_scanned_block_number: int
 
