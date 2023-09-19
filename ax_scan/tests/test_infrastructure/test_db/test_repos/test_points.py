@@ -27,7 +27,7 @@ async def test_create(points_repo: IPointsRepo, test_db: Database) -> None:
 
     assert len(point_records) == 1
 
-    assert point_records[0]["account"] == constant.TEST_MINT_MINTER
+    assert point_records[0]["account"] == constant.TEST_MINT_MINTER.lower()
     assert point_records[0]["points"] == points_create_amount
 
 
@@ -51,7 +51,7 @@ async def test_update(points_repo: IPointsRepo, test_db: Database) -> None:
 
     assert len(point_records) == 1
 
-    assert point_records[0]["account"] == constant.TEST_MINT_MINTER
+    assert point_records[0]["account"] == constant.TEST_MINT_MINTER.lower()
     assert point_records[0]["points"] == points_update_amount
 
 
@@ -70,5 +70,5 @@ async def test_retrieve(points_repo: IPointsRepo) -> None:
 
     assert isinstance(account_points, PointsInDb)
 
-    assert account_points.account == constant.TEST_MINT_MINTER
+    assert account_points.account == constant.TEST_MINT_MINTER.lower()
     assert account_points.points == points_create_amount

@@ -426,14 +426,21 @@ async def test_task_lz_dest_data_first_update(
 async def test_get_block_range_gt(
     gather_events_task_block_range_gt: IGatherTransferEventsTask,
     block_record_repo: IBlockRecordRepo,
+    test_db: Database,
     inserted_block_record: None,
 ) -> None:
     """Tests the case where the on-chain block number exceeds the maximum, evm-allowed block range.
     This test uses the Wormhole source transaction block number as its last database-stored block number.
     """
 
+    task = await test_db.fetch_one(
+        """SELECT * FROM ax_scan.tasks AS t WHERE t.name = 'test_task'"""
+    )
+
     # Setup
-    block_record = await block_record_repo.retrieve(chain_id=constant.TEST_SRC_CHAIN_ID)
+    block_record = await block_record_repo.retrieve(
+        task_id=task["id"], chain_id=constant.TEST_SRC_CHAIN_ID
+    )
 
     assert block_record.last_scanned_block_number == constant.TEST_BLOCK_NUMBER
 
@@ -449,7 +456,7 @@ async def test_get_block_range_gt(
 
     # Act
     block_ranges = await gather_events_task_block_range_gt.get_block_range(
-        ax_chain_id=constant.TEST_SRC_CHAIN_ID
+        task_id=task["id"], ax_chain_id=constant.TEST_SRC_CHAIN_ID
     )
 
     last_range = block_ranges.pop()
@@ -466,14 +473,20 @@ async def test_get_block_range_gt(
 async def test_get_block_range_lt(
     gather_events_task_block_range_lt: IGatherTransferEventsTask,
     block_record_repo: IBlockRecordRepo,
+    test_db: Database,
     inserted_block_record: None,
 ) -> None:
     """Tests the case where the on-chain block number is less than the maximum, evm-allowed upper bound.
     This test uses the Wormhole source transaction block number as its last database-stored block number.
     """
+    task = await test_db.fetch_one(
+        """SELECT * FROM ax_scan.tasks AS t WHERE t.name = 'test_task'"""
+    )
 
     # Setup
-    block_record = await block_record_repo.retrieve(chain_id=constant.TEST_SRC_CHAIN_ID)
+    block_record = await block_record_repo.retrieve(
+        task_id=task["id"], chain_id=constant.TEST_SRC_CHAIN_ID
+    )
 
     assert block_record.last_scanned_block_number == constant.TEST_BLOCK_NUMBER
 
@@ -489,7 +502,7 @@ async def test_get_block_range_lt(
 
     # Act
     block_ranges = await gather_events_task_block_range_lt.get_block_range(
-        ax_chain_id=constant.TEST_SRC_CHAIN_ID
+        task_id=task["id"], ax_chain_id=constant.TEST_SRC_CHAIN_ID
     )
 
     # Assertions

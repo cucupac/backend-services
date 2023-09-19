@@ -30,5 +30,5 @@ async def test_create(
     assert len(mint_records) == 1
 
     assert mint_records[0]["chain_tx_id"] == inserted_mint_tx
-    assert mint_records[0]["account"] == constant.TEST_MINT_MINTER
+    assert mint_records[0]["account"] == constant.TEST_MINT_MINTER.lower()
     assert mint_records[0]["amount"] == constant.TEST_MINT_AMOUNT

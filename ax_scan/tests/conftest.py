@@ -795,8 +795,14 @@ async def inserted_block_records(test_db: Database) -> None:
 
 @pytest_asyncio.fixture
 async def inserted_block_record(test_db: Database) -> None:
-    query = """INSERT INTO ax_scan.block_record (chain_id, last_scanned_block_number) VALUES (:chain_id, :block_number) RETURNING id"""
+    await test_db.execute("INSERT INTO ax_scan.tasks (name) VALUES ('test_task');")
+    task = await test_db.fetch_one(
+        """SELECT * FROM ax_scan.tasks AS t WHERE t.name = 'test_task'"""
+    )
+
+    query = """INSERT INTO ax_scan.block_record (task_id, chain_id, last_scanned_block_number) VALUES (:task_id, :chain_id, :block_number) RETURNING id"""
     values = {
+        "task_id": task["id"],
         "chain_id": constant.TEST_SRC_CHAIN_ID,
         "block_number": constant.TEST_BLOCK_NUMBER,
     }

@@ -17,7 +17,9 @@ class MintsRepo(IMintsRepo):
         """Inserts a mint; returns mints id."""
 
         mint_insert_stmt = MINTS.insert().values(
-            chain_tx_id=tx_id, account=mint_data.account, amount=mint_data.amount
+            chain_tx_id=tx_id,
+            account=mint_data.account.lower(),
+            amount=mint_data.amount,
         )
 
         return await self.db.execute(mint_insert_stmt)
